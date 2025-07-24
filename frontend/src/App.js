@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Navbar from './components/Navbar';
 import CreateTerms from './components/Create-Terms';
 import CreateStandard from './components/Create-Standard';
+import SignUp from './components/SignUp';
 import './App.css';
 
 // 이미지들을 import
@@ -20,18 +21,23 @@ function App() {
       setCurrentPage('create-standard');
     } else if (iconType === 'terms') {
       setCurrentPage('create-terms');
+    } else if (iconType === 'labor' || iconType === 'rent-money') {
+      alert('해당 서비스는 아직 준비중입니다.');
     }
-    // 다른 아이콘들에 대한 처리도 여기에 추가할 수 있습니다
   };
 
   const handleHomeClick = () => {
     setCurrentPage('home');
   };
 
+  const handleSignUpClick = () => {
+    setCurrentPage('signup');
+  };
+
   // 홈 페이지 컴포넌트
   const HomePage = () => (
     <div className="App">
-      <Navbar onHomeClick={handleHomeClick} />
+      <Navbar onHomeClick={handleHomeClick} onSignUpClick={handleSignUpClick} />
 
       {/* Main Content */}
       <main className="main-content">
@@ -76,11 +82,17 @@ function App() {
                 <img src={iconTerms} alt="표준약관" className="option-icon" />
                 <span className="option-text">표준약관</span>
               </div>
-              <div className="contract-option">
+              <div 
+                className="contract-option"
+                onClick={() => handleIconClick('labor')}
+              >
                 <img src={iconLabor} alt="근로계약서" className="option-icon" />
                 <span className="option-text">근로계약서</span>
               </div>
-              <div className="contract-option">
+              <div 
+                className="contract-option"
+                onClick={() => handleIconClick('rent-money')}
+              >
                 <img src={iconRentMoney} alt="차용증" className="option-icon" />
                 <span className="option-text">차용증</span>
               </div>
@@ -93,9 +105,11 @@ function App() {
 
   // 페이지 렌더링
   if (currentPage === 'create-terms') {
-    return <CreateTerms onHomeClick={handleHomeClick} />;
+    return <CreateTerms onHomeClick={handleHomeClick} onSignUpClick={handleSignUpClick} />;
   } else if (currentPage === 'create-standard') {
-    return <CreateStandard onHomeClick={handleHomeClick} />;
+    return <CreateStandard onHomeClick={handleHomeClick} onSignUpClick={handleSignUpClick} />;
+  } else if (currentPage === 'signup') {
+    return <SignUp onHomeClick={handleHomeClick} />;
   }
 
   return <HomePage />;

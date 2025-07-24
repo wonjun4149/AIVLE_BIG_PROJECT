@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Navbar from './Navbar';
 import './Create-Terms.css';
 
-function CreateTerms({ onHomeClick }) {
+function CreateTerms({ onHomeClick, onSignUpClick }) {
   const [companyName, setCompanyName] = useState('');
   const [category, setCategory] = useState('선택');
   const [productName, setProductName] = useState('');
@@ -22,7 +22,7 @@ function CreateTerms({ onHomeClick }) {
 
   return (
     <div className="App">
-      <Navbar onHomeClick={onHomeClick} />
+      <Navbar onHomeClick={onHomeClick} onSignUpClick={onSignUpClick} />
       
       <main className="terms-main">
         <div className="terms-container">
