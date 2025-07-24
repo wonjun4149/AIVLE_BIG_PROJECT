@@ -2,17 +2,22 @@ import React from 'react';
 import './Navbar.css';
 import logo from '../assets/logo.png';
 
-const Navbar = () => {
+const Navbar = ({ onHomeClick }) => {
+  const handleLogoClick = () => {
+    if (onHomeClick) {
+      onHomeClick();
+    }
+  };
+
   return (
     <header className="header">
       <div className="header-content">
-        <div className="logo">
+        <div className="logo" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
           <img src={logo} alt="보라계약 로고" className="logo-icon" />
           <span className="logo-text">보라계약</span>
         </div>
         <div className="header-buttons">
-          <button className="header-btn">로그인</button>
-          <button className="header-btn">회원가입</button>
+          <button className="header-btn">마이페이지</button>
           <button className="menu-btn">☰</button>
         </div>
       </div>

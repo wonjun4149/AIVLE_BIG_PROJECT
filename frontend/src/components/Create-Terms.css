@@ -1,0 +1,187 @@
+/* Create-Terms.css */
+.terms-main {
+  min-height: calc(100vh - 80px);
+  background-color: white;
+}
+
+.terms-container {
+  display: flex;
+  height: calc(100vh - 80px);
+}
+
+/* 왼쪽 미리보기 영역 */
+.preview-section {
+  flex: 1;
+  background-color: #f8f9fa;
+  padding: 2rem;
+  border-right: 1px solid #e9ecef;
+}
+
+.preview-placeholder {
+  width: 100%;
+  height: 100%;
+  background-color: #f1f3f4;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #636e72;
+  font-size: 1.1rem;
+}
+
+/* 오른쪽 입력 폼 영역 */
+.form-section {
+  width: 400px;
+  background-color: white;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.form-container {
+  max-width: 100%;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #2d3436;
+  margin-bottom: 0.5rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  border-color: #6c5ce7;
+}
+
+.form-input::placeholder {
+  color: #adb5bd;
+}
+
+/* 드롭다운 스타일 */
+.select-container {
+  position: relative;
+  width: 100%;
+}
+
+.form-select {
+  width: 100%;
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  outline: none;
+  background-color: white;
+  cursor: pointer;
+  appearance: none;
+  box-sizing: border-box;
+}
+
+.form-select:focus {
+  border-color: #6c5ce7;
+}
+
+.select-arrow {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #636e72;
+  font-size: 0.8rem;
+}
+
+/* 텍스트 영역 */
+.form-textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+  resize: vertical;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.form-textarea:focus {
+  border-color: #6c5ce7;
+}
+
+.form-textarea::placeholder {
+  color: #adb5bd;
+}
+
+/* AI 초안 생성 버튼 */
+.ai-draft-btn {
+  width: 100%;
+  padding: 1rem 2rem;
+  background-color: #6c5ce7;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 1rem;
+}
+
+.ai-draft-btn:hover {
+  background-color: #5f4fcf;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .form-section {
+    width: 350px;
+  }
+}
+
+@media (max-width: 768px) {
+  .terms-container {
+    flex-direction: column;
+    height: auto;
+  }
+  
+  .preview-section {
+    height: 300px;
+    border-right: none;
+    border-bottom: 1px solid #e9ecef;
+  }
+  
+  .form-section {
+    width: 100%;
+    padding: 1.5rem;
+  }
+  
+  .form-group {
+    margin-bottom: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-section {
+    padding: 1rem;
+  }
+  
+  .preview-section {
+    height: 200px;
+    padding: 1rem;
+  }
+}

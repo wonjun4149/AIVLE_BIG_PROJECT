@@ -1,37 +1,29 @@
 import React, { useState } from 'react';
-import Navbar from './components/Navbar';
-import CreateTerms from './components/Create-Terms';
-import CreateStandard from './components/Create-Standard';
-import './App.css';
+import { useNavigate } from 'react-router-dom';
+import Navbar from './Navbar';
+import '../App.css';
 
 // 이미지들을 import
-import logo from './assets/logo.png';
-import iconStandard from './assets/icon-standard.png';
-import iconRentMoney from './assets/icon-rent-money.png';
-import iconLabor from './assets/icon-labor.png';
-import iconTerms from './assets/icon-terms.png';
+import logo from '../assets/logo.png';
+import iconStandard from '../assets/icon-standard.png';
+import iconRentMoney from '../assets/icon-rent-money.png';
+import iconLabor from '../assets/icon-labor.png';
+import iconTerms from '../assets/icon-terms.png';
 
-function App() {
-  const [currentPage, setCurrentPage] = useState('home');
+function Home() {
   const [contractText, setContractText] = useState('');
+  const navigate = useNavigate();
 
   const handleIconClick = (iconType) => {
     if (iconType === 'standard') {
-      setCurrentPage('create-standard');
-    } else if (iconType === 'terms') {
-      setCurrentPage('create-terms');
+      navigate('/create-terms');
     }
-    // 다른 아이콘들에 대한 처리도 여기에 추가할 수 있습니다
+    // 다른 아이콘들의 처리 로직도 여기에 추가할 수 있습니다
   };
 
-  const handleHomeClick = () => {
-    setCurrentPage('home');
-  };
-
-  // 홈 페이지 컴포넌트
-  const HomePage = () => (
+  return (
     <div className="App">
-      <Navbar onHomeClick={handleHomeClick} />
+      <Navbar />
 
       {/* Main Content */}
       <main className="main-content">
@@ -69,10 +61,7 @@ function App() {
                 <img src={iconStandard} alt="표준 계약서" className="option-icon" />
                 <span className="option-text">표준 계약서</span>
               </div>
-              <div 
-                className="contract-option"
-                onClick={() => handleIconClick('terms')}
-              >
+              <div className="contract-option">
                 <img src={iconTerms} alt="표준약관" className="option-icon" />
                 <span className="option-text">표준약관</span>
               </div>
@@ -90,15 +79,6 @@ function App() {
       </main>
     </div>
   );
-
-  // 페이지 렌더링
-  if (currentPage === 'create-terms') {
-    return <CreateTerms onHomeClick={handleHomeClick} />;
-  } else if (currentPage === 'create-standard') {
-    return <CreateStandard onHomeClick={handleHomeClick} />;
-  }
-
-  return <HomePage />;
 }
 
-export default App;
+export default Home;
