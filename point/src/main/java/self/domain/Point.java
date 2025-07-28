@@ -15,7 +15,7 @@ import self.domain.PointReduced;
 @Entity
 @Table(name = "Point_table")
 @Data
-//<<< DDD / Aggregate Root
+// <<< DDD / Aggregate Root
 public class Point {
 
     @Id
@@ -24,11 +24,9 @@ public class Point {
 
     private Integer amount;
 
-    @Column(name = "firebase_uid")
-    private String firebaseUid;  // Firebase UID로 변경
-
-    // 기존 userId 필드는 호환성을 위해 유지하되, firebaseUid를 우선 사용
     private Long userId;
+
+    private String firebaseUid; // Firebase UID 필드 추가
 
     @PostPersist
     public void onPostPersist() {
@@ -38,27 +36,100 @@ public class Point {
 
     public static PointRepository repository() {
         PointRepository pointRepository = PointApplication.applicationContext.getBean(
-            PointRepository.class
-        );
+                PointRepository.class);
         return pointRepository;
     }
 
-    //<<< Clean Arch / Port Method
-    public static void reducePoint(TermCreateRequested termCreateRequested) {
+    // <<< Clean Arch / Port Method
+    public static void reducePointForTermCreate(TermCreateRequested termCreateRequested) {
         // Firebase UID로 포인트 찾아서 차감
         repository().findByFirebaseUid(termCreateRequested.getFirebaseUid())
-            .ifPresent(point -> {
-                if (point.getAmount() >= 5000) { // AI 초안 생성 비용
-                    point.setAmount(point.getAmount() - 5000);
-                    repository().save(point);
+                .ifPresent(point -> {
+                    if (point.getAmount() >= 5000) { // 공통 차감 비용
+                        point.setAmount(point.getAmount() - 5000);
+                        repository().save(point);
 
-                    PointReduced pointReduced = new PointReduced(point);
-                    pointReduced.publishAfterCommit();
-                }
-            });
+                        PointReduced pointReduced = new PointReduced(point);
+                        pointReduced.publishAfterCommit();
+
+                        System.out.println("일반 약관 생성 포인트 차감 완료: " +
+                                termCreateRequested.getFirebaseUid() +
+                                ", 차감: 5000, 남은 포인트: " + point.getAmount());
+                    } else {
+                        System.out.println("포인트 부족: " + termCreateRequested.getFirebaseUid() +
+                                ", 보유: " + point.getAmount() + ", 필요: 5000");
+                    }
+                });
     }
 
-    //>>> Clean Arch / Port Method
-    // 다른 reducePoint 메서드들도 동일하게 수정...
+    // >>> Clean Arch / Port Method
+    // <<< Clean Arch / Port Method
+    public static void reducePointForForeignTermCreate(ForeignTermCreateRequested foreignTermCreateRequested) {
+        // Firebase UID로 포인트 찾아서 차감
+        repository().findByFirebaseUid(foreignTermCreateRequested.getFirebaseUid())
+                .ifPresent(point -> {
+                    if (point.getAmount() >= 5000) { // 공통 차감 비용
+                        point.setAmount(point.getAmount() - 5000);
+                        repository().save(point);
+
+                        PointReduced pointReduced = new PointReduced(point);
+                        pointReduced.publishAfterCommit();
+
+                        System.out.println("외국어 약관 생성 포인트 차감 완료: " +
+                                foreignTermCreateRequested.getFirebaseUid() +
+                                ", 차감: 5000, 남은 포인트: " + point.getAmount());
+                    } else {
+                        System.out.println("포인트 부족: " + foreignTermCreateRequested.getFirebaseUid() +
+                                ", 보유: " + point.getAmount() + ", 필요: 5000");
+                    }
+                });
+    }
+
+    // >>> Clean Arch / Port Method
+    // <<< Clean Arch / Port Method
+    public static void reducePointForRiskDetect(RiskDetectRequested riskDetectRequested) {
+        // Firebase UID로 포인트 찾아서 차감
+        repository().findByFirebaseUid(riskDetectRequested.getFirebaseUid())
+                .ifPresent(point -> {
+                    if (point.getAmount() >= 5000) { // 공통 차감 비용
+                        point.setAmount(point.getAmount() - 5000);
+                        repository().save(point);
+
+                        PointReduced pointReduced = new PointReduced(point);
+                        pointReduced.publishAfterCommit();
+
+                        System.out.println("리스크 검사 포인트 차감 완료: " +
+                                riskDetectRequested.getFirebaseUid() +
+                                ", 차감: 5000, 남은 포인트: " + point.getAmount());
+                    } else {
+                        System.out.println("포인트 부족: " + riskDetectRequested.getFirebaseUid() +
+                                ", 보유: " + point.getAmount() + ", 필요: 5000");
+                    }
+                });
+    }
+
+    // >>> Clean Arch / Port Method
+    // <<< Clean Arch / Port Method
+    public static void reducePointForAiTermModify(AiTermModifyRequested aiTermModifyRequested) {
+        // Firebase UID로 포인트 찾아서 차감
+        repository().findByFirebaseUid(aiTermModifyRequested.getFirebaseUid())
+                .ifPresent(point -> {
+                    if (point.getAmount() >= 5000) { // 공통 차감 비용
+                        point.setAmount(point.getAmount() - 5000);
+                        repository().save(point);
+
+                        PointReduced pointReduced = new PointReduced(point);
+                        pointReduced.publishAfterCommit();
+
+                        System.out.println("AI 약관 수정 포인트 차감 완료: " +
+                                aiTermModifyRequested.getFirebaseUid() +
+                                ", 차감: 5000, 남은 포인트: " + point.getAmount());
+                    } else {
+                        System.out.println("포인트 부족: " + aiTermModifyRequested.getFirebaseUid() +
+                                ", 보유: " + point.getAmount() + ", 필요: 5000");
+                    }
+                });
+    }
+    // >>> Clean Arch / Port Method
 }
-//>>> DDD / Aggregate Root
+// >>> DDD / Aggregate Root

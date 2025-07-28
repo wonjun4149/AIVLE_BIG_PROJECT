@@ -14,7 +14,7 @@ import self.domain.*;
 //<<< Clean Arch / Inbound Adaptor
 
 @RestController
-@RequestMapping(value="/api/points")
+@RequestMapping(value = "/api/points")
 @Transactional
 public class PointController {
 
@@ -27,39 +27,101 @@ public class PointController {
         try {
             // Firebase UID로 포인트 조회
             Optional<Point> pointOpt = pointRepository.findByFirebaseUid(firebaseUid);
-            
+
             if (pointOpt.isPresent()) {
                 Point point = pointOpt.get();
                 return ResponseEntity.ok(new PointResponse(
-                    point.getId(),
-                    point.getFirebaseUid(),
-                    point.getAmount()
-                ));
+                        point.getId(),
+                        point.getFirebaseUid(),
+                        point.getAmount()));
             } else {
                 // 포인트가 없으면 0포인트로 초기화
                 Point newPoint = new Point();
                 newPoint.setFirebaseUid(firebaseUid);
                 newPoint.setAmount(0);
                 pointRepository.save(newPoint);
-                
+
                 return ResponseEntity.ok(new PointResponse(
-                    newPoint.getId(),
-                    newPoint.getFirebaseUid(),
-                    newPoint.getAmount()
-                ));
+                        newPoint.getId(),
+                        newPoint.getFirebaseUid(),
+                        newPoint.getAmount()));
             }
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("포인트 조회 실패: " + e.getMessage());
         }
     }
 
-    // 포인트 충전 API
+    // 포인트 충전 API (Query Parameter 방식)
+    @PostMapping("/{firebaseUid}/charge")
+    public ResponseEntity<?> chargePoint(@PathVariable String firebaseUid, @RequestParam Integer amount) {
+        try {
+            Optional<Point> pointOpt = pointRepository.findByFirebaseUid(firebaseUid);
+            Point point;
+
+            if (pointOpt.isPresent()) {
+                point = pointOpt.get();
+                point.setAmount(point.getAmount() + amount);
+            } else {
+                point = new Point();
+                point.setFirebaseUid(firebaseUid);
+                point.setAmount(amount);
+            }
+
+            pointRepository.save(point);
+
+            // 이벤트 발행
+            PointPurchased pointPurchased = new PointPurchased(point);
+            pointPurchased.publishAfterCommit();
+
+            return ResponseEntity.ok(new PointResponse(
+                    point.getId(),
+                    point.getFirebaseUid(),
+                    point.getAmount()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("포인트 충전 실패: " + e.getMessage());
+        }
+    }
+
+    // 포인트 수동 차감 API
+    @PostMapping("/{firebaseUid}/reduce")
+    public ResponseEntity<?> reducePoint(@PathVariable String firebaseUid, @RequestParam Integer amount) {
+        try {
+            Optional<Point> pointOpt = pointRepository.findByFirebaseUid(firebaseUid);
+
+            if (pointOpt.isPresent()) {
+                Point point = pointOpt.get();
+
+                if (point.getAmount() >= amount) {
+                    point.setAmount(point.getAmount() - amount);
+                    pointRepository.save(point);
+
+                    // 이벤트 발행
+                    PointReduced pointReduced = new PointReduced(point);
+                    pointReduced.publishAfterCommit();
+
+                    return ResponseEntity.ok(new PointResponse(
+                            point.getId(),
+                            point.getFirebaseUid(),
+                            point.getAmount()));
+                } else {
+                    return ResponseEntity.badRequest().body(
+                            "포인트 부족. 보유: " + point.getAmount() + ", 필요: " + amount);
+                }
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("포인트 차감 실패: " + e.getMessage());
+        }
+    }
+
+    // JSON 방식 충전 API (기존 호환성 유지)
     @PostMapping("/charge")
-    public ResponseEntity<?> chargePoint(@RequestBody ChargePointRequest request) {
+    public ResponseEntity<?> chargePointJson(@RequestBody ChargePointRequest request) {
         try {
             Optional<Point> pointOpt = pointRepository.findByFirebaseUid(request.getFirebaseUid());
             Point point;
-            
+
             if (pointOpt.isPresent()) {
                 point = pointOpt.get();
                 point.setAmount(point.getAmount() + request.getAmount());
@@ -68,14 +130,17 @@ public class PointController {
                 point.setFirebaseUid(request.getFirebaseUid());
                 point.setAmount(request.getAmount());
             }
-            
+
             pointRepository.save(point);
-            
+
+            // 이벤트 발행
+            PointPurchased pointPurchased = new PointPurchased(point);
+            pointPurchased.publishAfterCommit();
+
             return ResponseEntity.ok(new PointResponse(
-                point.getId(),
-                point.getFirebaseUid(),
-                point.getAmount()
-            ));
+                    point.getId(),
+                    point.getFirebaseUid(),
+                    point.getAmount()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("포인트 충전 실패: " + e.getMessage());
         }
@@ -94,9 +159,17 @@ public class PointController {
         }
 
         // Getters
-        public Long getId() { return id; }
-        public String getFirebaseUid() { return firebaseUid; }
-        public Integer getAmount() { return amount; }
+        public Long getId() {
+            return id;
+        }
+
+        public String getFirebaseUid() {
+            return firebaseUid;
+        }
+
+        public Integer getAmount() {
+            return amount;
+        }
     }
 
     // Request DTO
@@ -105,10 +178,21 @@ public class PointController {
         private Integer amount;
 
         // Getters and Setters
-        public String getFirebaseUid() { return firebaseUid; }
-        public void setFirebaseUid(String firebaseUid) { this.firebaseUid = firebaseUid; }
-        public Integer getAmount() { return amount; }
-        public void setAmount(Integer amount) { this.amount = amount; }
+        public String getFirebaseUid() {
+            return firebaseUid;
+        }
+
+        public void setFirebaseUid(String firebaseUid) {
+            this.firebaseUid = firebaseUid;
+        }
+
+        public Integer getAmount() {
+            return amount;
+        }
+
+        public void setAmount(Integer amount) {
+            this.amount = amount;
+        }
     }
 }
-//>>> Clean Arch / Inbound Adaptor
+// >>> Clean Arch / Inbound Adaptor

@@ -21,72 +21,53 @@ public class PolicyHandler {
     PointRepository pointRepository;
 
     @StreamListener(KafkaProcessor.INPUT)
-    public void whatever(@Payload String eventString) {}
+    public void whatever(@Payload String eventString) {
+    }
 
-    @StreamListener(
-        value = KafkaProcessor.INPUT,
-        condition = "headers['type']=='TermCreateRequested'"
-    )
+    @StreamListener(value = KafkaProcessor.INPUT, condition = "headers['type']=='TermCreateRequested'")
     public void wheneverTermCreateRequested_ReducePoint(
-        @Payload TermCreateRequested termCreateRequested
-    ) {
+            @Payload TermCreateRequested termCreateRequested) {
         TermCreateRequested event = termCreateRequested;
         System.out.println(
-            "\n\n##### listener ReducePoint : " + termCreateRequested + "\n\n"
-        );
+                "\n\n##### listener ReducePoint : " + termCreateRequested + "\n\n");
 
         // Sample Logic //
-        Point.reducePoint(event);
+        Point.reducePointForTermCreate(event);
     }
 
-    @StreamListener(
-        value = KafkaProcessor.INPUT,
-        condition = "headers['type']=='ForeignTermCreateRequested'"
-    )
+    @StreamListener(value = KafkaProcessor.INPUT, condition = "headers['type']=='ForeignTermCreateRequested'")
     public void wheneverForeignTermCreateRequested_ReducePoint(
-        @Payload ForeignTermCreateRequested foreignTermCreateRequested
-    ) {
+            @Payload ForeignTermCreateRequested foreignTermCreateRequested) {
         ForeignTermCreateRequested event = foreignTermCreateRequested;
         System.out.println(
-            "\n\n##### listener ReducePoint : " +
-            foreignTermCreateRequested +
-            "\n\n"
-        );
-    }
+                "\n\n##### listener ReducePoint : " +
+                        foreignTermCreateRequested +
+                        "\n\n");
+
         // Sample Logic //
-    //     Point.reducePoint(event);
-    // }
+        Point.reducePointForForeignTermCreate(event);
+    }
 
-    // @StreamListener(
-    //     value = KafkaProcessor.INPUT,
-    //     condition = "headers['type']=='RiskDetectRequested'"
-    // )
-    // public void wheneverRiskDetectRequested_ReducePoint(
-    //     @Payload RiskDetectRequested riskDetectRequested
-    // ) {
-    //     RiskDetectRequested event = riskDetectRequested;
-    //     System.out.println(
-    //         "\n\n##### listener ReducePoint : " + riskDetectRequested + "\n\n"
-    //     );
+    @StreamListener(value = KafkaProcessor.INPUT, condition = "headers['type']=='RiskDetectRequested'")
+    public void wheneverRiskDetectRequested_ReducePoint(
+            @Payload RiskDetectRequested riskDetectRequested) {
+        RiskDetectRequested event = riskDetectRequested;
+        System.out.println(
+                "\n\n##### listener ReducePoint : " + riskDetectRequested + "\n\n");
 
-    //     // Sample Logic //
-    //     Point.reducePoint(event);
-    // }
+        // Sample Logic //
+        Point.reducePointForRiskDetect(event);
+    }
 
-    // @StreamListener(
-    //     value = KafkaProcessor.INPUT,
-    //     condition = "headers['type']=='AiTermModifyRequested'"
-    // )
-    // public void wheneverAiTermModifyRequested_ReducePoint(
-    //     @Payload AiTermModifyRequested aiTermModifyRequested
-    // ) {
-    //     AiTermModifyRequested event = aiTermModifyRequested;
-    //     System.out.println(
-    //         "\n\n##### listener ReducePoint : " + aiTermModifyRequested + "\n\n"
-    //     );
+    @StreamListener(value = KafkaProcessor.INPUT, condition = "headers['type']=='AiTermModifyRequested'")
+    public void wheneverAiTermModifyRequested_ReducePoint(
+            @Payload AiTermModifyRequested aiTermModifyRequested) {
+        AiTermModifyRequested event = aiTermModifyRequested;
+        System.out.println(
+                "\n\n##### listener ReducePoint : " + aiTermModifyRequested + "\n\n");
 
-    //     // Sample Logic //
-    //     Point.reducePoint(event);
-    // }
+        // Sample Logic //
+        Point.reducePointForAiTermModify(event);
+    }
 }
-//>>> Clean Arch / Inbound Adaptor
+// >>> Clean Arch / Inbound Adaptor
