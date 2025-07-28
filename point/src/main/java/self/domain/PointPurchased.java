@@ -22,5 +22,6 @@ public class PointPurchased extends AbstractEvent {
     public PointPurchased() {
         super();
     }
+    
 }
 //>>> DDD / Domain Event
