@@ -20,7 +20,7 @@ spring:
         - id: user
           uri: http://localhost:8084
           predicates:
-            - Path=/users/**, /getUserInfos/**
+            - Path=/users/**, /getUserInfos/**, /api/auth/**
         - id: point
           uri: http://localhost:8085
           predicates:

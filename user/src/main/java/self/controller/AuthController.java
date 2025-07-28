@@ -1,10 +1,10 @@
 package self.controller;
 
+import com.google.firebase.auth.FirebaseAuthException;
 import lombok.Data;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import self.service.FirebaseAuthService;
-import com.google.firebase.auth.UserRecord;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -19,8 +19,8 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<?> signUp(@RequestBody SignUpRequest request) {
         try {
-            UserRecord user = firebaseAuthService.createUser(request.getEmail(), request.getPassword(), request.getName());
-            return ResponseEntity.ok(user);
+            firebaseAuthService.createUser(request.getEmail(), request.getPassword(), request.getName());
+            return ResponseEntity.ok("회원가입 성공. 이메일을 확인하여 인증을 완료해주세요.");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("회원가입 실패: " + e.getMessage());
         }
