@@ -1,23 +1,34 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './Navbar.css';
 import logo from '../assets/logo.png';
+import { auth } from '../firebase';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 
-const Navbar = ({ onHomeClick, onSignUpClick }) => {
+const Navbar = ({ onHomeClick }) => {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
   const handleLogoClick = () => {
-    if (onHomeClick) {
-      onHomeClick();
+    if (onHomeClick) onHomeClick();
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      alert('로그아웃 되었습니다.');
+    } catch (error) {
+      console.error('로그아웃 실패:', error);
     }
   };
 
-  const handleSignUpClick = () => {
-    if (onSignUpClick) {
-      onSignUpClick();
-    }
-  };
-
-  const handleLoginClick = () => {
-    // 로그인 기능은 아직 구현하지 않았으므로 알림만 표시
-    alert('로그인 기능은 준비중입니다.');
+  const goTo = (path) => {
+    window.location.href = path;
   };
 
   return (
@@ -28,8 +39,17 @@ const Navbar = ({ onHomeClick, onSignUpClick }) => {
           <span className="logo-text">보라계약</span>
         </div>
         <div className="header-buttons">
-          <button className="header-btn" onClick={handleLoginClick}>로그인</button>
-          <button className="header-btn" onClick={handleSignUpClick}>회원가입</button>
+          {user ? (
+            <>
+              <span className="header-username">{user.displayName || user.email}</span>
+              <button className="header-btn" onClick={handleLogout}>로그아웃</button>
+            </>
+          ) : (
+            <>
+              <button className="header-btn" onClick={() => goTo('/login')}>로그인</button>
+              <button className="header-btn" onClick={() => goTo('/signup')}>회원가입</button>
+            </>
+          )}
           <button className="menu-btn">☰</button>
         </div>
       </div>
