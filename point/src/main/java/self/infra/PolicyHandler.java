@@ -52,41 +52,41 @@ public class PolicyHandler {
             foreignTermCreateRequested +
             "\n\n"
         );
-
-        // Sample Logic //
-        Point.reducePoint(event);
     }
-
-    @StreamListener(
-        value = KafkaProcessor.INPUT,
-        condition = "headers['type']=='RiskDetectRequested'"
-    )
-    public void wheneverRiskDetectRequested_ReducePoint(
-        @Payload RiskDetectRequested riskDetectRequested
-    ) {
-        RiskDetectRequested event = riskDetectRequested;
-        System.out.println(
-            "\n\n##### listener ReducePoint : " + riskDetectRequested + "\n\n"
-        );
-
         // Sample Logic //
-        Point.reducePoint(event);
-    }
+    //     Point.reducePoint(event);
+    // }
 
-    @StreamListener(
-        value = KafkaProcessor.INPUT,
-        condition = "headers['type']=='AiTermModifyRequested'"
-    )
-    public void wheneverAiTermModifyRequested_ReducePoint(
-        @Payload AiTermModifyRequested aiTermModifyRequested
-    ) {
-        AiTermModifyRequested event = aiTermModifyRequested;
-        System.out.println(
-            "\n\n##### listener ReducePoint : " + aiTermModifyRequested + "\n\n"
-        );
+    // @StreamListener(
+    //     value = KafkaProcessor.INPUT,
+    //     condition = "headers['type']=='RiskDetectRequested'"
+    // )
+    // public void wheneverRiskDetectRequested_ReducePoint(
+    //     @Payload RiskDetectRequested riskDetectRequested
+    // ) {
+    //     RiskDetectRequested event = riskDetectRequested;
+    //     System.out.println(
+    //         "\n\n##### listener ReducePoint : " + riskDetectRequested + "\n\n"
+    //     );
 
-        // Sample Logic //
-        Point.reducePoint(event);
-    }
+    //     // Sample Logic //
+    //     Point.reducePoint(event);
+    // }
+
+    // @StreamListener(
+    //     value = KafkaProcessor.INPUT,
+    //     condition = "headers['type']=='AiTermModifyRequested'"
+    // )
+    // public void wheneverAiTermModifyRequested_ReducePoint(
+    //     @Payload AiTermModifyRequested aiTermModifyRequested
+    // ) {
+    //     AiTermModifyRequested event = aiTermModifyRequested;
+    //     System.out.println(
+    //         "\n\n##### listener ReducePoint : " + aiTermModifyRequested + "\n\n"
+    //     );
+
+    //     // Sample Logic //
+    //     Point.reducePoint(event);
+    // }
 }
 //>>> Clean Arch / Inbound Adaptor
