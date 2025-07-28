@@ -86,6 +86,7 @@ function SignUp({ onHomeClick }) {
       });
 
       alert('회원가입이 완료되었습니다. 이메일을 확인해주세요.');
+      navigate('/');
       onHomeClick();
     } catch (error) {
       console.error('회원가입 실패:', error);
