@@ -251,3 +251,21 @@
     font-size: 1.3rem;
   }
 }
+.google-signin-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 16px;
+  font-weight: 500;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.google-icon-img {
+  width: 20px;
+  height: 20px;
+}

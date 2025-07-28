@@ -9,6 +9,7 @@ import {
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../firebase';
 import { useNavigate } from 'react-router-dom';
+import googleLogo from '../assets/google-logo.png';
 
 function SignUp({ onHomeClick }) {
   const navigate = useNavigate();
@@ -172,7 +173,7 @@ function SignUp({ onHomeClick }) {
                   checked={formData.isVerified}
                   onChange={(e) => handleInputChange('isVerified', e.target.checked)}
                 />
-                <label htmlFor="company-verify">본인 확인</label>
+                <label htmlFor="company-verify">무직 체크</label>
               </div>
             </div>
 
@@ -254,7 +255,7 @@ function SignUp({ onHomeClick }) {
 
             {/* 구글 로그인 */}
             <button className="google-signin-btn" onClick={handleGoogleSignIn}>
-              <span className="google-icon">G</span>
+              <img src={googleLogo} alt="Google 로고" className="google-icon-img" />
               Sign in with Google
             </button>
           </div>

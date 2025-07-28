@@ -77,7 +77,7 @@ function Login() {
             </button>
 
             <button className="google-signin-btn" onClick={handleGoogleLogin}>
-              <span className="google-icon">G</span>
+              <img src={require('../assets/google-logo.png')} alt="Google 로고" className="google-icon-img" />
               Sign in with Google
             </button>
 
