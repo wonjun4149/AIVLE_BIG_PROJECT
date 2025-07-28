@@ -1,34 +1,24 @@
-import React, { useEffect, useState } from 'react';
+// src/components/Navbar.js
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Navbar.css';
 import logo from '../assets/logo.png';
-import { auth } from '../firebase';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
 
-const Navbar = ({ onHomeClick }) => {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe();
-  }, []);
+const Navbar = ({ onSignUpClick, onLoginClick, userName }) => {
+  const navigate = useNavigate();
 
   const handleLogoClick = () => {
-    if (onHomeClick) onHomeClick();
+    navigate('/');
   };
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      alert('로그아웃 되었습니다.');
-    } catch (error) {
-      console.error('로그아웃 실패:', error);
-    }
+  const handleSignUpClick = () => {
+    if (onSignUpClick) onSignUpClick();
+    else navigate('/signup');
   };
 
-  const goTo = (path) => {
-    window.location.href = path;
+  const handleLoginClick = () => {
+    if (onLoginClick) onLoginClick();
+    else navigate('/login');
   };
 
   return (
@@ -39,15 +29,12 @@ const Navbar = ({ onHomeClick }) => {
           <span className="logo-text">보라계약</span>
         </div>
         <div className="header-buttons">
-          {user ? (
-            <>
-              <span className="header-username">{user.displayName || user.email}</span>
-              <button className="header-btn" onClick={handleLogout}>로그아웃</button>
-            </>
+          {userName ? (
+            <span className="user-name">{userName}님</span>
           ) : (
             <>
-              <button className="header-btn" onClick={() => goTo('/login')}>로그인</button>
-              <button className="header-btn" onClick={() => goTo('/signup')}>회원가입</button>
+              <button className="header-btn" onClick={handleLoginClick}>로그인</button>
+              <button className="header-btn" onClick={handleSignUpClick}>회원가입</button>
             </>
           )}
           <button className="menu-btn">☰</button>
