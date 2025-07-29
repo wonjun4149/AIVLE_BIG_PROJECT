@@ -10,6 +10,7 @@ import self.TermApplication;
 import self.domain.TermCreateRequested;
 import self.domain.TermModified;
 import self.domain.TermRegistered;
+import self.domain.AiTermModifyRequested;
 
 @Entity
 @Table(name = "Term_table")
@@ -70,20 +71,20 @@ public class Term {
     @PostPersist
     public void onPostPersist() {
         if ("v1".equals(this.version)) {
-            // This is a new term creation
             TermCreateRequested termCreateRequested = new TermCreateRequested(this);
             termCreateRequested.publishAfterCommit();
+        } else if ("AI_MODIFY".equals(this.updateType)) {
+            AiTermModifyRequested aiTermModifyRequested = new AiTermModifyRequested(this);
+            aiTermModifyRequested.publishAfterCommit();
+        } else if ("DIRECT_UPDATE".equals(this.updateType)) {
+            TermModified termModified = new TermModified(this);
+            termModified.publishAfterCommit();
         } else {
-            // This is a new version from modification
-            if ("DIRECT_UPDATE".equals(this.updateType)) {
-                TermModified termModified = new TermModified(this);
-                termModified.publishAfterCommit();
-            }
+            // For any other case, or if no updateType is specified,
+            // publish the generic event.
+            TermRegistered termRegistered = new TermRegistered(this);
+            termRegistered.publishAfterCommit();
         }
-
-        // Always publish registered event for any new term row
-        TermRegistered termRegistered = new TermRegistered(this);
-        termRegistered.publishAfterCommit();
     }
 
     @PostUpdate
