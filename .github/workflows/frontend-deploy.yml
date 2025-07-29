@@ -40,7 +40,7 @@ jobs:
         with:
           workload_identity_provider: 'projects/902267887946/locations/global/workloadIdentityPools/github-actions-pool-2/providers/github-provider-v3'
           service_account: 'github-action-frontend@aivle-team0721.iam.gserviceaccount.com'
-
+          export_environment_variables: true  # ✅ 이게 핵심!
 
       - name: Deploy to Google Cloud Storage
         run: |
