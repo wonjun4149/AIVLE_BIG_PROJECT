@@ -1,0 +1,71 @@
+.container {
+    display: flex;
+    height: 100vh;
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+.sidebar {
+    width: 200px;
+    background-color: #f2f0f7;
+    padding: 20px;
+}
+
+.sidebar h2 {
+    color: #5c2d91;
+}
+
+.username {
+    margin: 20px 0;
+    font-weight: bold;
+}
+
+.menu {
+    list-style: none;
+    padding: 0;
+}
+
+.menu li {
+    padding: 10px 0;
+    cursor: pointer;
+}
+
+.menu li.active {
+    background-color: #dcd6f7;
+    font-weight: bold;
+}
+
+.account-content {
+    flex: 1;
+    padding: 40px;
+    background-color: white;
+}
+
+.info-row {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.info-row label {
+    width: 150px;
+    font-weight: bold;
+}
+
+.info-row span {
+    color: #5c2d91;
+}
+
+.info-row input {
+    padding: 5px;
+    width: 250px;
+}
+
+.save-button {
+    background-color: #5c2d91;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    margin-top: 20px;
+}
