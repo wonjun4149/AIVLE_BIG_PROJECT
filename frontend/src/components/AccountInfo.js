@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { auth } from '../firebase'; 
-import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
 import './AccountInfo.css';
 
 const AccountInfo = () => {
@@ -20,9 +21,9 @@ const AccountInfo = () => {
         }
 
         try {
-            const credential = EmailAuthProvider.credential(user.email, currentPwd);
-            await reauthenticateWithCredential(user, credential);
-            await updatePassword(user, newPwd);
+            const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPwd);
+            await user.reauthenticateWithCredential(credential); // compat 방식에서는 user에서 직접 호출
+            await user.updatePassword(newPwd); // user 객체에서 직접 호출
             setMessage("비밀번호가 성공적으로 변경되었습니다.");
         } catch (error) {
             console.error(error);
