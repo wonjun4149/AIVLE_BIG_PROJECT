@@ -13,7 +13,7 @@ public class PointPurchased extends AbstractEvent {
 
     private Long id;
     private Integer amount;
-    private Long userId;
+    private String userId; // Long -> String으로 변경 (Firebase UID 저장)
 
     public PointPurchased(Point aggregate) {
         super(aggregate);
@@ -22,6 +22,6 @@ public class PointPurchased extends AbstractEvent {
     public PointPurchased() {
         super();
     }
-    
+
 }
-//>>> DDD / Domain Event
+// >>> DDD / Domain Event

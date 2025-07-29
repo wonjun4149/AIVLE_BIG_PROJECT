@@ -14,6 +14,6 @@ import self.domain.*;
 public interface PointRepository
         extends PagingAndSortingRepository<Point, Long> {
 
-    // Firebase UID로 포인트 조회
-    Optional<Point> findByFirebaseUid(String firebaseUid);
+    // userId로 포인트 조회 (Firebase UID가 저장됨)
+    Optional<Point> findByUserId(String userId);
 }

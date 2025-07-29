@@ -24,9 +24,7 @@ public class Point {
 
     private Integer amount;
 
-    private Long userId;
-
-    private String firebaseUid; // Firebase UID 필드 추가
+    private String userId; // Firebase UID를 직접 저장
 
     @PostPersist
     public void onPostPersist() {
@@ -43,7 +41,7 @@ public class Point {
     // <<< Clean Arch / Port Method
     public static void reducePointForTermCreate(TermCreateRequested termCreateRequested) {
         // Firebase UID로 포인트 찾아서 차감
-        repository().findByFirebaseUid(termCreateRequested.getFirebaseUid())
+        repository().findByUserId(termCreateRequested.getFirebaseUid())
                 .ifPresent(point -> {
                     if (point.getAmount() >= 5000) { // 공통 차감 비용
                         point.setAmount(point.getAmount() - 5000);
@@ -66,7 +64,7 @@ public class Point {
     // <<< Clean Arch / Port Method
     public static void reducePointForForeignTermCreate(ForeignTermCreateRequested foreignTermCreateRequested) {
         // Firebase UID로 포인트 찾아서 차감
-        repository().findByFirebaseUid(foreignTermCreateRequested.getFirebaseUid())
+        repository().findByUserId(foreignTermCreateRequested.getFirebaseUid())
                 .ifPresent(point -> {
                     if (point.getAmount() >= 5000) { // 공통 차감 비용
                         point.setAmount(point.getAmount() - 5000);
@@ -89,7 +87,7 @@ public class Point {
     // <<< Clean Arch / Port Method
     public static void reducePointForRiskDetect(RiskDetectRequested riskDetectRequested) {
         // Firebase UID로 포인트 찾아서 차감
-        repository().findByFirebaseUid(riskDetectRequested.getFirebaseUid())
+        repository().findByUserId(riskDetectRequested.getFirebaseUid())
                 .ifPresent(point -> {
                     if (point.getAmount() >= 5000) { // 공통 차감 비용
                         point.setAmount(point.getAmount() - 5000);
@@ -112,7 +110,7 @@ public class Point {
     // <<< Clean Arch / Port Method
     public static void reducePointForAiTermModify(AiTermModifyRequested aiTermModifyRequested) {
         // Firebase UID로 포인트 찾아서 차감
-        repository().findByFirebaseUid(aiTermModifyRequested.getFirebaseUid())
+        repository().findByUserId(aiTermModifyRequested.getFirebaseUid())
                 .ifPresent(point -> {
                     if (point.getAmount() >= 5000) { // 공통 차감 비용
                         point.setAmount(point.getAmount() - 5000);

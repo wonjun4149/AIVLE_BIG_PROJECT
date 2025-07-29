@@ -21,29 +21,29 @@ public class PointController {
     @Autowired
     PointRepository pointRepository;
 
-    // Firebase UID로 포인트 조회
+    // Firebase UID로 포인트 조회 (userId 필드 사용)
     @GetMapping("/{firebaseUid}")
     public ResponseEntity<?> getPointByFirebaseUid(@PathVariable String firebaseUid) {
         try {
-            // Firebase UID로 포인트 조회
-            Optional<Point> pointOpt = pointRepository.findByFirebaseUid(firebaseUid);
+            // userId 필드로 포인트 조회 (Firebase UID가 저장됨)
+            Optional<Point> pointOpt = pointRepository.findByUserId(firebaseUid);
 
             if (pointOpt.isPresent()) {
                 Point point = pointOpt.get();
                 return ResponseEntity.ok(new PointResponse(
                         point.getId(),
-                        point.getFirebaseUid(),
+                        point.getUserId(),
                         point.getAmount()));
             } else {
                 // 포인트가 없으면 0포인트로 초기화
                 Point newPoint = new Point();
-                newPoint.setFirebaseUid(firebaseUid);
+                newPoint.setUserId(firebaseUid);
                 newPoint.setAmount(0);
                 pointRepository.save(newPoint);
 
                 return ResponseEntity.ok(new PointResponse(
                         newPoint.getId(),
-                        newPoint.getFirebaseUid(),
+                        newPoint.getUserId(),
                         newPoint.getAmount()));
             }
         } catch (Exception e) {
@@ -55,7 +55,7 @@ public class PointController {
     @PostMapping("/{firebaseUid}/charge")
     public ResponseEntity<?> chargePoint(@PathVariable String firebaseUid, @RequestParam Integer amount) {
         try {
-            Optional<Point> pointOpt = pointRepository.findByFirebaseUid(firebaseUid);
+            Optional<Point> pointOpt = pointRepository.findByUserId(firebaseUid);
             Point point;
 
             if (pointOpt.isPresent()) {
@@ -63,7 +63,7 @@ public class PointController {
                 point.setAmount(point.getAmount() + amount);
             } else {
                 point = new Point();
-                point.setFirebaseUid(firebaseUid);
+                point.setUserId(firebaseUid);
                 point.setAmount(amount);
             }
 
@@ -75,7 +75,7 @@ public class PointController {
 
             return ResponseEntity.ok(new PointResponse(
                     point.getId(),
-                    point.getFirebaseUid(),
+                    point.getUserId(),
                     point.getAmount()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("포인트 충전 실패: " + e.getMessage());
@@ -86,7 +86,7 @@ public class PointController {
     @PostMapping("/{firebaseUid}/reduce")
     public ResponseEntity<?> reducePoint(@PathVariable String firebaseUid, @RequestParam Integer amount) {
         try {
-            Optional<Point> pointOpt = pointRepository.findByFirebaseUid(firebaseUid);
+            Optional<Point> pointOpt = pointRepository.findByUserId(firebaseUid);
 
             if (pointOpt.isPresent()) {
                 Point point = pointOpt.get();
@@ -101,7 +101,7 @@ public class PointController {
 
                     return ResponseEntity.ok(new PointResponse(
                             point.getId(),
-                            point.getFirebaseUid(),
+                            point.getUserId(),
                             point.getAmount()));
                 } else {
                     return ResponseEntity.badRequest().body(
@@ -119,7 +119,7 @@ public class PointController {
     @PostMapping("/charge")
     public ResponseEntity<?> chargePointJson(@RequestBody ChargePointRequest request) {
         try {
-            Optional<Point> pointOpt = pointRepository.findByFirebaseUid(request.getFirebaseUid());
+            Optional<Point> pointOpt = pointRepository.findByUserId(request.getFirebaseUid());
             Point point;
 
             if (pointOpt.isPresent()) {
@@ -127,7 +127,7 @@ public class PointController {
                 point.setAmount(point.getAmount() + request.getAmount());
             } else {
                 point = new Point();
-                point.setFirebaseUid(request.getFirebaseUid());
+                point.setUserId(request.getFirebaseUid());
                 point.setAmount(request.getAmount());
             }
 
@@ -139,7 +139,7 @@ public class PointController {
 
             return ResponseEntity.ok(new PointResponse(
                     point.getId(),
-                    point.getFirebaseUid(),
+                    point.getUserId(),
                     point.getAmount()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("포인트 충전 실패: " + e.getMessage());
@@ -149,12 +149,12 @@ public class PointController {
     // Response DTO
     public static class PointResponse {
         private Long id;
-        private String firebaseUid;
+        private String userId; // firebaseUid -> userId로 변경
         private Integer amount;
 
-        public PointResponse(Long id, String firebaseUid, Integer amount) {
+        public PointResponse(Long id, String userId, Integer amount) {
             this.id = id;
-            this.firebaseUid = firebaseUid;
+            this.userId = userId;
             this.amount = amount;
         }
 
@@ -163,8 +163,8 @@ public class PointController {
             return id;
         }
 
-        public String getFirebaseUid() {
-            return firebaseUid;
+        public String getUserId() {
+            return userId;
         }
 
         public Integer getAmount() {
