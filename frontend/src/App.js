@@ -7,7 +7,7 @@ import Login from './components/Login';
 import CreateTerms from './components/Create-Terms';
 import CreateStandard from './components/Create-Standard';
 import CompleteSignUp from './components/CompleteSignUp';
-
+import MyPage from './MyPage';
 
 
 
@@ -21,6 +21,7 @@ function App() {
         <Route path="/create-terms" element={<CreateTerms />} />
         <Route path="/create-standard" element={<CreateStandard />} />
         <Route path="/complete-signup" element={<CompleteSignUp />} />
+        <Route path="/mypage" element={<MyPage />} />
       </Routes>
     </Router>
   );
