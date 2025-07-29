@@ -48,3 +48,4 @@ jobs:
         run: |
           gsutil -m rsync -r frontend/build gs://${{ env.GCS_BUCKET_NAME }}
 
+
