@@ -43,16 +43,21 @@ jobs:
           workload_identity_provider: 'projects/902267887946/locations/global/workloadIdentityPools/github-actions-pool-2/providers/github-provider-v3'
           service_account: 'github-action-frontend@aivle-team0721.iam.gserviceaccount.com'
 
-      - name: Set up gcloud
+      - name: Set up gcloud CLI
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: ${{ env.PROJECT_ID }}
 
-      - name: Activate credentials for gsutil
+      - name: Configure gsutil to use access token
         run: |
-          echo $GOOGLE_OAUTH_ACCESS_TOKEN > token.txt
-          gcloud auth activate-access-token $(cat token.txt)
+          cat > ~/.boto <<EOF
+          [Credentials]
+          gs_oauth2_refresh_token = ${GOOGLE_OAUTH_ACCESS_TOKEN}
+
+          [Boto]
+          https_validate_certificates = True
+          EOF
 
       - name: Deploy to Google Cloud Storage
         run: |
-          gsutil -m rsync -r frontend/build gs://${{ env.GCS_BUCKET_NAME }}
+          gsutil -o "Credentials:gs_oauth2_refresh_token=${GOOGLE_OAUTH_ACCESS_TOKEN}" -m rsync -r frontend/build gs://${{ env.GCS_BUCKET_NAME }}
