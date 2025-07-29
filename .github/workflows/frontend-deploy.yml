@@ -47,3 +47,4 @@ jobs:
       - name: Deploy to Google Cloud Storage
         run: |
           gsutil -m rsync -r frontend/build gs://${{ env.GCS_BUCKET_NAME }}
+
