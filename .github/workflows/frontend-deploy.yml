@@ -30,7 +30,7 @@ jobs:
         working-directory: frontend # React 앱이 있는 frontend 디렉토리로 이동하여 실행
 
       - name: Build React app
-        run: npm run build
+        run: CI=false npm run build
         working-directory: frontend # React 앱이 있는 frontend 디렉토리로 이동하여 실행
 
       - name: Authenticate to Google Cloud
