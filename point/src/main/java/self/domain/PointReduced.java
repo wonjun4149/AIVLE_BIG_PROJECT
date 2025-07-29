@@ -13,7 +13,7 @@ public class PointReduced extends AbstractEvent {
 
     private Long id;
     private Integer amount;
-    private Long userId;
+    private String userId; // Long -> String으로 변경 (Firebase UID 저장)
 
     public PointReduced(Point aggregate) {
         super(aggregate);
@@ -23,4 +23,4 @@ public class PointReduced extends AbstractEvent {
         super();
     }
 }
-//>>> DDD / Domain Event
+// >>> DDD / Domain Event

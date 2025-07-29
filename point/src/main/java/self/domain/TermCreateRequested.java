@@ -11,6 +11,7 @@ public class TermCreateRequested extends AbstractEvent {
 
     private Long id;
     private Long userId;
+    private String firebaseUid; // 추가
     private String title;
     private String category;
     private String productName;
