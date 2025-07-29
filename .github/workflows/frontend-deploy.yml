@@ -3,15 +3,15 @@ name: Deploy React Frontend to GCS
 on:
   push:
     branches:
-      - main # main 브랜치에 푸시될 때만 워크플로우 실행
+      - main
 
 env:
-  PROJECT_ID: aivle-team0721 # GCP 프로젝트 ID
-  GCS_BUCKET_NAME: aivle-project # GCS 버킷 이름
+  PROJECT_ID: aivle-team0721
+  GCS_BUCKET_NAME: aivle-project
 
 permissions:
   contents: read
-  id-token: write # GCP 인증을 위해 OIDC ID 토큰 생성 허용
+  id-token: write
 
 jobs:
   deploy:
@@ -24,11 +24,11 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18' # React 앱에 적합한 Node.js 버전
+          node-version: '18'
 
       - name: Install dependencies
         run: npm install
-        working-directory: frontend # frontend 폴더에서 실행
+        working-directory: frontend
 
       - name: Build React app
         run: CI=false npm run build
@@ -43,9 +43,15 @@ jobs:
           workload_identity_provider: 'projects/902267887946/locations/global/workloadIdentityPools/github-actions-pool-2/providers/github-provider-v3'
           service_account: 'github-action-frontend@aivle-team0721.iam.gserviceaccount.com'
 
-      - name: Activate gcloud with access token
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Activate credentials for gsutil
         run: |
-          gcloud auth activate-access-token "$GOOGLE_OAUTH_ACCESS_TOKEN"
+          echo $GOOGLE_OAUTH_ACCESS_TOKEN > token.txt
+          gcloud auth activate-access-token $(cat token.txt)
 
       - name: Deploy to Google Cloud Storage
         run: |
