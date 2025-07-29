@@ -1,8 +1,6 @@
 package self.domain;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.LocalDate;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -59,16 +57,24 @@ public class Term {
 
     private String updateType;
 
+    @PrePersist
+    public void onPrePersist() {
+        if (this.createdAt == null) { // It's a new v1 term
+            this.createdAt = new Date();
+            // modifiedAt remains null, as per user's observation
+        } else { // It's a new version of an existing term
+            this.modifiedAt = new Date();
+        }
+    }
+
     @PostPersist
     public void onPostPersist() {
         if ("v1".equals(this.version)) {
             // This is a new term creation
-            this.createdAt = new Date();
             TermCreateRequested termCreateRequested = new TermCreateRequested(this);
             termCreateRequested.publishAfterCommit();
         } else {
             // This is a new version from modification
-            this.modifiedAt = new Date();
             if ("DIRECT_UPDATE".equals(this.updateType)) {
                 TermModified termModified = new TermModified(this);
                 termModified.publishAfterCommit();
@@ -302,6 +308,7 @@ public class Term {
         newVersionTerm.setRequirement(originalTerm.getRequirement());
         newVersionTerm.setUserCompany(originalTerm.getUserCompany());
         newVersionTerm.setClient(originalTerm.getClient());
+        newVersionTerm.setCreatedAt(originalTerm.getCreatedAt());
         
         // Set version and origin
         int currentVersion = Integer.parseInt(originalTerm.getVersion().replace("v", ""));
