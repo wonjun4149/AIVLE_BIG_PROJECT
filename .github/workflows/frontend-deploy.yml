@@ -7,15 +7,16 @@ on:
 
 env:
   PROJECT_ID: aivle-team0721 # GCP 프로젝트 ID
-  GCS_BUCKET_NAME: aivle-project # GCP Cloud Storage 버킷 이름
+  GCS_BUCKET_NAME: aivle-project # GCS 버킷 이름
 
 permissions:
   contents: read
-  id-token: write # GCP 인증을 위해 OIDC ID 토큰 생성을 허용
+  id-token: write # GCP 인증을 위해 OIDC ID 토큰 생성 허용
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -23,27 +24,23 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18' # React 앱 빌드에 필요한 Node.js 버전 지정
+          node-version: '18' # React 앱에 적합한 Node.js 버전
 
       - name: Install dependencies
         run: npm install
-        working-directory: frontend # React 앱이 있는 frontend 디렉토리로 이동하여 실행
+        working-directory: frontend # frontend 폴더에서 실행
 
       - name: Build React app
         run: CI=false npm run build
-        working-directory: frontend # React 앱이 있는 frontend 디렉토리로 이동하여 실행
+        working-directory: frontend
 
       - name: Authenticate to Google Cloud
-        id: 'auth'
-        uses: 'google-github-actions/auth@v2'
+        id: auth
+        uses: google-github-actions/auth@v2
         with:
-          # 워크로드 아이덴티티 풀 및 공급업체 이름은 이전에 CLI로 생성하신 실제 값을 사용합니다.
-          # 풀 이름: github-actions-pool-2, 공급업체 이름: github-provider-v3
-          workload_identity_provider: 'projects/${{ env.PROJECT_ID }}/locations/global/workloadIdentityPools/github-actions-pool-2/providers/github-provider-v3' 
-          # 서비스 계정 이메일 주소
-          service_account: 'github-action-frontend@${{ env.PROJECT_ID }}.iam.gserviceaccount.com' 
+          workload_identity_provider: 'projects/${{ env.PROJECT_ID }}/locations/global/workloadIdentityPools/github-actions-pool-2/providers/github-provider-v3'
+          service_account: 'github-action-frontend@${{ env.PROJECT_ID }}.iam.gserviceaccount.com'
 
       - name: Deploy to Google Cloud Storage
         run: |
-          gsutil rsync -r frontend/build gs://${{ env.GCS_BUCKET_NAME }}
-        # gsutil 명령어 실행. React 빌드 폴더는 frontend/build에 있음
+          gsutil -m rsync -r frontend/build gs://${{ env.GCS_BUCKET_NAME }}
