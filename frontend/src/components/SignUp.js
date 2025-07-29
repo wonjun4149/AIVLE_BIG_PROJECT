@@ -4,7 +4,8 @@ import logo from '../assets/logo.png';
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
-  signInWithPopup
+  signInWithPopup,
+  updateProfile
 } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../firebase';
@@ -73,6 +74,11 @@ function SignUp({ onHomeClick }) {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
+
+      // 사용자 프로필에 이름 업데이트
+      await updateProfile(user, {
+        displayName: formData.name
+      });
 
       // 이메일 인증 발송
       await sendEmailVerification(user);

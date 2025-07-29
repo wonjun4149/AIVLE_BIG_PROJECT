@@ -3,8 +3,9 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Navbar.css';
 import logo from '../assets/logo.png';
+import { auth } from '../firebase';
 
-const Navbar = ({ onSignUpClick, onLoginClick, userName }) => {
+const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
   const navigate = useNavigate();
 
   const handleLogoClick = () => {
@@ -21,6 +22,17 @@ const Navbar = ({ onSignUpClick, onLoginClick, userName }) => {
     else navigate('/login');
   };
 
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      alert('로그아웃 되었습니다.');
+      window.location.reload();
+    } catch (error) {
+      console.error('로그아웃 실패:', error);
+      alert('로그아웃 중 오류가 발생했습니다.');
+    }
+  };
+
   return (
     <header className="header">
       <div className="header-content">
@@ -29,8 +41,11 @@ const Navbar = ({ onSignUpClick, onLoginClick, userName }) => {
           <span className="logo-text">보라계약</span>
         </div>
         <div className="header-buttons">
-          {userName ? (
-            <span className="user-name">{userName}님</span>
+          {user ? (
+            <>
+              <span className="user-name">{(user.name || user.displayName || user.email)}님</span>
+              <button className="header-btn" onClick={handleLogout}>로그아웃</button>
+            </>
           ) : (
             <>
               <button className="header-btn" onClick={handleLoginClick}>로그인</button>

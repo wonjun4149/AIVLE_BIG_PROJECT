@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Navbar from './Navbar';
 import './Create-Terms.css'; // 동일한 CSS 파일 사용
 
-function CreateStandard({ onHomeClick, onSignUpClick }) {
+function CreateStandard({ user, onHomeClick, onSignUpClick }) {
   const [companyName, setCompanyName] = useState('');
   const [clientName, setClientName] = useState(''); // 거래처 이름 추가
   const [category, setCategory] = useState('선택');
@@ -24,7 +24,7 @@ function CreateStandard({ onHomeClick, onSignUpClick }) {
 
   return (
     <div className="App">
-      <Navbar onHomeClick={onHomeClick} onSignUpClick={onSignUpClick} />
+      <Navbar user={user} onHomeClick={onHomeClick} onSignUpClick={onSignUpClick} />
       
       <main className="terms-main">
         <div className="terms-container">

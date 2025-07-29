@@ -9,7 +9,7 @@ import iconTerms from './assets/icon-terms.png';
 import logo from './assets/logo.png';
 import './App.css';
 
-function Home() {
+function Home({ user }) {
   const [contractText, setContractText] = useState('');
   const navigate = useNavigate();
 
@@ -29,7 +29,7 @@ function Home() {
 
   return (
     <div className="App">
-      <Navbar onSignUpClick={handleSignUpClick} onLoginClick={handleLoginClick} />
+      <Navbar user={user} onSignUpClick={handleSignUpClick} onLoginClick={handleLoginClick} />
 
       <main className="main-content">
         <div className="hero-section">
