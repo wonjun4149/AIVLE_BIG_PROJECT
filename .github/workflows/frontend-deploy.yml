@@ -38,11 +38,14 @@ jobs:
         id: auth
         uses: google-github-actions/auth@v2
         with:
-          token_format: 'access_token'  # ✅ access_token 형식으로 발급
-          export_environment_variables: true  # ✅ 환경변수에 자동 등록
+          token_format: 'access_token'
+          export_environment_variables: true
           workload_identity_provider: 'projects/902267887946/locations/global/workloadIdentityPools/github-actions-pool-2/providers/github-provider-v3'
           service_account: 'github-action-frontend@aivle-team0721.iam.gserviceaccount.com'
 
+      - name: Activate gcloud with access token
+        run: |
+          gcloud auth activate-access-token "$GOOGLE_OAUTH_ACCESS_TOKEN"
 
       - name: Deploy to Google Cloud Storage
         run: |
