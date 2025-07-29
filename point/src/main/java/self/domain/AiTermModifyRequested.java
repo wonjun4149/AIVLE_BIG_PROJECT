@@ -11,6 +11,7 @@ public class AiTermModifyRequested extends AbstractEvent {
 
     private Long id;
     private Long userId;
+    private String firebaseUid;
     private String title;
     private String category;
     private String productName;
