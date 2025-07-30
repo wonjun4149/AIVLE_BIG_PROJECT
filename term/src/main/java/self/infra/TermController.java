@@ -53,22 +53,32 @@ public class TermController {
 
 
     @RequestMapping(
-        value = "/terms/foreintermcreaterequest",
+        value = "/terms/{id}/foreintermcreaterequest",
         method = RequestMethod.POST,
         produces = "application/json;charset=UTF-8"
     )
     public Term foreinTermCreateRequest(
         HttpServletRequest request,
         HttpServletResponse response,
+        @PathVariable("id") Long id,
         @RequestBody ForeinTermCreateRequestCommand foreinTermCreateRequestCommand,
         @AuthenticationPrincipal String userId
     ) throws Exception {
-        System.out.println("##### /term/foreinTermCreateRequest  called #####");
-        Term term = new Term();
-        term.setUserId(userId);
-        term.foreinTermCreateRequest(foreinTermCreateRequestCommand);
-        termRepository.save(term);
-        return term;
+        System.out.println("##### /term/" + id + "/foreinTermCreateRequest  called #####");
+
+        return termRepository.findById(id).map(originalTerm -> {
+            // Check ownership
+            if (!originalTerm.getUserId().equals(userId)) {
+                throw new RuntimeException("User does not have permission to request foreign term creation for this term");
+            }
+            
+            originalTerm.foreinTermCreateRequest(foreinTermCreateRequestCommand);
+            
+            // No need to save the originalTerm here as the event is what matters.
+            // The actual new term is created when the response event is received.
+            
+            return originalTerm;
+        }).orElseThrow(() -> new Exception("Original term not found"));
     }
 
     @RequestMapping(

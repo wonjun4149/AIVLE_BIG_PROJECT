@@ -105,11 +105,11 @@ public class Term {
     public void foreinTermCreateRequest(
         ForeinTermCreateRequestCommand foreinTermCreateRequestCommand
     ) {
-        //implement business logic here:
-
         ForeignTermCreateRequested foreignTermCreateRequested = new ForeignTermCreateRequested(
             this
         );
+        // Pass the target language code to the event
+        foreignTermCreateRequested.setLangCode(foreinTermCreateRequestCommand.getLangCode());
         foreignTermCreateRequested.publishAfterCommit();
     }
 
@@ -183,34 +183,37 @@ public class Term {
     //>>> Clean Arch / Port Method
     //<<< Clean Arch / Port Method
     public static void registerTerm(ForeignTermCreated foreignTermCreated) {
-        //implement business logic here:
-
-        /** Example 1:  new item 
-        Term term = new Term();
-        repository().save(term);
-
-        TermRegistered termRegistered = new TermRegistered(term);
-        termRegistered.publishAfterCommit();
-        */
-
-        /** Example 2:  finding and process
+        // The AI service has created a foreign term and published an event.
+        // We now create a new Term entity based on the event data.
         
-        // if foreignTermCreated.llmId exists, use it
-        
-        // ObjectMapper mapper = new ObjectMapper();
-        // Map<, Object> aiMap = mapper.convertValue(foreignTermCreated.getLlmId(), Map.class);
+        // Find the original term to copy metadata from.
+        repository().findById(foreignTermCreated.getTermId()).ifPresent(originalTerm -> {
+            Term newForeignTerm = new Term();
 
-        repository().findById(foreignTermCreated.get???()).ifPresent(term->{
+            // Copy metadata from the original term
+            newForeignTerm.setUserId(originalTerm.getUserId());
+            newForeignTerm.setCategory(originalTerm.getCategory());
+            newForeignTerm.setProductName(originalTerm.getProductName());
+            newForeignTerm.setRequirement(originalTerm.getRequirement());
+            newForeignTerm.setUserCompany(originalTerm.getUserCompany());
+            newForeignTerm.setClient(originalTerm.getClient());
             
-            term // do something
-            repository().save(term);
+            // Set new data from the AI's event
+            newForeignTerm.setTitle(foreignTermCreated.getTermTile());
+            newForeignTerm.setContent(foreignTermCreated.getTermContent());
+            // Assuming the event carries the language code of the new term
+            // newForeignTerm.setLangCode(foreignTermCreated.getLangCode()); 
+            
+            // Set version and origin
+            newForeignTerm.setVersion("v1"); // It's the first version of this foreign term
+            newForeignTerm.setOrigin(String.valueOf(originalTerm.getId()));
 
-            TermRegistered termRegistered = new TermRegistered(term);
+            repository().save(newForeignTerm);
+
+            // Optionally, publish an event that a new term has been registered in the system
+            TermRegistered termRegistered = new TermRegistered(newForeignTerm);
             termRegistered.publishAfterCommit();
-
-         });
-        */
-
+        });
     }
 
     //>>> Clean Arch / Port Method
