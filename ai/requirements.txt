@@ -1,0 +1,14 @@
+Flask
+Flask-Cors
+langchain-google-vertexai
+langchain-community
+langchain-huggingface
+langchain-core
+pypdf
+chromadb
+sentence-transformers
+google-cloud-aiplatform
+google-auth
+google-api-core
+google-cloud-core
+gunicorn
