@@ -1,4 +1,3 @@
-/* Navbar.css */
 .header {
   background-color: white;
   border-bottom: 1px solid #e9ecef;
@@ -34,8 +33,17 @@
 
 .header-buttons {
   display: flex;
-  align-items: center;
+  align-items: center; /* 세로 중앙 정렬 */
   gap: 1rem;
+}
+
+.user-name {
+  display: flex;
+  align-items: center;      /* 세로 중앙 정렬 */
+  line-height: 1.5rem;      /* 버튼 높이와 유사한 라인 높이 */
+  height: 100%;             /* 부모 높이에 맞춤 */
+  font-size: 0.95rem;
+  color: #2d3436;
 }
 
 .header-btn {
@@ -46,6 +54,7 @@
   font-size: 0.9rem;
   padding: 0.5rem 1rem;
   transition: color 0.2s;
+  line-height: 1.5rem;       /* 버튼 내부 텍스트와 높이 일치 */
 }
 
 .header-btn:hover {
@@ -65,11 +74,11 @@
   .header-content {
     padding: 0 1rem;
   }
-  
+
   .logo-text {
     font-size: 1.25rem;
   }
-  
+
   .logo-icon {
     width: 35px;
     height: 35px;
