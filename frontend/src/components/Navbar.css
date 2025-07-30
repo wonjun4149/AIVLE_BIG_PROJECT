@@ -54,7 +54,7 @@
 .header-btn {
   background: none;
   border: none;
-  color: #6c5ce7;
+  color: #2d3436;
   cursor: pointer;
   font-size: 0.9rem;
   padding: 0.5rem 1rem;
@@ -63,12 +63,12 @@
 }
 
 .header-btn:hover {
-  color: #2d3436;
+  color: #6c5ce7; /* 호버 시 보라색으로 변경 */
   background-color: #f8f9fa;
 }
 
 .header-btn.user-name {
-  color: #2d3436 !important; /* 기본 텍스트 색상 */
+  color: #6c5ce7 !important; /* 기본 텍스트 색상 */
   cursor: default !important;
   font-weight: 500;
   padding: 0.6rem 0.8rem;
