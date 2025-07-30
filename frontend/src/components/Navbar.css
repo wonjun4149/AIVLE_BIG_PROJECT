@@ -36,19 +36,49 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  height: 40px; /* 고정 높이로 일관성 확보 */
+  height: 40px;
 }
 
-.user-name {
-  font-size: 0.9rem;
-  color: #2d3436;
-  font-weight: 500;
+.header-buttons>* {
   display: flex;
   align-items: center;
+  height: 40px;
+}
+
+.header-btn {
+  background: none;
+  border: none;
+  color: #6c5ce7;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+  transition: color 0.2s;
+  border-radius: 4px;
+}
+
+.header-btn:hover {
+  color: #2d3436;
+  background-color: #f8f9fa;
+}
+
+.header-btn.user-name {
+  color: #2d3436 !important; /* 기본 텍스트 색상 */
+  cursor: default !important;
+  font-weight: 500;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid transparent;
+  background-color: transparent !important;
   line-height: 1;
 }
-.user-name .name-highlight {
-  color: #6c5ce7;
+
+.header-btn.user-name:hover {
+  color: #6c5ce7 !important;
+  background-color: transparent !important;
+}
+
+/* name-highlight 스타일 */
+.header-btn.user-name .name-highlight {
+  color: #6c5ce7 !important;
   font-weight: 600;
 }
 
@@ -74,22 +104,6 @@
   color: #6c5ce7;
   font-weight: bold;
   text-align: center;
-}
-
-.header-btn {
-  background: none;
-  border: none;
-  color: #636e72;
-  cursor: pointer;
-  font-size: 0.9rem;
-  padding: 0.5rem 1rem;
-  transition: color 0.2s;
-  border-radius: 4px;
-}
-
-.header-btn:hover {
-  color: #2d3436;
-  background-color: #f8f9fa;
 }
 
 .mypage-btn {
@@ -129,11 +143,11 @@
   .header-content {
     padding: 0 1rem;
   }
-  
+
   .logo-text {
     font-size: 1.25rem;
   }
-  
+
   .logo-icon {
     width: 35px;
     height: 35px;
@@ -155,6 +169,11 @@
   .header-btn {
     padding: 0.4rem 0.8rem;
     font-size: 0.85rem;
+  }
+
+  /* user-name 반응형 오버라이드 */
+  .header-btn.user-name {
+    padding: 0.4rem 0.6rem !important;
   }
 
   .mypage-btn {

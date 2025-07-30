@@ -63,6 +63,7 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
     try {
       await auth.signOut();
       alert('로그아웃 되었습니다.');
+      setUserPoints(0); // 포인트 초기화
       window.location.reload();
     } catch (error) {
       console.error('로그아웃 실패:', error);
@@ -93,11 +94,11 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
         <div className="header-buttons">
           {user ? (
             <>
-              <span className="user-name">
+              <span className="header-btn">
                 <span className="name-highlight">
                   {formatUserName(user.name || user.displayName || user.email)}
                 </span>
-                님
+                &nbsp;님
               </span>
               <div className="points-display">
                 <span className="points-value">{formatPoints(userPoints)}P</span>
