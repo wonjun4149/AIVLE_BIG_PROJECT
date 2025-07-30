@@ -43,7 +43,7 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
         <div className="header-buttons">
           {user ? (
             <>
-              <span className="user-name">{(user.name || user.displayName || user.email)}님</span>
+              <span className="header-btn">{(user.name || user.displayName || user.email)}님</span>
               <button className="header-btn" onClick={handleLogout}>로그아웃</button>
             </>
           ) : (
