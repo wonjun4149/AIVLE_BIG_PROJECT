@@ -56,7 +56,7 @@ function SignUp({ onHomeClick }) {
   };
 
   const handleSubmit = async () => {
-    if (!formData.email || !formData.name || !formData.company || !formData.password) {
+    if (!formData.email || !formData.name || !formData.password) {
       alert('필수 정보를 모두 입력해주세요.');
       return;
     }
