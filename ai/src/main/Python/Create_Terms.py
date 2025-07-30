@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import vertexai
 import os
 from datetime import datetime
 from langchain_google_vertexai import ChatVertexAI
@@ -13,10 +14,16 @@ import logging
 
 app = Flask(__name__)
 
-# CORS 설정: 프론트엔드 요청 허용
-CORS(app, resources={r"/api/*": {"origins": "http://34.54.82.32"}})
+# ✅ CORS 허용
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 logging.basicConfig(level=logging.INFO)
+
+# ✅ Vertex AI 프로젝트 강제 초기화
+vertexai.init(
+    project=os.environ.get("GOOGLE_CLOUD_PROJECT", "aivle-team0721"),
+    location="us-central1"
+)
 
 location = "us-central1"
 llm = ChatVertexAI(model_name="gemini-1.5-flash-001", location=location)
@@ -50,35 +57,23 @@ PROMPT_TEMPLATE = """
 
 위의 상품 정보와 약관 문서를 참고해서 이 상품에 맞는 보험 약관 초안을 자세하게 작성해줘.
 기업에서 바로 약관으로 사용할 수 있을 정도로 자세하게 작성해주고, 독소조항과 소비자의 악용이 우려되는 내용은 특히 신경써줘.
-참고하라고 준 약관 이외에도 네가 이미 알고있는 약관을 참고해도 돼. 최대한 자세하게 작성하는게 네 역할이야.
-작성한 약관 초안 앞뒤로 아무 코멘트 달지 말고, **과 같은 마크업은 절대 사용하지마. 그냥 약관 내용에 '*' 기호를 하나도 넣지 마.
-최소 50 조항 이상 작성해줘. 그리고 조항에 따른 하위 조항도 여러개 추가해주고, 그것에 대한 설명도 자세히 해줘.
-조항을 번호를 표기할 때 예시로는 제1조, 제2조, 1., 2. 이런식으로 제n조와 n.으로만 표기해줘.
-조항을 작성할 때 메인이 되는 부분은 보장 관련된 내용이여야 해. 보장 관련 금액과 보장이 안 되는 부분 등 상세히 작성해줘.
-약관 초안의 전체 길이를 최대한 길게 작성해줘.
-작성할 때 '일정 금액', '일정 기간'과 같은 추상적인 표현은 사용하지 말고, 구체적인 숫자, 기간, 기준 또는 참조 가능한 공시 위치를 명시해줘.
-중요한 책임 및 면책조항에서 법률 용어를 사용하되, 고객이 이해하기 쉽도록 풀어서 작성하거나, 예시를 추가해줘.
-이 외에도 중요한 조항에는 구체적인 절차나 방법을 명시하고, 애매할 수 있는 표현이 없도록 구체적인 조건을 제시해줘.
-약관을 보는 고객이 오해할 만한 내용을 없애고 모든 내용을 구체적으로 명시해야해.
-예시를 들자면 '소정의 이자'라는 내용이 약관 내용에 들어간다면, '여기서 '소정의 이자'라 함은 약정 이자율과 예금보험공사가 정하는 이자율 중 낮은 이자율을 말합니다.'와 같은 구체적인 명시적 설명이 있어야해.
-그리고 '중과실', '부당하다고 판단 되는 경우'와 같이 여러 해석이 가능한 내용은 구체적인 예시를 드는 등 부가설명을 해줘.
-약관의 목적이 상품 정보 전달 뿐만 아니라, 고객과의 오해 소지를 최소화하고, 기업의 내부 정책 및 절차를 더욱 명확히 하여 분쟁 발생 시 기업의 입장을 더욱 공고히 하려는 목적도 있음을 명심하고 작성해.
-반복되는 문구, 예를 들어서 '중과실' 같은 내용이 여러 조항에서 반복된다면, 매번 설명하지 말고 용어를 정의하는 조항에 작성해서 간결하게 작성해줘.
-가능하다면 절차를 진행할 방법을 하나만 두지 말고, 메인으로 진행하는 방법 하나와 해당 방법을 사용할 수 없을 때를 위한 예비 방법을 추가로 기재해줘.
-마지막으로 출력하기 전에 한 번 읽어보고 미흡한 점이나 독소조항, 리스크 등 수정할 부분을 확인하고 수정할 부분이 있다면 수정해서 출력해줘.
+최소 50개 이상의 조항을 작성하고, 제n조 형식으로 번호를 붙이고, 구체적인 금액·기간·조건을 명시해줘.
 """
 
+# ✅ 모든 응답에 CORS 헤더 강제 추가
 @app.after_request
-def apply_cors_headers(response):
-    response.headers["Access-Control-Allow-Origin"] = "http://34.54.82.32"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
 
-@app.route("/api/generate", methods=["OPTIONS"])
-def handle_options():
+# ✅ Preflight 요청 처리
+@app.route('/api/generate', methods=['OPTIONS'])
+def preflight():
     return '', 204
 
+# ✅ 약관 생성 API
 @app.route('/api/generate', methods=['POST'])
 def generate_terms():
     try:
