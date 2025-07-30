@@ -24,7 +24,7 @@ spring:
         - id: point
           uri: http://localhost:8085
           predicates:
-            - Path=/points/**, /getPoints/**
+            - Path=/points/**, /getPoints/**, /api/points/**
         - id: frontend
           uri: http://localhost:8080
           predicates:

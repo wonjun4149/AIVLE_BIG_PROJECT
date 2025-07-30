@@ -7,6 +7,6 @@ import lombok.Data;
 public class GetTermQuery {
 
     private Long id;
-    private Long userId;
+    private String userId;
     private Integer point;
 }

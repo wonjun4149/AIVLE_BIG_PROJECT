@@ -12,7 +12,7 @@ import self.infra.AbstractEvent;
 public class RiskDetectRequested extends AbstractEvent {
 
     private Long id;
-    private Long userId;
+    private String userId;
     private String title;
     private String category;
     private String productName;

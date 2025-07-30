@@ -41,7 +41,7 @@ public class Point {
     // <<< Clean Arch / Port Method
     public static void reducePointForTermCreate(TermCreateRequested termCreateRequested) {
         // Firebase UID로 포인트 찾아서 차감
-        repository().findByUserId(termCreateRequested.getFirebaseUid())
+        repository().findByUserId(termCreateRequested.getUserId())
                 .ifPresent(point -> {
                     if (point.getAmount() >= 5000) { // 공통 차감 비용
                         point.setAmount(point.getAmount() - 5000);
@@ -51,10 +51,10 @@ public class Point {
                         pointReduced.publishAfterCommit();
 
                         System.out.println("일반 약관 생성 포인트 차감 완료: " +
-                                termCreateRequested.getFirebaseUid() +
+                                termCreateRequested.getUserId() +
                                 ", 차감: 5000, 남은 포인트: " + point.getAmount());
                     } else {
-                        System.out.println("포인트 부족: " + termCreateRequested.getFirebaseUid() +
+                        System.out.println("포인트 부족: " + termCreateRequested.getUserId() +
                                 ", 보유: " + point.getAmount() + ", 필요: 5000");
                     }
                 });
@@ -64,7 +64,7 @@ public class Point {
     // <<< Clean Arch / Port Method
     public static void reducePointForForeignTermCreate(ForeignTermCreateRequested foreignTermCreateRequested) {
         // Firebase UID로 포인트 찾아서 차감
-        repository().findByUserId(foreignTermCreateRequested.getFirebaseUid())
+        repository().findByUserId(foreignTermCreateRequested.getUserId())
                 .ifPresent(point -> {
                     if (point.getAmount() >= 5000) { // 공통 차감 비용
                         point.setAmount(point.getAmount() - 5000);
@@ -74,10 +74,10 @@ public class Point {
                         pointReduced.publishAfterCommit();
 
                         System.out.println("외국어 약관 생성 포인트 차감 완료: " +
-                                foreignTermCreateRequested.getFirebaseUid() +
+                                foreignTermCreateRequested.getUserId() +
                                 ", 차감: 5000, 남은 포인트: " + point.getAmount());
                     } else {
-                        System.out.println("포인트 부족: " + foreignTermCreateRequested.getFirebaseUid() +
+                        System.out.println("포인트 부족: " + foreignTermCreateRequested.getUserId() +
                                 ", 보유: " + point.getAmount() + ", 필요: 5000");
                     }
                 });
@@ -87,7 +87,7 @@ public class Point {
     // <<< Clean Arch / Port Method
     public static void reducePointForRiskDetect(RiskDetectRequested riskDetectRequested) {
         // Firebase UID로 포인트 찾아서 차감
-        repository().findByUserId(riskDetectRequested.getFirebaseUid())
+        repository().findByUserId(riskDetectRequested.getUserId())
                 .ifPresent(point -> {
                     if (point.getAmount() >= 5000) { // 공통 차감 비용
                         point.setAmount(point.getAmount() - 5000);
@@ -97,10 +97,10 @@ public class Point {
                         pointReduced.publishAfterCommit();
 
                         System.out.println("리스크 검사 포인트 차감 완료: " +
-                                riskDetectRequested.getFirebaseUid() +
+                                riskDetectRequested.getUserId() +
                                 ", 차감: 5000, 남은 포인트: " + point.getAmount());
                     } else {
-                        System.out.println("포인트 부족: " + riskDetectRequested.getFirebaseUid() +
+                        System.out.println("포인트 부족: " + riskDetectRequested.getUserId() +
                                 ", 보유: " + point.getAmount() + ", 필요: 5000");
                     }
                 });
@@ -110,7 +110,7 @@ public class Point {
     // <<< Clean Arch / Port Method
     public static void reducePointForAiTermModify(AiTermModifyRequested aiTermModifyRequested) {
         // Firebase UID로 포인트 찾아서 차감
-        repository().findByUserId(aiTermModifyRequested.getFirebaseUid())
+        repository().findByUserId(aiTermModifyRequested.getUserId())
                 .ifPresent(point -> {
                     if (point.getAmount() >= 5000) { // 공통 차감 비용
                         point.setAmount(point.getAmount() - 5000);
@@ -120,10 +120,10 @@ public class Point {
                         pointReduced.publishAfterCommit();
 
                         System.out.println("AI 약관 수정 포인트 차감 완료: " +
-                                aiTermModifyRequested.getFirebaseUid() +
+                                aiTermModifyRequested.getUserId() +
                                 ", 차감: 5000, 남은 포인트: " + point.getAmount());
                     } else {
-                        System.out.println("포인트 부족: " + aiTermModifyRequested.getFirebaseUid() +
+                        System.out.println("포인트 부족: " + aiTermModifyRequested.getUserId() +
                                 ", 보유: " + point.getAmount() + ", 필요: 5000");
                     }
                 });

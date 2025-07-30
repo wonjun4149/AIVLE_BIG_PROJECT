@@ -8,7 +8,7 @@ import lombok.Data;
 public class AiTermModifyRequestCommand {
 
     private Long id;
-    private Long userId;
+    private String userId;
     private String title;
     private String category;
     private String productName;
