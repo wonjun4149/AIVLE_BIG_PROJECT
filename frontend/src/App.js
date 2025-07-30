@@ -16,7 +16,7 @@ function App() {
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (userAuth) => {
-      if (userAuth) {
+      if (userAuth && userAuth.emailVerified) {
         const userDocRef = doc(db, 'users', userAuth.uid);
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
