@@ -9,6 +9,7 @@ import CreateStandard from './components/Create-Standard';
 import CompleteSignUp from './components/CompleteSignUp';
 import { auth, db } from './firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import MyPage from './MyPage';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -39,6 +40,7 @@ function App() {
         <Route path="/create-terms" element={<CreateTerms user={user} />} />
         <Route path="/create-standard" element={<CreateStandard user={user} />} />
         <Route path="/complete-signup" element={<CompleteSignUp />} />
+        <Route path="/mypage" element={<MyPage />} />
       </Routes>
     </Router>
   );
