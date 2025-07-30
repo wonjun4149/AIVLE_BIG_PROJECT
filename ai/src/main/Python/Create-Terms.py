@@ -13,23 +13,29 @@ import logging
 
 app = Flask(__name__)
 
-# --- CORS 설정: 프론트엔드 IP 주소와 HTTP 프로토콜을 명시 ---
-# HTTPS를 지원하지 않는다고 하셨으므로, http://로 설정합니다.
+# CORS 설정: 프론트엔드 IP 주소와 HTTP 프로토콜을 명시합니다.
+# 프론트엔드가 http://34.54.82.32 이므로, origins를 이 주소로 설정합니다.
 # 보안상의 이유로 추후 HTTPS로 전환을 강력히 권장합니다.
 CORS(app, resources={r"/api/*": {"origins": "http://34.54.82.32"}})
 
 logging.basicConfig(level=logging.INFO)
 
 # --- 환경 변수 및 LLM 설정 ---
-# Dockerfile의 ENV에서 설정되므로, 여기서의 아래 두 줄은 삭제하거나 주석 처리합니다.
-# os.environ["GOOGLE_CLOUD_PROJECT"] = "aivle-team0721"
-# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/workspaces/AIVLE_BIG_PROJECT/ai/src/main/Python/aivle-team0721-c72ab84f2251.json"
+# GOOGLE_CLOUD_PROJECT와 GOOGLE_APPLICATION_CREDENTIALS 설정은
+# Cloud Run 배포 시 `--set-env-vars`를 통해 주입되므로,
+# 여기서는 직접 설정하는 코드를 제거합니다.
+# os.environ["GOOGLE_CLOUD_PROJECT"] = "aivle-team0721" # 이 줄을 삭제하거나 주석 처리
+# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/workspaces/AIVLE_BIG_PROJECT/ai/src/main/Python/aivle-team0721-c72ab84f2251.json" # 이 줄을 삭제하거나 주석 처리
+
 location = "us-central1"
 
+# ChatVertexAI 초기화 시, 환경 변수 GOOGLE_APPLICATION_CREDENTIALS와 GOOGLE_CLOUD_PROJECT를 자동으로 찾습니다.
 llm = ChatVertexAI(model_name="gemini-1.5-flash-001", location=location)
 embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 # --- 카테고리-폴더명 매핑 ---
+# 스크립트 파일이 컨테이너 내부의 /app/src/main/Python/ 에 위치하므로,
+# BASE_DIR은 /app/src/main/Python/이 됩니다.
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 CATEGORY_FOLDER_MAP = {
@@ -103,7 +109,7 @@ def generate_terms():
         if not os.path.isdir(pdf_dir_path):
             logging.error(f"Directory not found for category '{category}': {pdf_dir_path}")
             return jsonify({"error": f"Directory not found for category '{category}': {pdf_dir_path}"}), 400
-
+        
         pdf_files = [f for f in os.listdir(pdf_dir_path) if f.lower().endswith('.pdf')]
         if not pdf_files:
             logging.warning(f"No PDF files found in '{pdf_dir_path}'. Processing might be affected.")
@@ -129,7 +135,7 @@ def generate_terms():
         docs = retriever.invoke(query)
         context = "\n\n".join([doc.page_content for doc in docs])
         logging.info(f"Retrieved context length: {len(context)} characters.")
-
+        
         current_date = datetime.now().strftime("%Y년 %m월 %d일")
 
         logging.info("Invoking LLM for terms generation...")
