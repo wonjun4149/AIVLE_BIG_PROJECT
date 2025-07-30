@@ -36,6 +36,44 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  height: 40px; /* 고정 높이로 일관성 확보 */
+}
+
+.user-name {
+  font-size: 0.9rem;
+  color: #2d3436;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+.user-name .name-highlight {
+  color: #6c5ce7;
+  font-weight: 600;
+}
+
+.points-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  border: 1px solid #e9ecef;
+  min-width: 80px;
+}
+
+.points-label {
+  font-size: 0.85rem;
+  color: #636e72;
+  font-weight: 500;
+}
+
+.points-value {
+  font-size: 0.9rem;
+  color: #6c5ce7;
+  font-weight: bold;
+  text-align: center;
 }
 
 .header-btn {
@@ -46,10 +84,25 @@
   font-size: 0.9rem;
   padding: 0.5rem 1rem;
   transition: color 0.2s;
+  border-radius: 4px;
 }
 
 .header-btn:hover {
   color: #2d3436;
+  background-color: #f8f9fa;
+}
+
+.mypage-btn {
+  background-color: #6c5ce7;
+  color: white !important;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 0.6rem 1.2rem;
+}
+
+.mypage-btn:hover {
+  background-color: #5f4fcf;
+  color: white !important;
 }
 
 .menu-btn {
@@ -58,9 +111,20 @@
   font-size: 1.2rem;
   cursor: pointer;
   color: #636e72;
+  margin-left: 0.5rem;
 }
 
-/* Responsive Design */
+.menu-btn:hover {
+  color: #2d3436;
+}
+
+/* 로딩 상태 표시 */
+.points-loading {
+  color: #adb5bd;
+  font-style: italic;
+}
+
+/* 반응형 디자인 */
 @media (max-width: 768px) {
   .header-content {
     padding: 0 1rem;
@@ -74,10 +138,46 @@
     width: 35px;
     height: 35px;
   }
+
+  .header-buttons {
+    gap: 0.5rem;
+  }
+
+  .points-display {
+    padding: 0.4rem 0.8rem;
+    min-width: 70px;
+  }
+
+  .points-value {
+    font-size: 0.85rem;
+  }
+
+  .header-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+
+  .mypage-btn {
+    padding: 0.5rem 1rem;
+  }
 }
 
 @media (max-width: 480px) {
-  .header-buttons .header-btn {
+  .header-buttons .user-name {
     display: none;
+  }
+
+  .points-display {
+    padding: 0.3rem 0.6rem;
+    min-width: 60px;
+  }
+
+  .header-btn {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  .mypage-btn {
+    padding: 0.4rem 0.8rem;
   }
 }
