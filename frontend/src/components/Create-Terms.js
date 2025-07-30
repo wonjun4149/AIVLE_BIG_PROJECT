@@ -32,9 +32,9 @@ function CreateTerms({ user, onHomeClick, onSignUpClick }) {
 
     try {
       // 백엔드 API 호출
-      // IMPORTANT: 아래 URL을 Codespaces의 5000번 포트 Forwarded Address로 변경해야 합니다.
-      // 예시: 'https://your-codespace-url-5000.app.github.dev/api/generate'
-      const response = await fetch('https://psychic-space-fishstick-5pv4pvwjxwx27j45-5000.app.github.dev/api/generate', {// 이 부분을 수정하세요!
+      // Cloud Run에 배포된 백엔드 서비스 URL로 변경되었습니다.
+      const CLOUD_RUN_API_BASE_URL = 'https://terms-api-service-902267887946.us-central1.run.app';
+      const response = await fetch(`${CLOUD_RUN_API_BASE_URL}/api/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
