@@ -13,29 +13,15 @@ import logging
 
 app = Flask(__name__)
 
-# CORS 설정: 프론트엔드 IP 주소와 HTTP 프로토콜을 명시합니다.
-# 프론트엔드가 http://34.54.82.32 이므로, origins를 이 주소로 설정합니다.
-# 보안상의 이유로 추후 HTTPS로 전환을 강력히 권장합니다.
+# CORS 설정: 프론트엔드 요청 허용
 CORS(app, resources={r"/api/*": {"origins": "http://34.54.82.32"}})
 
 logging.basicConfig(level=logging.INFO)
 
-# --- 환경 변수 및 LLM 설정 ---
-# GOOGLE_CLOUD_PROJECT와 GOOGLE_APPLICATION_CREDENTIALS 설정은
-# Cloud Run 배포 시 `--set-env-vars`를 통해 주입되므로,
-# 여기서는 직접 설정하는 코드를 제거합니다.
-# os.environ["GOOGLE_CLOUD_PROJECT"] = "aivle-team0721" # 이 줄을 삭제하거나 주석 처리
-# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/workspaces/AIVLE_BIG_PROJECT/ai/src/main/Python/aivle-team0721-c72ab84f2251.json" # 이 줄을 삭제하거나 주석 처리
-
 location = "us-central1"
-
-# ChatVertexAI 초기화 시, 환경 변수 GOOGLE_APPLICATION_CREDENTIALS와 GOOGLE_CLOUD_PROJECT를 자동으로 찾습니다.
 llm = ChatVertexAI(model_name="gemini-1.5-flash-001", location=location)
 embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
-# --- 카테고리-폴더명 매핑 ---
-# 스크립트 파일이 컨테이너 내부의 /app/src/main/Python/ 에 위치하므로,
-# BASE_DIR은 /app/src/main/Python/이 됩니다.
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 CATEGORY_FOLDER_MAP = {
@@ -46,7 +32,6 @@ CATEGORY_FOLDER_MAP = {
     '자동차보험': os.path.join(BASE_DIR, '자동차보험약관')
 }
 
-# --- 약관 생성을 위한 프롬프트 템플릿 (이전과 동일) ---
 PROMPT_TEMPLATE = """
 기업 이름은 다음과 같아:
 {company_name}
@@ -83,14 +68,23 @@ PROMPT_TEMPLATE = """
 마지막으로 출력하기 전에 한 번 읽어보고 미흡한 점이나 독소조항, 리스크 등 수정할 부분을 확인하고 수정할 부분이 있다면 수정해서 출력해줘.
 """
 
-# --- 약관 생성 API 엔드포인트 (이전과 동일) ---
+@app.after_request
+def apply_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "http://34.54.82.32"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return response
+
+@app.route("/api/generate", methods=["OPTIONS"])
+def handle_options():
+    return '', 204
+
 @app.route('/api/generate', methods=['POST'])
 def generate_terms():
     try:
         data = request.get_json()
         if not data:
-            logging.error("No input data provided")
-            return jsonify({"error": "No input data provided"}), 400
+            return jsonify({"error": "요청 데이터가 없습니다."}), 400
 
         company_name = data.get('companyName')
         category = data.get('category')
@@ -98,47 +92,30 @@ def generate_terms():
         wishlist = data.get('requirements')
 
         if not all([company_name, category, product_name, wishlist]):
-            logging.error(f"Missing required fields: companyName={company_name}, category={category}, productName={product_name}, requirements={wishlist}")
-            return jsonify({"error": "Missing required fields"}), 400
+            return jsonify({"error": "필수 입력값이 누락되었습니다."}), 400
 
         pdf_dir_path = CATEGORY_FOLDER_MAP.get(category)
-        if not pdf_dir_path:
-            logging.error(f"Invalid category provided: {category}")
-            return jsonify({"error": f"Invalid category provided: {category}"}), 400
+        if not pdf_dir_path or not os.path.isdir(pdf_dir_path):
+            return jsonify({"error": f"{category}에 해당하는 약관 폴더가 없습니다."}), 400
 
-        if not os.path.isdir(pdf_dir_path):
-            logging.error(f"Directory not found for category '{category}': {pdf_dir_path}")
-            return jsonify({"error": f"Directory not found for category '{category}': {pdf_dir_path}"}), 400
-        
-        pdf_files = [f for f in os.listdir(pdf_dir_path) if f.lower().endswith('.pdf')]
-        if not pdf_files:
-            logging.warning(f"No PDF files found in '{pdf_dir_path}'. Processing might be affected.")
-
-        logging.info(f"Loading documents from: {pdf_dir_path}")
         loader = PyPDFDirectoryLoader(pdf_dir_path)
         documents = loader.load()
         if not documents:
-            logging.warning(f"No documents loaded by PyPDFDirectoryLoader from '{pdf_dir_path}'")
-            return jsonify({"error": f"Failed to load any documents from '{pdf_dir_path}'. Check PDF file integrity."}), 400
+            return jsonify({"error": f"{category} 약관 PDF를 불러오지 못했습니다."}), 400
 
         splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
         docs_chunked = splitter.split_documents(documents)
-        logging.info(f"Chunked {len(docs_chunked)} documents.")
 
         vectorstore = Chroma.from_documents(docs_chunked, embedding)
         retriever = vectorstore.as_retriever()
 
+        docs = retriever.invoke("약관 초안 작성에 필요한 정보")
+        context = "\n\n".join([doc.page_content for doc in docs])
+        current_date = datetime.now().strftime("%Y년 %m월 %d일")
+
         prompt = PromptTemplate.from_template(PROMPT_TEMPLATE)
         chain = prompt | llm | StrOutputParser()
 
-        query = "약관 초안 작성에 필요한 정보"
-        docs = retriever.invoke(query)
-        context = "\n\n".join([doc.page_content for doc in docs])
-        logging.info(f"Retrieved context length: {len(context)} characters.")
-        
-        current_date = datetime.now().strftime("%Y년 %m월 %d일")
-
-        logging.info("Invoking LLM for terms generation...")
         response = chain.invoke({
             "context": context,
             "company_name": company_name,
@@ -146,13 +123,12 @@ def generate_terms():
             "wishlist": wishlist,
             "date": current_date
         })
-        logging.info("Terms generated successfully.")
 
         return jsonify({"terms": response})
 
     except Exception as e:
-        logging.exception("An error occurred during terms generation.")
+        logging.exception("약관 생성 중 오류")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=True)
