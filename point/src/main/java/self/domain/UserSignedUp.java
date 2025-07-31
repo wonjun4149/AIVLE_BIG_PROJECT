@@ -9,6 +9,7 @@ import self.infra.AbstractEvent;
 public class UserSignedUp extends AbstractEvent {
 
     private Long id;
+    private String userId; // Firebase UID
     private String name;
     private String email;
     private String password;

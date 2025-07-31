@@ -32,53 +32,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-            .csrf().disable()
-            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Set session management to stateless
-            .and()
+            .csrf().disable() // CSRF 보호 비활성화
             .authorizeRequests()
-            .anyRequest().authenticated() // Re-enable authentication for all requests
-            .and()
-            .addFilterBefore(new FirebaseFilter(firebaseAuth), UsernamePasswordAuthenticationFilter.class);
+            .anyRequest().permitAll(); // 모든 요청을 허용
     }
 
+    // FirebaseFilter는 더 이상 필요 없으므로 주석 처리 또는 삭제합니다.
+    /*
     public static class FirebaseFilter extends OncePerRequestFilter {
-
-        private final FirebaseAuth firebaseAuth;
-
-        public FirebaseFilter(FirebaseAuth firebaseAuth) {
-            this.firebaseAuth = firebaseAuth;
-        }
-
-        @Override
-        protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-                throws ServletException, IOException {
-            String header = request.getHeader("Authorization");
-            if (header == null || !header.startsWith("Bearer ")) {
-                filterChain.doFilter(request, response);
-                return;
-            }
-
-            String token = header.substring(7);
-            try {
-                FirebaseToken decodedToken = firebaseAuth.verifyIdToken(token);
-                
-                // Add authorities
-                List<GrantedAuthority> authorities = new ArrayList<>();
-                authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
-
-                FirebaseAuthentication authentication = new FirebaseAuthentication(decodedToken.getUid(), decodedToken, authorities);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            } catch (Exception e) {
-                // Log the exception for detailed diagnostics
-                logger.error("Firebase token verification failed", e);
-                
-                // Invalid token
-                SecurityContextHolder.clearContext();
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
-                return;
-            }
-
-            filterChain.doFilter(request, response);
-        }
+        // ...
     }
+    */
 }

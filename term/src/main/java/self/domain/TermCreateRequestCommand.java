@@ -11,4 +11,5 @@ public class TermCreateRequestCommand {
     private String requirement;
     private String userCompany;
     private String client;
+    private String termType;
 }

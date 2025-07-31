@@ -1,19 +1,19 @@
 server:
-  port: 8080
+  port: 8085
 
 spring:
   application:
     name: point
+
+# Firebase 설정
+firebase:
+  service-account-file: "file:src/main/resources/firebase-adminsdk.json"
+  project-id: "aivle-team0721" # 실제 프로젝트 ID로 변경해주세요
+
 ---
 
 spring:
   profiles: default
-  jpa:
-    properties:
-      hibernate:
-        show_sql: true
-        format_sql: true
-        implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
     stream:
       kafka:
@@ -42,23 +42,21 @@ spring:
 
 logging:
   level:
-    org.hibernate.type: trace
     org.springframework.cloud: debug
 
-
-server:
-  port: 8085
+# GitPod CORS 설정
+management:
+  endpoints:
+    web:
+      cors:
+        allowed-origins: "*"
+        allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
+        allowed-headers: "*"
 
 ---
 
 spring:
   profiles: docker
-  jpa:
-    properties:
-      hibernate:
-        show_sql: true
-        format_sql: true
-        implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
   cloud:
     stream:
       kafka:
@@ -80,5 +78,3 @@ spring:
         event-out:
           destination: self
           contentType: application/json
-
-

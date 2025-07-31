@@ -1,6 +1,11 @@
 server:
   port: 8088
 
+# Firebase 설정
+firebase:
+  service-account-file: "classpath:firebase-adminsdk.json"
+  database-url: "aivle-team0721" # 실제 프로젝트 ID로 변경해주세요
+
 ---
 
 spring:
@@ -17,10 +22,6 @@ spring:
           uri: http://localhost:8083
           predicates:
             - Path=/terms/**, /getTerms/**
-        - id: user
-          uri: http://localhost:8084
-          predicates:
-            - Path=/users/**, /getUserInfos/**, /api/auth/**
         - id: point
           uri: http://localhost:8085
           predicates:
@@ -57,10 +58,6 @@ spring:
           uri: http://term:8080
           predicates:
             - Path=/terms/**, 
-        - id: user
-          uri: http://user:8080
-          predicates:
-            - Path=/users/**, 
         - id: point
           uri: http://point:8080
           predicates:

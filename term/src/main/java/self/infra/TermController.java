@@ -3,23 +3,21 @@ package self.infra;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import self.domain.*;
+import self.service.TermService;
+import java.util.Date; // import 추가
 
 //<<< Clean Arch / Inbound Adaptor
 
 @RestController
 // @RequestMapping(value="/terms")
-@Transactional
 public class TermController {
 
     @Autowired
-    TermRepository termRepository;
+    TermService termService;
 
     @RequestMapping(
             value = "/terms",
@@ -30,7 +28,7 @@ public class TermController {
             HttpServletRequest request,
             HttpServletResponse response,
             @RequestBody TermCreateRequestCommand createCommand,
-            @AuthenticationPrincipal String userId
+            @RequestHeader("X-Authenticated-User-Uid") String userId
     ) throws Exception {
         System.out.println("##### /terms  called #####");
         Term term = new Term();
@@ -42,11 +40,13 @@ public class TermController {
         term.setRequirement(createCommand.getRequirement());
         term.setUserCompany(createCommand.getUserCompany());
         term.setClient(createCommand.getClient());
+        term.setTermType(createCommand.getTermType());
         term.setVersion("v1"); // Set initial version
 
-        termRepository.save(term);
+        // termService를 통해 저장
+        termService.createTerm(term);
         
-        // After save, the TermCreateRequested event will be published by onPostPersist
+        // TODO: TermCreateRequested 이벤트 발행 로직을 TermService.createTerm 내부에 구현해야 함
         
         return term;
     }
@@ -60,64 +60,49 @@ public class TermController {
     public Term foreinTermCreateRequest(
         HttpServletRequest request,
         HttpServletResponse response,
-        @PathVariable("id") Long id,
+        @PathVariable("id") String id, // Long -> String
         @RequestBody ForeinTermCreateRequestCommand foreinTermCreateRequestCommand,
-        @AuthenticationPrincipal String userId
+        @RequestHeader("X-Authenticated-User-Uid") String userId
     ) throws Exception {
         System.out.println("##### /term/" + id + "/foreinTermCreateRequest  called #####");
 
-        return termRepository.findById(id).map(originalTerm -> {
-            // Check ownership
+        return termService.findById(id).map(originalTerm -> {
             if (!originalTerm.getUserId().equals(userId)) {
-                throw new RuntimeException("User does not have permission to request foreign term creation for this term");
+                throw new RuntimeException("User does not have permission for this term");
             }
             
-            originalTerm.foreinTermCreateRequest(foreinTermCreateRequestCommand);
-            
-            // No need to save the originalTerm here as the event is what matters.
-            // The actual new term is created when the response event is received.
+            // TODO: foreinTermCreateRequest 로직을 TermService로 이동해야 함
+            // originalTerm.foreinTermCreateRequest(foreinTermCreateRequestCommand);
             
             return originalTerm;
         }).orElseThrow(() -> new Exception("Original term not found"));
     }
 
+    // riskDectectRequest, termReviewRequest, visualizationRequest는
+    // Term 객체를 먼저 생성하지 않고 바로 서비스 로직을 호출해야 합니다.
+    // 이 부분은 로직의 재설계가 필요하여 일단 주석 처리합니다.
+    /*
     @RequestMapping(
         value = "/terms/riskdectectrequest",
         method = RequestMethod.POST,
         produces = "application/json;charset=UTF-8"
     )
-    public Term riskDectectRequest(
-        HttpServletRequest request,
-        HttpServletResponse response,
-        @RequestBody RiskDectectRequestCommand riskDectectRequestCommand,
-        @AuthenticationPrincipal String userId
-    ) throws Exception {
-        System.out.println("##### /term/riskDectectRequest  called #####");
-        Term term = new Term();
-        term.setUserId(userId);
-        term.riskDectectRequest(riskDectectRequestCommand);
-        termRepository.save(term);
-        return term;
-    }
+    public Term riskDectectRequest(...) throws Exception { ... }
 
     @RequestMapping(
         value = "/terms/termreviewrequest",
         method = RequestMethod.POST,
         produces = "application/json;charset=UTF-8"
     )
-    public Term termReviewRequest(
-        HttpServletRequest request,
-        HttpServletResponse response,
-        @RequestBody TermReviewRequestCommand termReviewRequestCommand,
-        @AuthenticationPrincipal String userId
-    ) throws Exception {
-        System.out.println("##### /term/termReviewRequest  called #####");
-        Term term = new Term();
-        term.setUserId(userId);
-        term.termReviewRequest(termReviewRequestCommand);
-        termRepository.save(term);
-        return term;
-    }
+    public Term termReviewRequest(...) throws Exception { ... }
+
+    @RequestMapping(
+        value = "/terms/visualizationrequest",
+        method = RequestMethod.POST,
+        produces = "application/json;charset=UTF-8"
+    )
+    public Term visualizationRequest(...) throws Exception { ... }
+    */
 
     @RequestMapping(
         value = "/terms/{id}/ai-modify",
@@ -127,27 +112,26 @@ public class TermController {
     public Term aiTermModifyRequest(
         HttpServletRequest request,
         HttpServletResponse response,
-        @PathVariable("id") Long id,
+        @PathVariable("id") String id, // Long -> String
         @RequestBody AiTermModifyRequestCommand aiTermModifyRequestCommand,
-        @AuthenticationPrincipal String userId
+        @RequestHeader("X-Authenticated-User-Uid") String userId
     ) throws Exception {
         System.out.println("##### /terms/" + id + "/ai-modify called #####");
 
-        Term originalTerm = termRepository.findById(id)
+        Term originalTerm = termService.findById(id)
             .orElseThrow(() -> new Exception("Original term not found"));
 
-        // Check ownership
         if (!originalTerm.getUserId().equals(userId)) {
             throw new Exception("User does not have permission to modify this term");
         }
 
-        Term newVersionTerm = Term.createNewVersionFrom(originalTerm);
+        Term newVersionTerm = termService.createNewVersionFrom(originalTerm);
         newVersionTerm.setUpdateType("AI_MODIFY");
+        newVersionTerm.setModifiedAt(new Date()); // 수정 시간 설정
         
-        // The aiTermModifyRequest method in Term.java is now just a placeholder
-        // The actual event publishing is handled by onPostPersist
+        // TODO: aiTermModifyRequest 로직을 TermService로 이동해야 함
         
-        termRepository.save(newVersionTerm);
+        termService.save(newVersionTerm);
         return newVersionTerm;
     }
 
@@ -159,49 +143,29 @@ public class TermController {
     public Term directUpdateTerm(
         HttpServletRequest request,
         HttpServletResponse response,
-        @PathVariable("id") Long id,
+        @PathVariable("id") String id, // Long -> String
         @RequestBody TermDirectUpdateRequestCommand updateCommand,
-        @AuthenticationPrincipal String userId
+        @RequestHeader("X-Authenticated-User-Uid") String userId
     ) throws Exception {
         System.out.println("##### /terms/" + id + "/direct-update called #####");
 
-        Term originalTerm = termRepository.findById(id)
+        Term originalTerm = termService.findById(id)
             .orElseThrow(() -> new Exception("Original term not found"));
 
-        // Check ownership
         if (!originalTerm.getUserId().equals(userId)) {
             throw new Exception("User does not have permission to modify this term");
         }
 
-        Term newVersionTerm = Term.createNewVersionFrom(originalTerm);
+        Term newVersionTerm = termService.createNewVersionFrom(originalTerm);
         newVersionTerm.setUpdateType("DIRECT_UPDATE");
+        newVersionTerm.setModifiedAt(new Date()); // 수정 시간 설정
 
         // Apply changes from the command
         newVersionTerm.setTitle(updateCommand.getTitle());
         newVersionTerm.setContent(updateCommand.getContent());
         newVersionTerm.setMemo(updateCommand.getMemo());
         
-        termRepository.save(newVersionTerm);
+        termService.save(newVersionTerm);
         return newVersionTerm;
     }
-
-    @RequestMapping(
-        value = "/terms/visualizationrequest",
-        method = RequestMethod.POST,
-        produces = "application/json;charset=UTF-8"
-    )
-    public Term visualizationRequest(
-        HttpServletRequest request,
-        HttpServletResponse response,
-        @RequestBody VisualizationRequestCommand visualizationRequestCommand,
-        @AuthenticationPrincipal String userId
-    ) throws Exception {
-        System.out.println("##### /term/visualizationRequest  called #####");
-        Term term = new Term();
-        term.setUserId(userId);
-        term.visualizationRequest(visualizationRequestCommand);
-        termRepository.save(term);
-        return term;
-    }
 }
-//>>> Clean Arch / Inbound Adaptor

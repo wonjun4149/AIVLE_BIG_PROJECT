@@ -3,22 +3,22 @@ package self.infra;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javax.naming.NameParser;
-import javax.naming.NameParser;
-import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 import self.config.kafka.KafkaProcessor;
 import self.domain.*;
+import self.service.TermService;
+
+import java.util.concurrent.ExecutionException;
 
 //<<< Clean Arch / Inbound Adaptor
 @Service
-@Transactional
 public class PolicyHandler {
 
     @Autowired
-    TermRepository termRepository;
+    TermService termService;
 
     @StreamListener(KafkaProcessor.INPUT)
     public void whatever(@Payload String eventString) {}
@@ -29,14 +29,14 @@ public class PolicyHandler {
     )
     public void wheneverTermCreated_RegisterTerm(
         @Payload TermCreated termCreated
-    ) {
+    ) throws ExecutionException, InterruptedException {
         TermCreated event = termCreated;
         System.out.println(
             "\n\n##### listener RegisterTerm : " + termCreated + "\n\n"
         );
 
         // Sample Logic //
-        Term.registerTerm(event);
+        termService.registerTerm(event);
     }
 
     @StreamListener(
@@ -45,14 +45,14 @@ public class PolicyHandler {
     )
     public void wheneverForeignTermCreated_RegisterTerm(
         @Payload ForeignTermCreated foreignTermCreated
-    ) {
+    ) throws ExecutionException, InterruptedException {
         ForeignTermCreated event = foreignTermCreated;
         System.out.println(
             "\n\n##### listener RegisterTerm : " + foreignTermCreated + "\n\n"
         );
 
         // Sample Logic //
-        Term.registerTerm(event);
+        termService.registerTerm(event);
     }
 
     @StreamListener(
@@ -68,7 +68,7 @@ public class PolicyHandler {
         );
 
         // Sample Logic //
-        Term.saveAnalysis(event);
+        // Term.saveAnalysis(event); // TODO: Move this logic to TermService
     }
 
     @StreamListener(
@@ -84,7 +84,7 @@ public class PolicyHandler {
         );
 
         // Sample Logic //
-        Term.saveAnalysis(event);
+        // Term.saveAnalysis(event); // TODO: Move this logic to TermService
     }
 
     @StreamListener(
@@ -93,14 +93,14 @@ public class PolicyHandler {
     )
     public void wheneverAiTermModified_SaveModifiedTerm(
         @Payload AiTermModified aiTermModified
-    ) {
+    ) throws ExecutionException, InterruptedException {
         AiTermModified event = aiTermModified;
         System.out.println(
             "\n\n##### listener SaveModifiedTerm : " + aiTermModified + "\n\n"
         );
 
         // Sample Logic //
-        Term.saveModifiedTerm(event);
+        termService.saveModifiedTerm(event);
     }
 }
 //>>> Clean Arch / Inbound Adaptor
