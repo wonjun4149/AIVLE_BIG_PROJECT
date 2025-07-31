@@ -1,5 +1,5 @@
 server:
-  port: 8085
+  port: ${PORT:8080}
 
 spring:
   application:
@@ -30,14 +30,10 @@ spring:
       bindings:
         event-in:
           group: point
-#<<< EDA / Topic Name
           destination: self
-#>>> EDA / Topic Name
           contentType: application/json
         event-out:
-#<<< EDA / Topic Name
           destination: self
-#>>> EDA / Topic Name
           contentType: application/json
 
 logging:
@@ -45,7 +41,6 @@ logging:
     org.hibernate.type: trace
     org.springframework.cloud: debug
 
-# GitPod CORS 설정
 management:
   endpoints:
     web:
@@ -53,35 +48,3 @@ management:
         allowed-origins: "*"
         allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
         allowed-headers: "*"
-
----
-
-spring:
-  profiles: docker
-  jpa:
-    properties:
-      hibernate:
-        show_sql: true
-        format_sql: true
-        implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
-  cloud:
-    stream:
-      kafka:
-        binder:
-          brokers: my-kafka:9092
-        streams:
-          binder:
-            configuration:
-              default:
-                key:
-                  serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-                value:
-                  serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-      bindings:
-        event-in:
-          group: point
-          destination: self
-          contentType: application/json
-        event-out:
-          destination: self
-          contentType: application/json
