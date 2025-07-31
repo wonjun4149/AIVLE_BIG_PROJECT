@@ -30,6 +30,9 @@ jobs:
         run: npm install
         working-directory: frontend
 
+      - name: Create .env file
+        run: echo "${{ secrets.FRONTEND_ENV_FILE }}" > frontend/.env
+
       - name: Build React app
         run: CI=false npm run build
         working-directory: frontend
