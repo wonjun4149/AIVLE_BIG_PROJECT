@@ -1,15 +1,13 @@
 package self.config;
 
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.firestore.Firestore;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.cloud.FirestoreClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.Resource;
+import org.springframework.core.io.ClassPathResource;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,18 +16,19 @@ import java.io.InputStream;
 public class FirebaseConfig {
 
     @Value("${firebase.service-account-file}")
-    private Resource serviceAccountResource;
+    private String serviceAccountFile;
 
-    @Value("${firebase.project-id}")
-    private String projectId;
+    @Value("${firebase.database-url}")
+    private String databaseUrl;
 
     @Bean
     public FirebaseApp firebaseApp() throws IOException {
-        InputStream serviceAccount = serviceAccountResource.getInputStream();
+        ClassPathResource resource = new ClassPathResource(serviceAccountFile);
+        InputStream serviceAccount = resource.getInputStream();
 
         FirebaseOptions options = new FirebaseOptions.Builder()
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                .setProjectId(projectId)
+                .setDatabaseUrl(databaseUrl)
                 .build();
 
         if (FirebaseApp.getApps().isEmpty()) {
@@ -37,11 +36,6 @@ public class FirebaseConfig {
         } else {
             return FirebaseApp.getInstance();
         }
-    }
-
-    @Bean
-    public Firestore firestore(FirebaseApp firebaseApp) {
-        return FirestoreClient.getFirestore(firebaseApp);
     }
 
     @Bean
