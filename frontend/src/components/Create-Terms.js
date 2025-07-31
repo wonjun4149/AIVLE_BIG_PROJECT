@@ -11,9 +11,16 @@ function CreateTerms({ user, onHomeClick, onSignUpClick }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // API Base URL을 환경 변수에서 읽음 (.env 파일 필요)
+  const CLOUD_RUN_API_BASE_URL = process.env.REACT_APP_CLOUD_RUN_API_BASE_URL;
+
   const categories = ['예금', '적금', '주택담보대출', '암보험', '자동차보험'];
 
+  // -----------------------
+  // ✅ 약관 생성 요청
+  // -----------------------
   const handleSubmit = async () => {
+    // 입력값 유효성 체크
     if (!companyName || category === '선택' || !productName || !requirements) {
       setError('모든 필드를 입력해주세요.');
       return;
@@ -24,7 +31,7 @@ function CreateTerms({ user, onHomeClick, onSignUpClick }) {
     setGeneratedTerms('');
 
     try {
-      const CLOUD_RUN_API_BASE_URL = 'https://terms-api-service-902267887946.us-central1.run.app';
+      // API 호출
       const response = await fetch(`${CLOUD_RUN_API_BASE_URL}/api/generate`, {
         method: 'POST',
         headers: {
@@ -38,6 +45,7 @@ function CreateTerms({ user, onHomeClick, onSignUpClick }) {
         }),
       });
 
+      // 응답 확인
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || '약관 생성에 실패했습니다.');
@@ -53,11 +61,16 @@ function CreateTerms({ user, onHomeClick, onSignUpClick }) {
     }
   };
 
+  // -----------------------
+  // ✅ 화면 렌더링
+  // -----------------------
   return (
     <div className="App">
       <Navbar user={user} onHomeClick={onHomeClick} onSignUpClick={onSignUpClick} />
       <main className="terms-main">
         <div className="terms-container">
+          
+          {/* 미리보기 섹션 */}
           <div className="preview-section">
             <div className="preview-placeholder">
               {isLoading ? (
@@ -77,8 +90,10 @@ function CreateTerms({ user, onHomeClick, onSignUpClick }) {
             </div>
           </div>
 
+          {/* 입력 폼 섹션 */}
           <div className="form-section">
             <div className="form-container">
+              
               <div className="form-group">
                 <label className="form-label">회사 이름</label>
                 <input
@@ -138,6 +153,7 @@ function CreateTerms({ user, onHomeClick, onSignUpClick }) {
               >
                 {isLoading ? '생성 중...' : 'AI 초안 딸각 (5,000P)'}
               </button>
+
             </div>
           </div>
         </div>
