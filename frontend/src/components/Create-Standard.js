@@ -1,89 +1,25 @@
 import React, { useState } from 'react';
 import Navbar from './Navbar';
 import './Create-Terms.css'; // 동일한 CSS 파일 사용
-import { useNavigate } from 'react-router-dom';
-import { auth } from '../firebase'; // auth 모듈 직접 임포트
 
 function CreateStandard({ user, onHomeClick, onSignUpClick }) {
   const [companyName, setCompanyName] = useState('');
-  const [clientName, setClientName] = useState('');
+  const [clientName, setClientName] = useState(''); // 거래처 이름 추가
   const [category, setCategory] = useState('선택');
   const [productName, setProductName] = useState('');
   const [requirements, setRequirements] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
 
   const categories = ['예금', '적금', '주택담보대출', '암보험', '자동차보험'];
 
-  const handleAiRequest = async () => {
-    if (!user || !auth.currentUser) { // auth.currentUser 확인 추가
-      alert('AI 초안 생성을 위해서는 로그인이 필요합니다.');
-      navigate('/login');
-      return;
-    }
-    if (!companyName || !clientName || category === '선택' || !productName || !requirements) {
-      alert('AI 초안 생성을 위해 모든 필드를 입력해주세요.');
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const idToken = await auth.currentUser.getIdToken();
-      const firebaseUid = auth.currentUser.uid;
-
-      // 1. 포인트 확인
-      const pointResponse = await fetch(`/api/points/${firebaseUid}`, {
-        headers: {
-          'Authorization': `Bearer ${idToken}`
-        }
-      });
-
-      if (!pointResponse.ok) {
-        throw new Error('포인트 정보를 가져오는 데 실패했습니다.');
-      }
-
-      const pointData = await pointResponse.json();
-      if (pointData.amount < 5000) {
-        alert(`포인트가 부족합니다. (현재 보유: ${pointData.amount}P)`);
-        setIsLoading(false);
-        return;
-      }
-
-      // 2. 포인트 충분 시, 약관 생성 요청
-      const requestBody = {
-        title: `${productName} 표준약관`,
-        content: requirements, // 사용자가 입력한 요구사항을 초기 content로 설정
-        category: category,
-        productName: productName,
-        requirement: requirements,
-        userCompany: companyName,
-        client: clientName,
-        termType: "standard", // 약관 종류 추가
-      };
-
-      const termResponse = await fetch('/terms', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      if (!termResponse.ok) {
-        throw new Error('AI 초안 생성 요청에 실패했습니다.');
-      }
-
-      await termResponse.json();
-      alert('AI 초안 생성 요청이 완료되었습니다. 잠시 후 마이페이지에서 확인하실 수 있습니다.');
-      navigate('/');
-    } catch (error) {
-      console.error('AI 초안 생성 요청 중 오류 발생:', error);
-      alert(error.message);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleSubmit = () => {
+    // AI 초안 생성 로직
+    console.log({
+      companyName,
+      clientName,
+      category,
+      productName,
+      requirements
+    });
   };
 
   return (
@@ -92,21 +28,17 @@ function CreateStandard({ user, onHomeClick, onSignUpClick }) {
       
       <main className="terms-main">
         <div className="terms-container">
+          {/* 왼쪽 미리보기 영역 */}
           <div className="preview-section">
             <div className="preview-placeholder">
-              {isLoading ? (
-                <p>AI 초안 생성 요청을 보내는 중입니다...</p>
-              ) : (
-                <div style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
-                  <p>'AI 초안 딸각' 버튼을 누르면 생성 요청이 접수됩니다.</p>
-                  <p style={{ marginTop: '10px' }}>완료된 약관은 '마이페이지'에서 확인하실 수 있습니다.</p>
-                </div>
-              )}
+              {/* 미리보기 내용이 들어갈 영역 */}
             </div>
           </div>
 
+          {/* 오른쪽 입력 폼 영역 */}
           <div className="form-section">
             <div className="form-container">
+              {/* 회사 이름 */}
               <div className="form-group">
                 <label className="form-label">회사 이름</label>
                 <input
@@ -118,6 +50,7 @@ function CreateStandard({ user, onHomeClick, onSignUpClick }) {
                 />
               </div>
 
+              {/* 거래처 이름 (새로 추가된 필드) */}
               <div className="form-group">
                 <label className="form-label">거래처 이름</label>
                 <input
@@ -129,6 +62,7 @@ function CreateStandard({ user, onHomeClick, onSignUpClick }) {
                 />
               </div>
 
+              {/* 초안 카테고리 */}
               <div className="form-group">
                 <label className="form-label">초안 카테고리</label>
                 <div className="select-container">
@@ -148,6 +82,7 @@ function CreateStandard({ user, onHomeClick, onSignUpClick }) {
                 </div>
               </div>
 
+              {/* 상품 이름 */}
               <div className="form-group">
                 <label className="form-label">상품 이름</label>
                 <input
@@ -159,6 +94,7 @@ function CreateStandard({ user, onHomeClick, onSignUpClick }) {
                 />
               </div>
 
+              {/* 필수 조항 및 희망사항 */}
               <div className="form-group">
                 <label className="form-label">필수 조항 및 희망사항</label>
                 <textarea
@@ -170,12 +106,12 @@ function CreateStandard({ user, onHomeClick, onSignUpClick }) {
                 />
               </div>
 
+              {/* AI 초안 생성 버튼 */}
               <button
-                onClick={handleAiRequest}
+                onClick={handleSubmit}
                 className="ai-draft-btn"
-                disabled={isLoading}
               >
-                {isLoading ? '요청 중...' : 'AI 초안 딸각 (5,000P)'}
+                AI 초안 딸각 (5,000P)
               </button>
             </div>
           </div>
