@@ -58,6 +58,8 @@ public class Term {
 
     private String updateType;
 
+    private String termType;
+
     @PrePersist
     public void onPrePersist() {
         if (this.createdAt == null) { // It's a new v1 term

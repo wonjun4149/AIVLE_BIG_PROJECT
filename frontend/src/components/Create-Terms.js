@@ -1,53 +1,85 @@
 import React, { useState } from 'react';
 import Navbar from './Navbar';
 import './Create-Terms.css';
+import { useNavigate } from 'react-router-dom';
+import { auth } from '../firebase'; // auth 모듈 직접 임포트
 
 function CreateTerms({ user, onHomeClick, onSignUpClick }) {
   const [companyName, setCompanyName] = useState('');
   const [category, setCategory] = useState('선택');
   const [productName, setProductName] = useState('');
   const [requirements, setRequirements] = useState('');
-  const [generatedTerms, setGeneratedTerms] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const categories = ['예금', '적금', '주택담보대출', '암보험', '자동차보험'];
 
-  const handleSubmit = async () => {
+  const handleAiRequest = async () => {
+    if (!user || !auth.currentUser) { // auth.currentUser 확인 추가
+      alert('AI 초안 생성을 위해서는 로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
     if (!companyName || category === '선택' || !productName || !requirements) {
-      setError('모든 필드를 입력해주세요.');
+      alert('AI 초안 생성을 위해 모든 필드를 입력해주세요.');
       return;
     }
 
-    setError('');
     setIsLoading(true);
-    setGeneratedTerms('');
 
     try {
-      const CLOUD_RUN_API_BASE_URL = 'https://terms-api-service-902267887946.us-central1.run.app';
-      const response = await fetch(`${CLOUD_RUN_API_BASE_URL}/api/generate`, {
+      const idToken = await auth.currentUser.getIdToken();
+      const firebaseUid = auth.currentUser.uid;
+
+      // 1. 포인트 확인
+      const pointResponse = await fetch(`/api/points/${firebaseUid}`, {
+        headers: {
+          'Authorization': `Bearer ${idToken}`
+        }
+      });
+
+      if (!pointResponse.ok) {
+        throw new Error('포인트 정보를 가져오는 데 실패했습니다.');
+      }
+
+      const pointData = await pointResponse.json();
+      if (pointData.amount < 5000) {
+        alert(`포인트가 부족합니다. (현재 보유: ${pointData.amount}P)`);
+        setIsLoading(false);
+        return;
+      }
+
+      // 2. 포인트 충분 시, 약관 생성 요청
+      const requestBody = {
+        title: `${productName} 약관`,
+        content: requirements, // 사용자가 입력한 요구사항을 초기 content로 설정
+        category: category,
+        productName: productName,
+        requirement: requirements,
+        userCompany: companyName,
+        client: '', // '일반 약관'에서는 거래처(client)가 특정되지 않으므로 빈 값으로 설정
+        termType: "general", // 약관 종류 추가
+      };
+
+      const termResponse = await fetch('/terms', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
         },
-        body: JSON.stringify({
-          companyName,
-          category,
-          productName,
-          requirements,
-        }),
+        body: JSON.stringify(requestBody)
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || '약관 생성에 실패했습니다.');
+      if (!termResponse.ok) {
+        throw new Error('AI 초안 생성 요청에 실패했습니다.');
       }
 
-      const data = await response.json();
-      setGeneratedTerms(data.terms);
-    } catch (err) {
-      console.error('Error generating terms:', err);
-      setError(err.message || '약관 생성 중 오류가 발생했습니다.');
+      await termResponse.json();
+      alert('AI 초안 생성 요청이 완료되었습니다. 잠시 후 마이페이지에서 확인하실 수 있습니다.');
+      navigate('/');
+    } catch (error) {
+      console.error('AI 초안 생성 요청 중 오류 발생:', error);
+      alert(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -61,18 +93,12 @@ function CreateTerms({ user, onHomeClick, onSignUpClick }) {
           <div className="preview-section">
             <div className="preview-placeholder">
               {isLoading ? (
-                <p>약관 초안을 생성 중입니다. 잠시만 기다려 주세요...</p>
-              ) : error ? (
-                <p className="error-message">{error}</p>
-              ) : generatedTerms ? (
-                <div className="generated-terms-content">
-                  <h3 style={{textAlign: 'center', marginBottom: '20px'}}>
-                    {productName ? `${productName} 약관` : '생성된 약관'}
-                  </h3>
-                  <pre>{generatedTerms}</pre>
-                </div>
+                <p>AI 초안 생성 요청을 보내는 중입니다...</p>
               ) : (
-                <p>AI 약관 초안이 여기에 표시됩니다.</p>
+                <div style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
+                  <p>'AI 초안 딸각' 버튼을 누르면 생성 요청이 접수됩니다.</p>
+                  <p style={{ marginTop: '10px' }}>완료된 약관은 '마이페이지'에서 확인하실 수 있습니다.</p>
+                </div>
               )}
             </div>
           </div>
@@ -132,11 +158,11 @@ function CreateTerms({ user, onHomeClick, onSignUpClick }) {
               </div>
 
               <button
-                onClick={handleSubmit}
+                onClick={handleAiRequest}
                 className="ai-draft-btn"
                 disabled={isLoading}
               >
-                {isLoading ? '생성 중...' : 'AI 초안 딸각 (5,000P)'}
+                {isLoading ? '요청 중...' : 'AI 초안 딸각 (5,000P)'}
               </button>
             </div>
           </div>

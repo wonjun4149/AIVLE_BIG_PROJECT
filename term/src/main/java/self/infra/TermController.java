@@ -42,6 +42,7 @@ public class TermController {
         term.setRequirement(createCommand.getRequirement());
         term.setUserCompany(createCommand.getUserCompany());
         term.setClient(createCommand.getClient());
+        term.setTermType(createCommand.getTermType());
         term.setVersion("v1"); // Set initial version
 
         termRepository.save(term);
