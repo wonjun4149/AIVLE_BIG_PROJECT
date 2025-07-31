@@ -97,6 +97,47 @@
   border-radius: 20px;
   border: 1px solid #e9ecef;
   min-width: 80px;
+  transition: all 0.2s ease;
+  user-select: none; /* 텍스트 선택 방지 */
+}
+
+/* 포인트 새로고침 호버 효과 */
+.points-display:hover {
+  background-color: #e9ecef;
+  border-color: #6c5ce7;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(108, 92, 231, 0.1);
+}
+
+/* 새로고침 중 상태 */
+.points-display.refreshing {
+  background-color: #6c5ce7;
+  border-color: #5f4fcf;
+  animation: pulse 1s infinite;
+}
+
+.points-display.refreshing .points-value {
+  color: white !important;
+  font-weight: 600;
+}
+
+/* 새로고침 애니메이션 */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* 클릭 효과 */
+.points-display:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(108, 92, 231, 0.2);
 }
 
 .points-label {
@@ -110,6 +151,7 @@
   color: #6c5ce7;
   font-weight: bold;
   text-align: center;
+  transition: color 0.2s ease;
 }
 
 .mypage-btn {
