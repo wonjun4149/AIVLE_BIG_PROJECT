@@ -9,6 +9,7 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
   const navigate = useNavigate();
   const [userPoints, setUserPoints] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // 사이드바 상태 추가
 
   // 스마트한 API URL 감지
   const getApiUrl = () => {
@@ -175,6 +176,16 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
     }
   };
 
+  // 햄버거 메뉴 클릭 핸들러 추가
+  const handleMenuClick = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  // 사이드바 외부 클릭 시 닫기
+  const handleOverlayClick = () => {
+    setIsSidebarOpen(false);
+  };
+
   // 포인트를 천 단위로 포맷팅하는 함수
   const formatPoints = (points) => {
     return points.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -189,50 +200,101 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
   };
 
   return (
-    <header className="header">
-      <div className="header-content">
-        <div className="logo" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
-          <img src={logo} alt="보라계약 로고" className="logo-icon" />
-          <span className="logo-text">보라계약</span>
+    <>
+      <header className="header">
+        <div className="header-content">
+          <div className="logo" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
+            <img src={logo} alt="보라계약 로고" className="logo-icon" />
+            <span className="logo-text">보라계약</span>
+          </div>
+          <div className="header-buttons">
+            {user ? (
+              <>
+                <span className="header-btn">
+                  <span className="name-highlight">
+                    {formatUserName(user.name || user.displayName || user.email)}
+                    &nbsp;님
+                  </span>
+                </span>
+                <div 
+                  className={`points-display ${isRefreshing ? 'refreshing' : ''}`}
+                  onClick={handlePointRefresh}
+                  style={{ 
+                    cursor: 'pointer',
+                    opacity: isRefreshing ? 0.7 : 1,
+                    transition: 'opacity 0.2s ease'
+                  }}
+                  title="클릭하여 포인트 새로고침"
+                >
+                  <span className="points-value">
+                    {isRefreshing ? '새로고침...' : `${formatPoints(userPoints)}P`}
+                  </span>
+                </div>
+                <button className="header-btn mypage-btn" onClick={handleMyPageClick}>
+                  마이페이지
+                </button>
+                <button className="header-btn" onClick={handleLogout}>로그아웃</button>
+              </>
+            ) : (
+              <>
+                <button className="header-btn" onClick={handleLoginClick}>로그인</button>
+                <button className="header-btn" onClick={handleSignUpClick}>회원가입</button>
+              </>
+            )}
+            <button className="menu-btn" onClick={handleMenuClick}>☰</button>
+          </div>
         </div>
-        <div className="header-buttons">
-          {user ? (
-            <>
-              <span className="header-btn">
-                <span className="name-highlight">
-                  {formatUserName(user.name || user.displayName || user.email)}
-                  &nbsp;님
-                </span>
-              </span>
-              <div 
-                className={`points-display ${isRefreshing ? 'refreshing' : ''}`}
-                onClick={handlePointRefresh}
-                style={{ 
-                  cursor: 'pointer',
-                  opacity: isRefreshing ? 0.7 : 1,
-                  transition: 'opacity 0.2s ease'
-                }}
-                title="클릭하여 포인트 새로고침"
-              >
-                <span className="points-value">
-                  {isRefreshing ? '새로고침...' : `${formatPoints(userPoints)}P`}
-                </span>
+      </header>
+
+      {/* 사이드바 오버레이 및 사이드바 */}
+      {isSidebarOpen && (
+        <>
+          {/* 배경 오버레이 */}
+          <div className="sidebar-overlay" onClick={handleOverlayClick}></div>
+          
+          {/* 사이드바 */}
+          <div className={`sidebar ${isSidebarOpen ? 'sidebar-open' : ''}`}>
+            <div className="sidebar-header">
+              <h2>보라계약</h2>
+              <button className="sidebar-close-btn" onClick={handleMenuClick}>×</button>
+            </div>
+            
+            {user && (
+              <div className="sidebar-user-info">
+                <div className="sidebar-user-name">
+                  {formatUserName(user.name || user.displayName || user.email)} 님
+                </div>
+                <div className="sidebar-user-points">
+                  포인트: {formatPoints(userPoints)}P
+                </div>
               </div>
-              <button className="header-btn mypage-btn" onClick={handleMyPageClick}>
-                마이페이지
-              </button>
-              <button className="header-btn" onClick={handleLogout}>로그아웃</button>
-            </>
-          ) : (
-            <>
-              <button className="header-btn" onClick={handleLoginClick}>로그인</button>
-              <button className="header-btn" onClick={handleSignUpClick}>회원가입</button>
-            </>
-          )}
-          <button className="menu-btn">☰</button>
-        </div>
-      </div>
-    </header>
+            )}
+            
+            <nav className="sidebar-nav">
+              <ul>
+                <li onClick={() => { navigate('/mypage'); setIsSidebarOpen(false); }}>
+                  마이페이지
+                </li>
+                <li onClick={() => { navigate('/contracts'); setIsSidebarOpen(false); }}>
+                  계약서 관리
+                </li>
+                <li onClick={() => { navigate('/points'); setIsSidebarOpen(false); }}>
+                  포인트 관리
+                </li>
+                <li onClick={() => { navigate('/settings'); setIsSidebarOpen(false); }}>
+                  설정
+                </li>
+                {user && (
+                  <li onClick={() => { handleLogout(); setIsSidebarOpen(false); }}>
+                    로그아웃
+                  </li>
+                )}
+              </ul>
+            </nav>
+          </div>
+        </>
+      )}
+    </>
   );
 };
 

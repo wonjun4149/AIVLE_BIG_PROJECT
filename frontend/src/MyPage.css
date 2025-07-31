@@ -1,6 +1,17 @@
+/* 로딩 컨테이너 */
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: sans-serif;
+    color: #636e72;
+}
+
 .mypage-container {
     display: flex;
-    height: 100vh;
+    /* 네비게이션바 높이만큼 뺀 높이 설정 */
+    height: calc(100vh - 80px);
     font-family: sans-serif;
 }
 
@@ -8,64 +19,185 @@
     width: 220px;
     background-color: #f2f0f5;
     padding: 1rem;
+    /* 스크롤 처리 추가 */
+    overflow-y: auto;
 }
 
 .sidebar h2 {
     color: #4b2979;
+    margin-top: 0;
 }
 
 .sidebar .user-name {
     font-weight: bold;
     margin: 1rem 0;
+    color: #2d3436;
 }
 
 .sidebar ul {
     list-style: none;
     padding: 0;
+    margin: 0;
 }
 
 .sidebar li {
-    padding: 0.5rem 0;
+    padding: 0.75rem 0.5rem;
     cursor: pointer;
+    border-radius: 4px;
+    margin-bottom: 0.25rem;
+    transition: background-color 0.2s ease;
+}
+
+.sidebar li:hover {
+    background-color: #e1dce6;
 }
 
 .sidebar li.active {
     background-color: #d9d3e3;
     font-weight: bold;
+    color: #4b2979;
 }
 
 .main-content {
     flex: 1;
     padding: 2rem;
+    /* 스크롤 처리 추가 */
+    overflow-y: auto;
+    background-color: #ffffff;
+}
+
+/* 계정 정보 스타일 개선 */
+.account-info {
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    margin-bottom: 2rem;
+}
+
+.account-info h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #2d3436;
+    font-size: 1.2rem;
 }
 
 .account-info p {
-    margin: 0.5rem 0;
+    margin: 0.75rem 0;
+    color: #636e72;
+    line-height: 1.5;
 }
 
 .highlight {
-    color: #5b2c90;
+    color: #6c5ce7;
+    font-weight: 600;
+}
+
+/* 비밀번호 변경 폼 스타일 개선 */
+.password-form {
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.password-form h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #2d3436;
+    font-size: 1.2rem;
 }
 
 .password-form label {
     display: block;
     margin-top: 1rem;
+    margin-bottom: 0.3rem;
+    color: #2d3436;
+    font-weight: 500;
+    font-size: 0.9rem;
 }
 
 .password-form input {
     width: 100%;
-    padding: 0.5rem;
-    margin-top: 0.3rem;
-    border: 1px solid #ccc;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
     border-radius: 4px;
+    font-size: 0.9rem;
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.password-form input:focus {
+    outline: none;
+    border-color: #6c5ce7;
+    box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.1);
 }
 
 .password-form button {
     margin-top: 1.5rem;
-    padding: 0.7rem 1.5rem;
-    background-color: #5b2c90;
+    padding: 0.8rem 1.5rem;
+    background-color: #6c5ce7;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.password-form button:hover {
+    background-color: #5f4fcf;
+}
+
+.password-form button:active {
+    transform: translateY(1px);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .mypage-container {
+        flex-direction: column;
+        height: auto;
+        min-height: calc(100vh - 80px);
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        order: 2;
+    }
+
+    .main-content {
+        order: 1;
+        padding: 1rem;
+    }
+
+    .password-form input {
+        padding: 0.6rem;
+    }
+
+    .password-form button {
+        padding: 0.7rem 1.2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-content {
+        padding: 0.75rem;
+    }
+
+    .account-info,
+    .password-form {
+        padding: 1rem;
+    }
+
+    .password-form input {
+        padding: 0.5rem;
+    }
+
+    .password-form button {
+        padding: 0.6rem 1rem;
+        width: 100%;
+    }
 }
