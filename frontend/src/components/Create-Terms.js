@@ -31,7 +31,7 @@ function CreateTerms({ user, onHomeClick, onSignUpClick }) {
     setGeneratedTerms('');
 
     try {
-      // API 호출
+      const CLOUD_RUN_API_BASE_URL = 'https://terms-api-service-902267887946.us-central1.run.app';
       const response = await fetch(`${CLOUD_RUN_API_BASE_URL}/api/generate`, {
         method: 'POST',
         headers: {
