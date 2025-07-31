@@ -1,5 +1,5 @@
 server:
-  port: 8085
+  port: ${PORT:8085} # 포트는 원격 main의 방식을 따르되, 기본값은 8085로 유지
 
 spring:
   application:
@@ -30,21 +30,16 @@ spring:
       bindings:
         event-in:
           group: point
-#<<< EDA / Topic Name
           destination: self
-#>>> EDA / Topic Name
           contentType: application/json
         event-out:
-#<<< EDA / Topic Name
           destination: self
-#>>> EDA / Topic Name
           contentType: application/json
 
 logging:
   level:
     org.springframework.cloud: debug
 
-# GitPod CORS 설정
 management:
   endpoints:
     web:

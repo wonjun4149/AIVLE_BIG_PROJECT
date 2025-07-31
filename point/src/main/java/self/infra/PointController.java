@@ -4,11 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import self.domain.Point;
-import self.domain.PointPurchased;
-import self.domain.PointReduced;
-import self.service.PointService; // PointService import
-
-import java.util.Optional;
+import self.service.PointService;
 
 @RestController
 @RequestMapping(value = "/api/points")
@@ -16,13 +12,12 @@ import java.util.Optional;
 public class PointController {
 
     @Autowired
-    private PointService pointService; // PointRepository -> PointService
+    private PointService pointService;
 
     // Firebase UID로 포인트 조회
     @GetMapping("/{firebaseUid}")
     public ResponseEntity<?> getPointByFirebaseUid(@PathVariable String firebaseUid) {
         try {
-            // PointService를 통해 포인트 조회
             Point point = pointService.getOrCreatePoint(firebaseUid);
             return ResponseEntity.ok(new PointResponse(point.getId(), point.getUserId(), point.getAmount()));
         } catch (Exception e) {
@@ -56,7 +51,7 @@ public class PointController {
 
     // Response DTO
     public static class PointResponse {
-        private String id; // Long -> String
+        private String id;
         private String userId;
         private Integer amount;
 
