@@ -3,7 +3,7 @@ server:
 
 # Firebase 설정
 firebase:
-  service-account-file: "classpath:firebase-adminsdk.json"
+  service-account-file: "src/main/resources/firebase-adminsdk.json"
   database-url: "aivle-team0721" # 실제 프로젝트 ID로 변경해주세요
 
 ---
@@ -40,6 +40,7 @@ spring:
               - "*"
             allowedHeaders:
               - "*"
+              - "X-Authenticated-User-Uid"
             allowCredentials: true
 
 
@@ -75,6 +76,7 @@ spring:
               - "*"
             allowedHeaders:
               - "*"
+              - "X-Authenticated-User-Uid"
             allowCredentials: true
 
 server:

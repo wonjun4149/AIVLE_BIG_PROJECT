@@ -7,8 +7,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
-
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -23,8 +22,7 @@ public class FirebaseConfig {
 
     @Bean
     public FirebaseApp firebaseApp() throws IOException {
-        ClassPathResource resource = new ClassPathResource(serviceAccountFile);
-        InputStream serviceAccount = resource.getInputStream();
+        InputStream serviceAccount = new FileInputStream(serviceAccountFile);
 
         FirebaseOptions options = new FirebaseOptions.Builder()
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))

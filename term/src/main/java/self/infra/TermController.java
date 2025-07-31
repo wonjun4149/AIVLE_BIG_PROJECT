@@ -28,9 +28,10 @@ public class TermController {
             HttpServletRequest request,
             HttpServletResponse response,
             @RequestBody TermCreateRequestCommand createCommand,
-            @RequestHeader("X-Authenticated-User-Uid") String userId
+            @RequestHeader("x-authenticated-user-uid") String userId
     ) throws Exception {
         System.out.println("##### /terms  called #####");
+        System.out.println("##### Received x-authenticated-user-uid: " + userId + " #####");
         Term term = new Term();
         term.setUserId(userId);
         term.setTitle(createCommand.getTitle());

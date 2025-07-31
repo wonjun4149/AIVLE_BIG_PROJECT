@@ -41,7 +41,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             String uid = decodedToken.getUid();
 
             ServerHttpRequest modifiedRequest = request.mutate()
-                    .header("X-Authenticated-User-Uid", uid)
+                    .headers(httpHeaders -> httpHeaders.set("X-Authenticated-User-Uid", uid))
                     .build();
 
             return chain.filter(exchange.mutate().request(modifiedRequest).build());
