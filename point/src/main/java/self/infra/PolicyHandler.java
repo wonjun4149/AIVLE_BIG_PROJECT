@@ -1,73 +1,51 @@
 package self.infra;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import javax.naming.NameParser;
-import javax.naming.NameParser;
-import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 import self.config.kafka.KafkaProcessor;
 import self.domain.*;
+import self.service.PointService;
 
-//<<< Clean Arch / Inbound Adaptor
+import java.util.concurrent.ExecutionException;
+
 @Service
-@Transactional
 public class PolicyHandler {
 
     @Autowired
-    PointRepository pointRepository;
+    PointService pointService;
 
     @StreamListener(KafkaProcessor.INPUT)
-    public void whatever(@Payload String eventString) {
+    public void whatever(@Payload String eventString) {}
+
+    @StreamListener(value = KafkaProcessor.INPUT, condition = "headers['type']=='UserSignedUp'")
+    public void wheneverUserSignedUp_CreateInitialPoint(@Payload UserSignedUp userSignedUp) throws ExecutionException, InterruptedException {
+        System.out.println("\n\n##### listener CreateInitialPoint : " + userSignedUp + "\n\n");
+        pointService.createInitialPoint(userSignedUp);
     }
 
     @StreamListener(value = KafkaProcessor.INPUT, condition = "headers['type']=='TermCreateRequested'")
-    public void wheneverTermCreateRequested_ReducePoint(
-            @Payload TermCreateRequested termCreateRequested) {
-        TermCreateRequested event = termCreateRequested;
-        System.out.println(
-                "\n\n##### listener ReducePoint : " + termCreateRequested + "\n\n");
-
-        // Sample Logic //
-        Point.reducePointForTermCreate(event);
+    public void wheneverTermCreateRequested_ReducePoint(@Payload TermCreateRequested termCreateRequested) throws ExecutionException, InterruptedException {
+        System.out.println("\n\n##### listener ReducePoint : " + termCreateRequested + "\n\n");
+        pointService.reducePointForEvent(termCreateRequested.getUserId(), "일반 약관 생성");
     }
 
     @StreamListener(value = KafkaProcessor.INPUT, condition = "headers['type']=='ForeignTermCreateRequested'")
-    public void wheneverForeignTermCreateRequested_ReducePoint(
-            @Payload ForeignTermCreateRequested foreignTermCreateRequested) {
-        ForeignTermCreateRequested event = foreignTermCreateRequested;
-        System.out.println(
-                "\n\n##### listener ReducePoint : " +
-                        foreignTermCreateRequested +
-                        "\n\n");
-
-        // Sample Logic //
-        Point.reducePointForForeignTermCreate(event);
+    public void wheneverForeignTermCreateRequested_ReducePoint(@Payload ForeignTermCreateRequested foreignTermCreateRequested) throws ExecutionException, InterruptedException {
+        System.out.println("\n\n##### listener ReducePoint : " + foreignTermCreateRequested + "\n\n");
+        pointService.reducePointForEvent(foreignTermCreateRequested.getUserId(), "외국어 약관 생성");
     }
 
     @StreamListener(value = KafkaProcessor.INPUT, condition = "headers['type']=='RiskDetectRequested'")
-    public void wheneverRiskDetectRequested_ReducePoint(
-            @Payload RiskDetectRequested riskDetectRequested) {
-        RiskDetectRequested event = riskDetectRequested;
-        System.out.println(
-                "\n\n##### listener ReducePoint : " + riskDetectRequested + "\n\n");
-
-        // Sample Logic //
-        Point.reducePointForRiskDetect(event);
+    public void wheneverRiskDetectRequested_ReducePoint(@Payload RiskDetectRequested riskDetectRequested) throws ExecutionException, InterruptedException {
+        System.out.println("\n\n##### listener ReducePoint : " + riskDetectRequested + "\n\n");
+        pointService.reducePointForEvent(riskDetectRequested.getUserId(), "리스크 검사");
     }
 
     @StreamListener(value = KafkaProcessor.INPUT, condition = "headers['type']=='AiTermModifyRequested'")
-    public void wheneverAiTermModifyRequested_ReducePoint(
-            @Payload AiTermModifyRequested aiTermModifyRequested) {
-        AiTermModifyRequested event = aiTermModifyRequested;
-        System.out.println(
-                "\n\n##### listener ReducePoint : " + aiTermModifyRequested + "\n\n");
-
-        // Sample Logic //
-        Point.reducePointForAiTermModify(event);
+    public void wheneverAiTermModifyRequested_ReducePoint(@Payload AiTermModifyRequested aiTermModifyRequested) throws ExecutionException, InterruptedException {
+        System.out.println("\n\n##### listener ReducePoint : " + aiTermModifyRequested + "\n\n");
+        pointService.reducePointForEvent(aiTermModifyRequested.getUserId(), "AI 약관 수정");
     }
 }
-// >>> Clean Arch / Inbound Adaptor

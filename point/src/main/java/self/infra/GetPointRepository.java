@@ -1,10 +1,9 @@
 package self.infra;
 
-import java.util.List;
-import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-import self.domain.*;
-
-@RepositoryRestResource(collectionResourceRel = "getPoints", path = "getPoints")
-public interface GetPointRepository
-    extends PagingAndSortingRepository<GetPoint, Long> {}
+import org.springframework.stereotype.Repository;
+// Firestore 연동 로직이 필요하다면 여기에 추가
+// 지금은 컴파일 오류를 해결하기 위해 내용이 없는 상태로 둠
+@Repository
+public class GetPointRepository {
+    // public void save(GetPoint getPoint) { ... }
+}

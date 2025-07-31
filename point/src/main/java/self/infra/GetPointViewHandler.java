@@ -27,9 +27,9 @@ public class GetPointViewHandler {
             // view 객체 생성
             GetPoint getPoint = new GetPoint();
             // view 객체에 이벤트의 Value 를 set 함
-            getPoint.setUserid(userSignedUp.getId());
+            getPoint.setUserid(userSignedUp.getUserId());
             // view 레파지 토리에 save
-            getPointRepository.save(getPoint);
+            // getPointRepository.save(getPoint); // TODO: Firestore에 맞게 구현 필요
         } catch (Exception e) {
             e.printStackTrace();
         }
