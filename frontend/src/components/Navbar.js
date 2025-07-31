@@ -12,7 +12,7 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
 
   // 스마트한 API URL 감지
   const getApiUrl = () => {
-    // 1. 환경변수가 설정되어 있으면 최우선 사용
+    // 1. 환경변수가 설정되어 있으면 최우선 사용 (팀원이 수동으로 설정한 경우)
     if (process.env.REACT_APP_POINT_API_URL) {
       return process.env.REACT_APP_POINT_API_URL;
     }
@@ -47,15 +47,18 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
       return 'http://localhost:8085/api/points';
     }
     
-    // 6. 배포 서버 IP 감지
+    // 6. 배포 서버 IP 감지 (특정 IP 대응)
     if (hostname === '34.54.82.32') {
       return `http://34.54.82.32:8085/api/points`;
     }
     
-    // 7. 기본값 - 상대 경로 (같은 도메인의 8085 포트 시도)
-    const port = window.location.port;
-    const baseHost = hostname;
-    return `${protocol}//${baseHost}:8085/api/points`;
+    // 7. HTTPS 환경에서는 HTTPS 포트 사용 (일반적인 배포 환경)
+    if (protocol === 'https:') {
+      return `${protocol}//${hostname}:8085/api/points`;
+    }
+    
+    // 8. 기본값 - HTTP 환경
+    return `${protocol}//${hostname}:8085/api/points`;
   };
 
   // 포인트 조회 함수
