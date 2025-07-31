@@ -8,6 +8,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import self.domain.*;
 import self.service.TermService;
+import java.util.Date; // import 추가
 
 //<<< Clean Arch / Inbound Adaptor
 
@@ -126,6 +127,7 @@ public class TermController {
 
         Term newVersionTerm = termService.createNewVersionFrom(originalTerm);
         newVersionTerm.setUpdateType("AI_MODIFY");
+        newVersionTerm.setModifiedAt(new Date()); // 수정 시간 설정
         
         // TODO: aiTermModifyRequest 로직을 TermService로 이동해야 함
         
@@ -156,7 +158,9 @@ public class TermController {
 
         Term newVersionTerm = termService.createNewVersionFrom(originalTerm);
         newVersionTerm.setUpdateType("DIRECT_UPDATE");
+        newVersionTerm.setModifiedAt(new Date()); // 수정 시간 설정
 
+        // Apply changes from the command
         newVersionTerm.setTitle(updateCommand.getTitle());
         newVersionTerm.setContent(updateCommand.getContent());
         newVersionTerm.setMemo(updateCommand.getMemo());

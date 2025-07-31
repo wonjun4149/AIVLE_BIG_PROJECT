@@ -2,9 +2,12 @@ package self.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import self.domain.*;
 
+import java.util.Date; // import 추가
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -21,6 +24,7 @@ public class TermService {
     // TermController에서 사용할 메소드들
     public Term createTerm(Term term) throws ExecutionException, InterruptedException {
         // 생성 시에는 항상 "v1"이므로, 별도의 updateType은 없음
+        term.setCreatedAt(new Date()); // 생성 시간 설정
         // save 메소드를 호출하여 저장 및 이벤트 발행
         return this.save(term);
     }
@@ -36,17 +40,34 @@ public class TermService {
         String updateType = term.getUpdateType();
         if ("v1".equals(term.getVersion()) && updateType == null) {
              TermCreateRequested termCreateRequested = new TermCreateRequested(term);
-             streamBridge.send("event-out", termCreateRequested);
+             // 헤더와 함께 메시지 전송
+             Message<TermCreateRequested> message = MessageBuilder
+                     .withPayload(termCreateRequested)
+                     .setHeader("type", "TermCreateRequested")
+                     .build();
+             streamBridge.send("event-out", message);
         } else if ("AI_MODIFY".equals(updateType)) {
             TermModified termModified = new TermModified(term);
-            streamBridge.send("event-out", termModified);
+            Message<TermModified> message = MessageBuilder
+                    .withPayload(termModified)
+                    .setHeader("type", "TermModified")
+                    .build();
+            streamBridge.send("event-out", message);
         } else if ("DIRECT_UPDATE".equals(updateType)) {
             TermModified termModified = new TermModified(term);
-            streamBridge.send("event-out", termModified);
+            Message<TermModified> message = MessageBuilder
+                    .withPayload(termModified)
+                    .setHeader("type", "TermModified")
+                    .build();
+            streamBridge.send("event-out", message);
         } else {
             // 그 외의 경우, 또는 updateType이 없는 경우 일반적인 등록 이벤트 발행
             TermRegistered termRegistered = new TermRegistered(term);
-            streamBridge.send("event-out", termRegistered);
+            Message<TermRegistered> message = MessageBuilder
+                    .withPayload(termRegistered)
+                    .setHeader("type", "TermRegistered")
+                    .build();
+            streamBridge.send("event-out", message);
         }
 
         return term;

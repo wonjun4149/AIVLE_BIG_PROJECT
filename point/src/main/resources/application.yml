@@ -8,7 +8,7 @@ spring:
 # Firebase 설정
 firebase:
   service-account-file: "file:src/main/resources/firebase-adminsdk.json"
-  project-id: "your-project-id" # 실제 프로젝트 ID로 변경해주세요
+  project-id: "aivle-team0721" # 실제 프로젝트 ID로 변경해주세요
 
 ---
 
