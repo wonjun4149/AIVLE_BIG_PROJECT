@@ -53,3 +53,61 @@
     background-color: #6c757d;
     color: white;
 }
+
+.file-upload-wrapper {
+    display: flex;
+    align-items: baseline; /* 정렬 기준을 baseline으로 변경 */
+    gap: 10px;
+}
+
+.file-upload-wrapper > * {
+    vertical-align: middle; /* 모든 자식 요소의 수직 정렬 기준을 중간으로 통일 */
+}
+
+.file-select-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f0f0f0;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.file-select-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.file-name-display {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.qna-write-form .file-cancel-btn {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    line-height: 1; /* line-height 초기화 */
+    text-align: center;
+    cursor: pointer;
+    font-weight: bold;
+    color: #721c24;
+    font-size: 10px;
+    padding: 0;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.qna-write-form .file-cancel-btn:hover {
+    background-color: #d9534f; /* 호버 시 진한 빨간색 */
+    color: white;
+    border-color: #d9534f;
+}
+
+.progress-bar-container {
+    margin-bottom: 1rem;
+}
+
+.progress-bar-container progress {
+    width: 100%;
+}

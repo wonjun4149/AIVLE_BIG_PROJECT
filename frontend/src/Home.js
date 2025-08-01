@@ -27,7 +27,7 @@ function Home({ user }) {
   };
 
   return (
-    <div className="App">
+    <div className="HomeContainer">
 
       <main className="main-content">
         <div className="hero-section">

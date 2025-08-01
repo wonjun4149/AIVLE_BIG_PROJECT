@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import Sidebar from './components/Sidebar';
 import AccountInfo from './components/AccountInfo';
 import PasswordChangeForm from './components/PasswordChangeForm';
 import './MyPage.css';
@@ -28,14 +27,11 @@ const MyPage = () => {
     }
 
     return (
-        <>
-            <div className="mypage-container">
-                <Sidebar />
-                <div className="main-content">
-                    <AccountInfo />
-                </div>
+        <div className="mypage-container-nosidebar"> {/* Sidebar가 없으므로 새로운 클래스명 사용 */}
+            <div className="main-content-full"> {/* Sidebar가 없으므로 새로운 클래스명 사용 */}
+                <AccountInfo />
             </div>
-        </>
+        </div>
     );
 };
 
