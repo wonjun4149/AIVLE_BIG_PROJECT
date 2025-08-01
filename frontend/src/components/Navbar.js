@@ -13,7 +13,12 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
 
   // ✅ API URL 결정 함수
   const getApiUrl = () => {
-    // 1️⃣ 환경변수에서 URL 설정 시 무조건 사용
+    // 1️⃣ Cloud Run URL이 있으면 최우선 사용
+    if (process.env.REACT_APP_CLOUD_RUN_POINT_API_BASE_URL) {
+      return process.env.REACT_APP_CLOUD_RUN_POINT_API_BASE_URL + '/api/points';
+    }
+
+    // 2️⃣ 기타 환경변수
     if (process.env.REACT_APP_POINT_API_URL) {
       return process.env.REACT_APP_POINT_API_URL;
     }
@@ -21,19 +26,19 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
     const hostname = window.location.hostname;
     const protocol = window.location.protocol;
 
-    // 2️⃣ GitPod 환경
+    // 3️⃣ GitPod 환경
     if (hostname.includes('gitpod.io')) {
       const gitpodUrl = hostname.replace(/^\d+-/, '8085-');
       return `${protocol}//${gitpodUrl}/api/points`;
     }
 
-    // 3️⃣ GitHub Codespaces
+    // 4️⃣ GitHub Codespaces
     if (hostname.includes('github.dev') || hostname.includes('githubpreview.dev')) {
       const codespacesUrl = hostname.replace(/^\d+-/, '8085-');
       return `${protocol}//${codespacesUrl}/api/points`;
     }
 
-    // 4️⃣ CodeSandbox
+    // 5️⃣ CodeSandbox
     if (hostname.includes('csb.app') || hostname.includes('codesandbox.io')) {
       const parts = hostname.split('-');
       if (parts.length > 1) {
@@ -42,12 +47,12 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
       }
     }
 
-    // 5️⃣ 로컬 개발
+    // 6️⃣ 로컬 개발
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
       return 'http://localhost:8085/api/points';
     }
 
-    // 6️⃣ 기본값
+    // 7️⃣ 최종 기본값
     return `${protocol}//${hostname}/api/points`;
   };
 
@@ -101,6 +106,7 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
 
   const getEnvironmentType = () => {
     const hostname = window.location.hostname;
+    if (process.env.REACT_APP_CLOUD_RUN_POINT_API_BASE_URL) return 'Cloud Run (env)';
     if (process.env.REACT_APP_POINT_API_URL) return 'Environment Variable';
     if (hostname.includes('gitpod.io')) return 'GitPod';
     if (hostname.includes('github.dev')) return 'GitHub Codespaces';
