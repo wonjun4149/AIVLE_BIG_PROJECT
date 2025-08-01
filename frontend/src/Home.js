@@ -1,7 +1,6 @@
 // src/Home.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from './components/Navbar';
 import iconStandard from './assets/icon-standard.png';
 import iconRentMoney from './assets/icon-rent-money.png';
 import iconLabor from './assets/icon-labor.png';
@@ -29,7 +28,6 @@ function Home({ user }) {
 
   return (
     <div className="App">
-      <Navbar user={user} onSignUpClick={handleSignUpClick} onLoginClick={handleLoginClick} />
 
       <main className="main-content">
         <div className="hero-section">

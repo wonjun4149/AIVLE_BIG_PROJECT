@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Navbar from './Navbar';
 import './Create-Terms.css';
 
 function CreateTerms({ user, onHomeClick, onSignUpClick }) {
@@ -66,7 +65,6 @@ function CreateTerms({ user, onHomeClick, onSignUpClick }) {
   // -----------------------
   return (
     <div className="App">
-      <Navbar user={user} onHomeClick={onHomeClick} onSignUpClick={onSignUpClick} />
       <main className="terms-main">
         <div className="terms-container">
           

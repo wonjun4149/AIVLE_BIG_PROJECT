@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Navbar from './Navbar';
 import './Create-Terms.css'; // 동일한 CSS 파일 사용
 
 function CreateStandard({ user, onHomeClick, onSignUpClick }) {
@@ -24,7 +23,6 @@ function CreateStandard({ user, onHomeClick, onSignUpClick }) {
 
   return (
     <div className="App">
-      <Navbar user={user} onHomeClick={onHomeClick} onSignUpClick={onSignUpClick} />
       
       <main className="terms-main">
         <div className="terms-container">

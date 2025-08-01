@@ -24,18 +24,25 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
-        List<String> path = List.of(request.getURI().getPath().split("/"));
+        String authToken = this.getAuthToken(request);
 
-        // Allow access to authentication endpoints without a token
+        // 비로그인 사용자의 qna GET 요청은 허용
+        if (authToken == null && request.getMethod().matches("GET") && request.getURI().getPath().startsWith("/qna")) {
+            return chain.filter(exchange);
+        }
+
+        // 인증 엔드포인트는 허용
+        List<String> path = List.of(request.getURI().getPath().split("/"));
         if (path.contains("auth")) {
             return chain.filter(exchange);
         }
 
-        String authToken = this.getAuthToken(request);
+        // 위 조건에 해당하지 않는데 토큰이 없으면 거부
         if (authToken == null) {
             return this.onError(exchange, "Authorization header is missing or invalid");
         }
 
+        // 토큰이 있으면 검증하고 uid를 헤더에 추가
         try {
             FirebaseToken decodedToken = firebaseAuth.verifyIdToken(authToken);
             String uid = decodedToken.getUid();

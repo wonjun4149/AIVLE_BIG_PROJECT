@@ -127,7 +127,7 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
     try {
       await auth.signOut();
       alert('로그아웃 되었습니다.');
-      window.location.reload();
+      navigate('/'); // 메인 페이지로 이동
     } catch (error) {
       console.error('로그아웃 실패:', error);
       alert('로그아웃 중 오류가 발생했습니다.');
@@ -208,6 +208,7 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
               <ul>
                 <li onClick={() => { navigate('/mypage'); setIsSidebarOpen(false); }}>마이페이지</li>
                 <li onClick={() => { navigate('/contracts'); setIsSidebarOpen(false); }}>계약서 관리</li>
+                <li onClick={() => { navigate('/qna'); setIsSidebarOpen(false); }}>질문 게시판</li>
                 <li onClick={() => { navigate('/points'); setIsSidebarOpen(false); }}>포인트 관리</li>
                 <li onClick={() => { navigate('/settings'); setIsSidebarOpen(false); }}>설정</li>
                 {user && (

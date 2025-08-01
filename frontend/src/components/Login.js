@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword, signOut, signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import logo from '../assets/logo.png';
 import './Login.css';
 
@@ -10,6 +10,8 @@ function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || '/';
 
   const handleLogin = async () => {
     try {
@@ -23,7 +25,7 @@ function Login() {
       }
 
       alert('로그인 성공');
-      navigate('/');
+      navigate(from, { replace: true });
     } catch (error) {
       console.error('로그인 실패:', error);
       alert(error.message);
@@ -34,7 +36,7 @@ function Login() {
     try {
       await signInWithPopup(auth, googleProvider);
       alert('Google 로그인 성공');
-      navigate('/');
+      navigate(from, { replace: true });
     } catch (error) {
       console.error('Google 로그인 실패:', error);
       alert(error.message);

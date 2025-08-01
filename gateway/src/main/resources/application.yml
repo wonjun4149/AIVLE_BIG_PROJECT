@@ -26,22 +26,16 @@ spring:
           uri: http://localhost:8085
           predicates:
             - Path=/points/**, /getPoints/**, /api/points/**
+        - id: qna
+          uri: http://localhost:8086
+          predicates:
+            - Path=/qna/**
         - id: frontend
           uri: http://localhost:8080
           predicates:
             - Path=/**
 #>>> API Gateway / Routes
-      globalcors:
-        corsConfigurations:
-          '[/**]':
-            allowedOrigins:
-              - "*"
-            allowedMethods:
-              - "*"
-            allowedHeaders:
-              - "*"
-              - "X-Authenticated-User-Uid"
-            allowCredentials: true
+      
 
 
 ---
@@ -63,21 +57,15 @@ spring:
           uri: http://point:8080
           predicates:
             - Path=/points/**, 
+        - id: qna
+          uri: http://qna:8080
+          predicates:
+            - Path=/qna/**, 
         - id: frontend
           uri: http://frontend:8080
           predicates:
             - Path=/**
-      globalcors:
-        corsConfigurations:
-          '[/**]':
-            allowedOrigins:
-              - "*"
-            allowedMethods:
-              - "*"
-            allowedHeaders:
-              - "*"
-              - "X-Authenticated-User-Uid"
-            allowCredentials: true
+      
 
 server:
   port: 8080

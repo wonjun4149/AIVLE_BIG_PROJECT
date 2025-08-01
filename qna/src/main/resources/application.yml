@@ -1,0 +1,30 @@
+server:
+  port: ${PORT:8086}
+
+spring:
+  application:
+    name: qna
+  jpa:
+    hibernate:
+      ddl-auto: none # Firestore를 사용하므로 JPA 스키마 생성 비활성화
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+
+# Firebase 설정
+firebase:
+  service-account-file: "file:src/main/resources/firebase-adminsdk.json"
+  project-id: "aivle-team0721" # 실제 프로젝트 ID
+
+logging:
+  level:
+    org.springframework.cloud: debug
+
+management:
+  endpoints:
+    web:
+      cors:
+        allowed-origins: "*"
+        allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
+        allowed-headers: "*"

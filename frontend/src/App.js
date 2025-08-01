@@ -10,6 +10,10 @@ import CompleteSignUp from './components/CompleteSignUp';
 import { auth, db } from './firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import MyPage from './MyPage';
+import QnaList from './components/QnaList';
+import QnaWrite from './components/QnaWrite';
+import QnaDetail from './components/QnaDetail';
+import MainLayout from './components/MainLayout';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -34,13 +38,21 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Home user={user} />} />
+        {/* 네비게이션 바가 있는 페이지들 */}
+        <Route element={<MainLayout user={user} />}>
+          <Route path="/" element={<Home user={user} />} />
+          <Route path="/create-terms" element={<CreateTerms user={user} />} />
+          <Route path="/create-standard" element={<CreateStandard user={user} />} />
+          <Route path="/mypage" element={<MyPage />} />
+          <Route path="/qna" element={<QnaList />} />
+          <Route path="/qna/write" element={<QnaWrite />} />
+          <Route path="/qna/:id" element={<QnaDetail />} />
+        </Route>
+
+        {/* 네비게이션 바가 없는 페이지들 */}
         <Route path="/signup" element={<SignUp onHomeClick={() => window.location.href = '/'} />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/create-terms" element={<CreateTerms user={user} />} />
-        <Route path="/create-standard" element={<CreateStandard user={user} />} />
         <Route path="/complete-signup" element={<CompleteSignUp />} />
-        <Route path="/mypage" element={<MyPage />} />
       </Routes>
     </Router>
   );

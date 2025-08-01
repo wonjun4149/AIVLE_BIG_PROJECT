@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import AccountInfo from './components/AccountInfo';
 import PasswordChangeForm from './components/PasswordChangeForm';
@@ -30,9 +29,6 @@ const MyPage = () => {
 
     return (
         <>
-            {/* 네비게이션바 추가 */}
-            <Navbar user={user} />
-            
             <div className="mypage-container">
                 <Sidebar />
                 <div className="main-content">
