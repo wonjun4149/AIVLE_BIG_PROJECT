@@ -35,30 +35,35 @@
 }
 
 .account-content {
-    flex: 1;
+    max-width: 600px; /* 콘텐츠 최대 너비 설정 */
+    margin: 0 auto; /* 중앙 정렬 */
     padding: 40px;
     background-color: white;
 }
 
 .info-row {
-    display: flex;
-    justify-content: flex-start;
+    display: grid; /* Grid 레이아웃 사용 */
+    grid-template-columns: 150px 1fr; /* 150px 너비의 레이블 열과 나머지 공간을 차지하는 값 열 */
     align-items: center;
     margin-bottom: 20px;
+    gap: 20px; /* 레이블과 값 사이의 간격 */
 }
 
 .info-row label {
-    width: 150px;
     font-weight: bold;
+    text-align: right; /* 레이블 텍스트 오른쪽 정렬 */
 }
 
 .info-row span {
-    color: #5c2d91;
+    color: #333; /* 기본 텍스트 색상으로 변경 */
+    text-align: left;
 }
 
 .info-row input {
-    padding: 5px;
-    width: 250px;
+    padding: 8px;
+    width: 100%; /* 부모 컨테이너에 맞게 너비 조정 */
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }
 
 .save-button {
@@ -68,4 +73,7 @@
     border: none;
     cursor: pointer;
     margin-top: 20px;
+    display: block; /* 버튼을 블록 요소로 만들어 margin:auto 적용 */
+    margin-left: auto; /* 오른쪽 정렬 효과 */
+    margin-right: 0;
 }

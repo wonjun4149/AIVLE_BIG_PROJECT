@@ -8,62 +8,13 @@
     color: #636e72;
 }
 
-.mypage-container {
-    display: flex;
-    /* 네비게이션바 높이만큼 뺀 높이 설정 */
-    height: calc(100vh - 80px);
-    font-family: sans-serif;
-}
-
-.sidebar {
-    width: 220px;
-    background-color: #f2f0f5;
-    padding: 1rem;
-    /* 스크롤 처리 추가 */
-    overflow-y: auto;
-}
-
-.sidebar h2 {
-    color: #4b2979;
-    margin-top: 0;
-}
-
-.sidebar .user-name {
-    font-weight: bold;
-    margin: 1rem 0;
-    color: #2d3436;
-}
-
-.sidebar ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.sidebar li {
-    padding: 0.75rem 0.5rem;
-    cursor: pointer;
-    border-radius: 4px;
-    margin-bottom: 0.25rem;
-    transition: background-color 0.2s ease;
-}
-
-.sidebar li:hover {
-    background-color: #e1dce6;
-}
-
-.sidebar li.active {
-    background-color: #d9d3e3;
-    font-weight: bold;
-    color: #4b2979;
-}
-
 .main-content {
-    flex: 1;
+    max-width: 900px; /* 최대 너비 설정 */
+    margin: 0 auto; /* 좌우 여백을 자동으로 설정하여 중앙 정렬 */
     padding: 2rem;
-    /* 스크롤 처리 추가 */
     overflow-y: auto;
     background-color: #ffffff;
+    min-height: calc(100vh - 80px); /* 최소 높이만 설정 */
 }
 
 /* 계정 정보 스타일 개선 */

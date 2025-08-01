@@ -14,5 +14,6 @@ public class Question {
     private Date createdAt;
     private Date updatedAt;
     private int viewCount;
+    private String imageUrl;
     private List<Answer> answers; // Embedded or sub-collection
 }

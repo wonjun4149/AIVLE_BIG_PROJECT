@@ -20,6 +20,9 @@ public class FirebaseConfig {
     @Value("${firebase.project-id}")
     private String projectId;
 
+    @Value("${firebase.storage-bucket}") // storage-bucket 값 주입
+    private String storageBucket;
+
     @PostConstruct
     public void initFirebase() throws IOException {
         if (FirebaseApp.getApps().isEmpty()) {
@@ -28,6 +31,7 @@ public class FirebaseConfig {
             FirebaseOptions options = new FirebaseOptions.Builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccountStream))
                     .setProjectId(projectId)
+                    .setStorageBucket(storageBucket) // Storage 버킷 설정 추가
                     .build();
 
             FirebaseApp.initializeApp(options);
