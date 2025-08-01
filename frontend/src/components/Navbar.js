@@ -13,12 +13,9 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
 
   // ✅ API URL 결정 함수
   const getApiUrl = () => {
-    // 1️⃣ Cloud Run URL이 있으면 최우선 사용
     if (process.env.REACT_APP_CLOUD_RUN_POINT_API_BASE_URL) {
       return process.env.REACT_APP_CLOUD_RUN_POINT_API_BASE_URL + '/api/points';
     }
-
-    // 2️⃣ 기타 환경변수
     if (process.env.REACT_APP_POINT_API_URL) {
       return process.env.REACT_APP_POINT_API_URL;
     }
@@ -26,19 +23,14 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
     const hostname = window.location.hostname;
     const protocol = window.location.protocol;
 
-    // 3️⃣ GitPod 환경
     if (hostname.includes('gitpod.io')) {
       const gitpodUrl = hostname.replace(/^\d+-/, '8085-');
       return `${protocol}//${gitpodUrl}/api/points`;
     }
-
-    // 4️⃣ GitHub Codespaces
     if (hostname.includes('github.dev') || hostname.includes('githubpreview.dev')) {
       const codespacesUrl = hostname.replace(/^\d+-/, '8085-');
       return `${protocol}//${codespacesUrl}/api/points`;
     }
-
-    // 5️⃣ CodeSandbox
     if (hostname.includes('csb.app') || hostname.includes('codesandbox.io')) {
       const parts = hostname.split('-');
       if (parts.length > 1) {
@@ -46,17 +38,13 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
         return `${protocol}//${parts.join('-')}/api/points`;
       }
     }
-
-    // 6️⃣ 로컬 개발
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
       return 'http://localhost:8085/api/points';
     }
-
-    // 7️⃣ 최종 기본값
     return `${protocol}//${hostname}/api/points`;
   };
 
-  // 포인트 조회 함수
+  // ✅ Firebase 토큰 포함 포인트 조회
   const fetchUserPoints = async (showRefreshIndicator = false) => {
     if (!user || !user.uid) return;
 
@@ -66,6 +54,10 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
 
     try {
       const apiUrl = getApiUrl();
+
+      // 🔹 Firebase에서 토큰 가져오기
+      const token = await user.getIdToken();
+
       console.log('감지된 환경:', {
         hostname: window.location.hostname,
         환경: getEnvironmentType(),
@@ -76,7 +68,8 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}` // ✅ 토큰 추가
         }
       });
 
@@ -133,7 +126,7 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
     try {
       await auth.signOut();
       alert('로그아웃 되었습니다.');
-      navigate('/'); // 메인 페이지로 이동
+      navigate('/');
     } catch (error) {
       console.error('로그아웃 실패:', error);
       alert('로그아웃 중 오류가 발생했습니다.');
