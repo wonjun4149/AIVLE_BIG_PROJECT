@@ -118,3 +118,10 @@
   margin-top: 10px;
   font-size: 0.9rem;
 }
+
+.login-error-msg {
+  color: #dc3545; /* 빨간색 */
+  font-size: 0.875rem; /* 기존보다 작은 글자 크기 */
+  margin-bottom: 16px; /* 다른 요소와의 간격 */
+  text-align: center; /* 중앙 정렬 */
+}
