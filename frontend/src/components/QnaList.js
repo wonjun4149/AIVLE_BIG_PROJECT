@@ -184,15 +184,15 @@ const QnaList = () => {
         });
     };
 
-    if (loading) return <div className="loading-spinner">로딩 중...</div>;
     if (error) return <div className="error-message">{error}</div>;
-    if (!pageData || !pageData.content) return <div className="no-data-message">데이터가 없습니다.</div>;
 
     return (
         <div className="qna-container">
             <h1>질문 게시판</h1>
             <div className="list-header">
-                <p className="total-posts-count">{pageData.totalElements}개의 게시물</p>
+                <p className="total-posts-count">
+                    {pageData ? `${pageData.totalElements}개의 게시물` : '게시물을 불러오는 중...'}
+                </p>
                 <button onClick={handleWriteClick} className="write-question-btn">질문 작성하기</button>
             </div>
             <table className="qna-table">
@@ -205,7 +205,13 @@ const QnaList = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {pageData.content.length > 0 ? (
+                    {loading ? (
+                        <tr>
+                            <td colSpan="4" style={{ textAlign: 'center', padding: '20px' }}>
+                                <div className="loading-spinner"></div>
+                            </td>
+                        </tr>
+                    ) : pageData && pageData.content.length > 0 ? (
                         pageData.content.map((q) => (
                             <tr key={q.id}>
                                 <td><Link to={`/qna/${q.id}`}>{q.title}</Link></td>
@@ -222,17 +228,18 @@ const QnaList = () => {
                 </tbody>
             </table>
 
+            {/* 페이지네이션 컨트롤 */}
             <div className="pagination-controls">
                 <button 
                     onClick={() => handlePageChange(currentPage - 1)} 
-                    disabled={currentPage === 0}
+                    disabled={!pageData || currentPage === 0}
                 >
                     이전
                 </button>
                 {renderPagination()}
                 <button 
                     onClick={() => handlePageChange(currentPage + 1)} 
-                    disabled={pageData.last}
+                    disabled={!pageData || pageData.last}
                 >
                     다음
                 </button>
