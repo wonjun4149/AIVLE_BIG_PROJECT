@@ -103,7 +103,7 @@ const QnaList = () => {
             <h1>질문 게시판</h1>
             <div className="list-header">
                 <p className="total-posts-count">
-                    {pageData ? `${pageData.totalElements}개의 게시물` : '게시물을 불러오는 중...'}
+                    {pageData && `${pageData.totalElements}개의 게시물`}
                 </p>
                 <button onClick={handleWriteClick} className="write-question-btn">질문 작성하기</button>
             </div>

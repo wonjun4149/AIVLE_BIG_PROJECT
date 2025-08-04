@@ -116,9 +116,8 @@ const QnaDetail = () => {
         }
     };
 
-    if (loading) return <div>로딩 중...</div>;
     if (error) return <div>{error}</div>;
-    if (!question) return <div>질문을 찾을 수 없습니다.</div>;
+    if (!question) return null; // 데이터가 로드되기 전까지는 아무것도 렌더링하지 않음
 
     const isAuthor = user && user.uid === question.authorId;
 
