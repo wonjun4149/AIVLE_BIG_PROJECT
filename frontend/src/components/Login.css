@@ -127,3 +127,11 @@
   width: 20px;
   height: 20px;
 }
+
+  .fail-count-msg {
+    color: red;
+    margin-top: 10px;
+    font-size: 0.9rem;
+  }
+  height: 20px;
+}
