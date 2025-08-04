@@ -12,5 +12,6 @@ google-auth==2.40.3
 google-api-core==2.25.1
 google-cloud-core==2.4.3
 gunicorn==23.0.0
-torch==2.2.2+cpu
+torch==2.2.2
+numpy==1.26.4
 -f https://download.pytorch.org/whl/cpu/torch_stable.html
