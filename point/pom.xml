@@ -35,6 +35,10 @@
 			<artifactId>firebase-admin</artifactId>
 			<version>9.2.0</version> <!-- 버전은 다른 서비스와 통일 -->
 		</dependency>
+		<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>google-cloud-secretmanager</artifactId>
+		</dependency>
       <!-- lombok -->
 		<dependency>
 				<groupId>org.projectlombok</groupId>

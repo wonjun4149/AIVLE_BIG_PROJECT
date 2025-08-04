@@ -3,8 +3,9 @@ server:
 
 # Firebase 설정
 firebase:
-  service-account-file: "src/main/resources/firebase-adminsdk.json"
+  secret-id: "firebase-adminsdk"
   database-url: "aivle-team0721" # 실제 프로젝트 ID로 변경해주세요
+  project-id: "aivle-team0721" # 실제 프로젝트 ID로 변경해주세요
 
 ---
 
@@ -12,6 +13,17 @@ spring:
   profiles: default
   cloud:
     gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
 #<<< API Gateway / Routes
       routes:
         - id: ai
@@ -29,7 +41,7 @@ spring:
         - id: qna
           uri: http://localhost:8086
           predicates:
-            - Path=/qna/**
+            - Path=/qna, /qna/**
         - id: frontend
           uri: http://localhost:8080
           predicates:

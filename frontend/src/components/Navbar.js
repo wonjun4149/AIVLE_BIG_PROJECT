@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import './Navbar.css';
 import logo from '../assets/logo.png';
 import { auth } from '../firebase';
-import Sidebar from './Sidebar'; // Sidebar 컴포넌트 import
 
 const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
   const navigate = useNavigate();
@@ -181,17 +180,44 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
                 <button className="header-btn" onClick={handleSignUpClick}>회원가입</button>
               </>
             )}
-            <button className="menu-btn" onClick={() => setIsSidebarOpen(true)}>☰</button>
+            <button className="menu-btn" onClick={handleMenuClick}>☰</button>
           </div>
         </div>
       </header>
 
-      <Sidebar 
-        isOpen={isSidebarOpen} 
-        onClose={() => setIsSidebarOpen(false)} 
-        user={user} 
-        userPoints={userPoints}
-      />
+      {isSidebarOpen && (
+        <>
+          <div className="sidebar-overlay" onClick={handleOverlayClick}></div>
+          <div className={`sidebar ${isSidebarOpen ? 'sidebar-open' : ''}`}>
+            <div className="sidebar-header">
+              <h2>보라계약</h2>
+              <button className="sidebar-close-btn" onClick={handleMenuClick}>×</button>
+            </div>
+            {user && (
+              <div className="sidebar-user-info">
+                <div className="sidebar-user-name">
+                  {formatUserName(user.name || user.displayName || user.email)} 님
+                </div>
+                <div className="sidebar-user-points">
+                  포인트: {formatPoints(userPoints)}P
+                </div>
+              </div>
+            )}
+            <nav className="sidebar-nav">
+              <ul>
+                <li onClick={() => { navigate('/mypage'); setIsSidebarOpen(false); }}>마이페이지</li>
+                <li onClick={() => { navigate('/contracts'); setIsSidebarOpen(false); }}>계약서 관리</li>
+                <li onClick={() => { navigate('/qna'); setIsSidebarOpen(false); }}>질문 게시판</li>
+                <li onClick={() => { navigate('/points'); setIsSidebarOpen(false); }}>포인트 관리</li>
+                <li onClick={() => { navigate('/settings'); setIsSidebarOpen(false); }}>설정</li>
+                {user && (
+                  <li onClick={() => { handleLogout(); setIsSidebarOpen(false); }}>로그아웃</li>
+                )}
+              </ul>
+            </nav>
+          </div>
+        </>
+      )}
     </>
   );
 };

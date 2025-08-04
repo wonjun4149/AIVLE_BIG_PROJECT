@@ -39,16 +39,22 @@ apiClient.interceptors.request.use(async (config) => {
 
 /**
 <<<<<<< HEAD
+<<<<<<< HEAD
  * ✅ 모든 질문 목록을 가져옵니다.
 =======
  * 모든 질문 목록을 페이지별로 가져옵니다.
  * @param {number} page - 페이지 번호 (0부터 시작)
  * @param {number} size - 페이지당 게시글 수
 >>>>>>> 775a33f (게시판 수정작업)
+=======
+ * ✅ 모든 질문 목록을 가져옵니다. (페이징 지원)
+>>>>>>> 80dec57 (시크릿매니저 사용으로 변경)
  */
 export const getAllQuestions = async (page = 0, size = 10) => {
     try {
-        const response = await apiClient.get(`/qna?page=${page}&size=${size}`);
+        const response = await apiClient.get('/qna', {
+            params: { page, size }
+        });
         return response.data;
     } catch (error) {
         console.error("Error fetching questions:", error);
@@ -110,36 +116,34 @@ export const createAnswer = async (questionId, content) => {
 };
 
 /**
- * ID로 특정 질문을 수정합니다.
- * @param {string} id - 질문 ID
- * @param {object} questionData - { title, content }
+ * ✅ 이미지를 서버에 업로드합니다.
  */
-export const updateQuestion = async (id, questionData) => {
+export const uploadImage = async (imageFile) => {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+
     try {
-        await apiClient.put(`/qna/${id}`, questionData);
+        const response = await apiClient.post('/qna/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data; // { imageUrl: '...' } 형태의 객체를 반환할 것으로 예상
     } catch (error) {
-        console.error(`Error updating question with id ${id}:`, error);
+        console.error("Error uploading image:", error);
         throw error;
     }
 };
 
 /**
- * 이미지 파일을 백엔드 서버를 통해 업로드합니다.
- * @param {File} imageFile - 업로드할 이미지 파일
+ * ✅ ID로 특정 질문을 수정합니다.
  */
-export const uploadImage = async (imageFile) => {
-    const formData = new FormData();
-    formData.append('file', imageFile);
-
+export const updateQuestion = async (id, questionData) => {
     try {
-        const response = await apiClient.post('/qna/upload-image', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
-        return response.data; // { "imageUrl": "..." }
+        const response = await apiClient.put(`/qna/${id}`, questionData);
+        return response.data;
     } catch (error) {
-        console.error('Error uploading image:', error);
+        console.error(`Error updating question with id ${id}:`, error);
         throw error;
     }
 };
