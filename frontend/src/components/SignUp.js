@@ -192,7 +192,7 @@ function SignUp({ onHomeClick }) {
                 <div className="agreement-item">
                   <input type="checkbox" id="terms" checked={agreements.terms} onChange={(e) => handleAgreementChange('terms', e.target.checked)} />
                   <label htmlFor="terms">이용약관 (필수)</label>
-                  <button className="view-btn" onClick={() => openModal('이용약관', 'https://firebasestorage.googleapis.com/v0/b/aivle-team0721.appspot.com/o/이용약관.pdf?alt=media')}>
+                  <button className="view-btn" onClick={() => openModal('이용약관', 'https://firebasestorage.googleapis.com/v0/b/aivle-team0721.firebasestorage.app/o/%E1%84%87%E1%85%A9%E1%84%85%E1%85%A1%E1%84%80%E1%85%A8%E1%84%8B%E1%85%A3%E1%86%A8%20%E1%84%89%E1%85%A5%E1%84%87%E1%85%B5%E1%84%89%E1%85%B3%20%E1%84%8B%E1%85%B5%E1%84%8B%E1%85%AD%E1%86%BC%E1%84%8B%E1%85%A3%E1%86%A8%E1%84%80%E1%85%AA%E1%86%AB.pdf?alt=media&token=8145e86d-efcd-4106-86e6-6185f2756ae5')}>
                     보기
                   </button>
                 </div>
