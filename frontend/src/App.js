@@ -26,7 +26,7 @@ function App() {
         const userDocRef = doc(db, 'users', userAuth.uid);
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
-          setUser({ ...userAuth, ...userDoc.data() });
+          setUser(Object.assign(userAuth, userDoc.data()));
         } else {
           setUser(userAuth);
         }

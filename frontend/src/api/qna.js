@@ -38,11 +38,13 @@ apiClient.interceptors.request.use(async (config) => {
 });
 
 /**
- * ✅ 모든 질문 목록을 가져옵니다.
+ * ✅ 모든 질문 목록을 가져옵니다. (페이징 지원)
  */
-export const getAllQuestions = async () => {
+export const getAllQuestions = async (page = 0, size = 10) => {
     try {
-        const response = await apiClient.get('/qna');
+        const response = await apiClient.get('/qna', {
+            params: { page, size }
+        });
         return response.data;
     } catch (error) {
         console.error("Error fetching questions:", error);
@@ -99,6 +101,39 @@ export const createAnswer = async (questionId, content) => {
         return response.data;
     } catch (error) {
         console.error(`Error creating answer for question ${questionId}:`, error);
+        throw error;
+    }
+};
+
+/**
+ * ✅ 이미지를 서버에 업로드합니다.
+ */
+export const uploadImage = async (imageFile) => {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+
+    try {
+        const response = await apiClient.post('/qna/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data; // { imageUrl: '...' } 형태의 객체를 반환할 것으로 예상
+    } catch (error) {
+        console.error("Error uploading image:", error);
+        throw error;
+    }
+};
+
+/**
+ * ✅ ID로 특정 질문을 수정합니다.
+ */
+export const updateQuestion = async (id, questionData) => {
+    try {
+        const response = await apiClient.put(`/qna/${id}`, questionData);
+        return response.data;
+    } catch (error) {
+        console.error(`Error updating question with id ${id}:`, error);
         throw error;
     }
 };
