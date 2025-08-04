@@ -15,6 +15,7 @@ import QnaWrite from './components/QnaWrite';
 import QnaDetail from './components/QnaDetail';
 import MainLayout from './components/MainLayout';
 import ResetPassword from './components/ResetPassword';
+import PointPage from './components/PointPage';
 
 
 function App() {
@@ -51,6 +52,7 @@ function App() {
           <Route path="/qna" element={<QnaList />} />
           <Route path="/qna/write" element={<QnaWrite />} />
           <Route path="/qna/:id" element={<QnaDetail />} />
+          <Route path="/points" element={<PointPage />} />
           <Route path="/reset-password" element={<ResetPassword />} />
         </Route>
 

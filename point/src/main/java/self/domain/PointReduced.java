@@ -1,26 +1,31 @@
 package self.domain;
 
-import java.time.LocalDate;
-import java.util.*;
-import lombok.*;
-import self.domain.*;
 import self.infra.AbstractEvent;
+import java.util.Date;
 
-//<<< DDD / Domain Event
-@Data
-@ToString
 public class PointReduced extends AbstractEvent {
 
-    private Long id;
+    private String id;
+    private String userId;
     private Integer amount;
-    private String userId; // Long -> String으로 변경 (Firebase UID 저장)
 
     public PointReduced(Point aggregate) {
         super(aggregate);
+        this.id = aggregate.getId();
+        this.userId = aggregate.getUserId();
+        this.amount = aggregate.getAmount();
+        // 부모 클래스의 timestamp를 사용하므로 별도 설정 필요 없음
     }
 
-    public PointReduced() {
-        super();
+    public String getId() {
+        return id;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public Integer getAmount() {
+        return amount;
     }
 }
-// >>> DDD / Domain Event
