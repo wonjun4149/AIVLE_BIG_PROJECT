@@ -246,7 +246,7 @@ function SignUp({ onHomeClick }) {
                 <div className="agreement-item">
                   <input type="checkbox" id="marketing" checked={agreements.marketing} onChange={(e) => handleAgreementChange('marketing', e.target.checked)} />
                   <label htmlFor="marketing">마케팅 수신 동의 (선택)</label>
-                        <button
+                  <button
                       className="view-btn"
                       onClick={() =>
                           openModal(
