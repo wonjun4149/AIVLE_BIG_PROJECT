@@ -1,4 +1,3 @@
-// src/components/SignUp.js
 import React, { useState } from 'react';
 import './SignUp.css';
 import logo from '../assets/logo.png';
@@ -65,6 +64,12 @@ function SignUp({ onHomeClick }) {
 
     if (formData.password !== formData.confirmPassword) {
       alert('비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/;
+    if (!passwordRegex.test(formData.password)) {
+      alert('비밀번호는 영문과 숫자를 포함해 6자 이상이어야 합니다.');
       return;
     }
 
