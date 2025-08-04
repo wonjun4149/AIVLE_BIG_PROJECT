@@ -142,7 +142,12 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
 
   const formatUserName = (userName) => {
     if (!userName) return '';
-    return userName.replace(/님$/, '');
+
+    const name = userName.replace(/님$/, '');
+
+    if (name.length <= 1) return name + '님'; 
+
+    return name.slice(0, -1) + '*' ;
   };
 
   return (
