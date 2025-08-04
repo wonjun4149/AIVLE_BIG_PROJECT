@@ -14,6 +14,9 @@ import QnaList from './components/QnaList';
 import QnaWrite from './components/QnaWrite';
 import QnaDetail from './components/QnaDetail';
 import MainLayout from './components/MainLayout';
+import ContractsPage from './ContractsPage';
+import ResetPassword from './components/ResetPassword';
+
 
 function App() {
   const [user, setUser] = useState(null);
@@ -47,6 +50,8 @@ function App() {
           <Route path="/qna" element={<QnaList />} />
           <Route path="/qna/write" element={<QnaWrite />} />
           <Route path="/qna/:id" element={<QnaDetail />} />
+          <Route path="/contracts" element={<ContractsPage />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Route>
 
         {/* 네비게이션 바가 없는 페이지들 */}
