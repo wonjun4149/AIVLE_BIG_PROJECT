@@ -14,7 +14,6 @@ import QnaList from './components/QnaList';
 import QnaWrite from './components/QnaWrite';
 import QnaDetail from './components/QnaDetail';
 import MainLayout from './components/MainLayout';
-import ContractsPage from './ContractsPage';
 import ResetPassword from './components/ResetPassword';
 
 
