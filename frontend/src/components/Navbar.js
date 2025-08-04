@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import './Navbar.css';
 import logo from '../assets/logo.png';
 import { auth } from '../firebase';
-import Sidebar from './Sidebar'; // Sidebar 컴포넌트 import
 
 const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
   const navigate = useNavigate();
@@ -14,7 +13,9 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
 
   // ✅ API URL 결정 함수
   const getApiUrl = () => {
-    // 1️⃣ 환경변수에서 URL 설정 시 무조건 사용
+    if (process.env.REACT_APP_CLOUD_RUN_POINT_API_BASE_URL) {
+      return process.env.REACT_APP_CLOUD_RUN_POINT_API_BASE_URL + '/api/points';
+    }
     if (process.env.REACT_APP_POINT_API_URL) {
       return process.env.REACT_APP_POINT_API_URL;
     }
@@ -22,19 +23,14 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
     const hostname = window.location.hostname;
     const protocol = window.location.protocol;
 
-    // 2️⃣ GitPod 환경
     if (hostname.includes('gitpod.io')) {
       const gitpodUrl = hostname.replace(/^\d+-/, '8085-');
       return `${protocol}//${gitpodUrl}/api/points`;
     }
-
-    // 3️⃣ GitHub Codespaces
     if (hostname.includes('github.dev') || hostname.includes('githubpreview.dev')) {
       const codespacesUrl = hostname.replace(/^\d+-/, '8085-');
       return `${protocol}//${codespacesUrl}/api/points`;
     }
-
-    // 4️⃣ CodeSandbox
     if (hostname.includes('csb.app') || hostname.includes('codesandbox.io')) {
       const parts = hostname.split('-');
       if (parts.length > 1) {
@@ -42,17 +38,13 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
         return `${protocol}//${parts.join('-')}/api/points`;
       }
     }
-
-    // 5️⃣ 로컬 개발
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
       return 'http://localhost:8085/api/points';
     }
-
-    // 6️⃣ 기본값
     return `${protocol}//${hostname}/api/points`;
   };
 
-  // 포인트 조회 함수
+  // ✅ Firebase 토큰 포함 포인트 조회
   const fetchUserPoints = async (showRefreshIndicator = false) => {
     if (!user || !user.uid) return;
 
@@ -62,6 +54,10 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
 
     try {
       const apiUrl = getApiUrl();
+
+      // 🔹 Firebase에서 토큰 가져오기
+      const token = await user.getIdToken();
+
       console.log('감지된 환경:', {
         hostname: window.location.hostname,
         환경: getEnvironmentType(),
@@ -72,7 +68,8 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}` // ✅ 토큰 추가
         }
       });
 
@@ -102,6 +99,7 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
 
   const getEnvironmentType = () => {
     const hostname = window.location.hostname;
+    if (process.env.REACT_APP_CLOUD_RUN_POINT_API_BASE_URL) return 'Cloud Run (env)';
     if (process.env.REACT_APP_POINT_API_URL) return 'Environment Variable';
     if (hostname.includes('gitpod.io')) return 'GitPod';
     if (hostname.includes('github.dev')) return 'GitHub Codespaces';
@@ -128,7 +126,7 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
     try {
       await auth.signOut();
       alert('로그아웃 되었습니다.');
-      navigate('/'); // 메인 페이지로 이동
+      navigate('/');
     } catch (error) {
       console.error('로그아웃 실패:', error);
       alert('로그아웃 중 오류가 발생했습니다.');
@@ -182,17 +180,44 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
                 <button className="header-btn" onClick={handleSignUpClick}>회원가입</button>
               </>
             )}
-            <button className="menu-btn" onClick={() => setIsSidebarOpen(true)}>☰</button>
+            <button className="menu-btn" onClick={handleMenuClick}>☰</button>
           </div>
         </div>
       </header>
 
-      <Sidebar 
-        isOpen={isSidebarOpen} 
-        onClose={() => setIsSidebarOpen(false)} 
-        user={user} 
-        userPoints={userPoints}
-      />
+      {isSidebarOpen && (
+        <>
+          <div className="sidebar-overlay" onClick={handleOverlayClick}></div>
+          <div className={`sidebar ${isSidebarOpen ? 'sidebar-open' : ''}`}>
+            <div className="sidebar-header">
+              <h2>보라계약</h2>
+              <button className="sidebar-close-btn" onClick={handleMenuClick}>×</button>
+            </div>
+            {user && (
+              <div className="sidebar-user-info">
+                <div className="sidebar-user-name">
+                  {formatUserName(user.name || user.displayName || user.email)} 님
+                </div>
+                <div className="sidebar-user-points">
+                  포인트: {formatPoints(userPoints)}P
+                </div>
+              </div>
+            )}
+            <nav className="sidebar-nav">
+              <ul>
+                <li onClick={() => { navigate('/mypage'); setIsSidebarOpen(false); }}>마이페이지</li>
+                <li onClick={() => { navigate('/contracts'); setIsSidebarOpen(false); }}>계약서 관리</li>
+                <li onClick={() => { navigate('/qna'); setIsSidebarOpen(false); }}>질문 게시판</li>
+                <li onClick={() => { navigate('/points'); setIsSidebarOpen(false); }}>포인트 관리</li>
+                <li onClick={() => { navigate('/settings'); setIsSidebarOpen(false); }}>설정</li>
+                {user && (
+                  <li onClick={() => { handleLogout(); setIsSidebarOpen(false); }}>로그아웃</li>
+                )}
+              </ul>
+            </nav>
+          </div>
+        </>
+      )}
     </>
   );
 };

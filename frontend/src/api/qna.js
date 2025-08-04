@@ -1,16 +1,27 @@
+// src/api/qna.js
 import axios from 'axios';
-import { auth } from '../firebase'; // Firebase auth import 추가
+import { auth } from '../firebase'; // Firebase 인증 추가
 
-const API_BASE_URL = 'http://localhost:8088'; // API Gateway URL
+// ✅ API URL 결정 함수
+const getApiUrl = () => {
+    // 1️⃣ Cloud Run URL이 있으면 최우선 사용
+    if (process.env.REACT_APP_CLOUD_RUN_QNA_API_BASE_URL) {
+        return process.env.REACT_APP_CLOUD_RUN_QNA_API_BASE_URL;
+    }
 
+    // 2️⃣ 로컬 개발 기본 URL
+    return 'http://localhost:8088';
+};
+
+// ✅ Axios 인스턴스 생성
 const apiClient = axios.create({
-    baseURL: API_BASE_URL,
+    baseURL: getApiUrl(),
     headers: {
         'Content-Type': 'application/json',
     }
 });
 
-// Axios 요청 인터셉터: 모든 요청에 인증 토큰을 추가합니다.
+// ✅ Axios 요청 인터셉터: Firebase 토큰 자동 추가
 apiClient.interceptors.request.use(async (config) => {
     const user = auth.currentUser;
     if (user) {
@@ -26,15 +37,14 @@ apiClient.interceptors.request.use(async (config) => {
     return Promise.reject(error);
 });
 
-
 /**
- * 모든 질문 목록을 페이지별로 가져옵니다.
- * @param {number} page - 페이지 번호 (0부터 시작)
- * @param {number} size - 페이지당 게시글 수
+ * ✅ 모든 질문 목록을 가져옵니다. (페이징 지원)
  */
 export const getAllQuestions = async (page = 0, size = 10) => {
     try {
-        const response = await apiClient.get(`/qna?page=${page}&size=${size}`);
+        const response = await apiClient.get('/qna', {
+            params: { page, size }
+        });
         return response.data;
     } catch (error) {
         console.error("Error fetching questions:", error);
@@ -43,8 +53,7 @@ export const getAllQuestions = async (page = 0, size = 10) => {
 };
 
 /**
- * 새로운 질문을 등록합니다.
- * @param {object} questionData - { title, content, authorId, authorName }
+ * ✅ 새로운 질문을 등록합니다.
  */
 export const createQuestion = async (questionData) => {
     try {
@@ -57,8 +66,7 @@ export const createQuestion = async (questionData) => {
 };
 
 /**
- * ID로 특정 질문의 상세 정보를 가져옵니다.
- * @param {string} id - 질문 ID
+ * ✅ ID로 특정 질문의 상세 정보를 가져옵니다.
  */
 export const getQuestionById = async (id) => {
     try {
@@ -71,8 +79,7 @@ export const getQuestionById = async (id) => {
 };
 
 /**
- * ID로 특정 질문을 삭제합니다.
- * @param {string} id - 질문 ID
+ * ✅ ID로 특정 질문을 삭제합니다.
  */
 export const deleteQuestion = async (id) => {
     try {
@@ -84,14 +91,12 @@ export const deleteQuestion = async (id) => {
 };
 
 /**
- * 특정 질문에 새로운 답변(댓글)을 등록합니다.
- * @param {string} questionId - 질문 ID
- * @param {string} content - 답변 내용
+ * ✅ 특정 질문에 새로운 답변(댓글)을 등록합니다.
  */
 export const createAnswer = async (questionId, content) => {
     try {
         const response = await apiClient.post(`/qna/${questionId}/answers`, content, {
-            headers: { 'Content-Type': 'text/plain' } // 일반 텍스트로 전송
+            headers: { 'Content-Type': 'text/plain' }
         });
         return response.data;
     } catch (error) {
@@ -101,36 +106,34 @@ export const createAnswer = async (questionId, content) => {
 };
 
 /**
- * ID로 특정 질문을 수정합니다.
- * @param {string} id - 질문 ID
- * @param {object} questionData - { title, content }
+ * ✅ 이미지를 서버에 업로드합니다.
  */
-export const updateQuestion = async (id, questionData) => {
+export const uploadImage = async (imageFile) => {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+
     try {
-        await apiClient.put(`/qna/${id}`, questionData);
+        const response = await apiClient.post('/qna/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data; // { imageUrl: '...' } 형태의 객체를 반환할 것으로 예상
     } catch (error) {
-        console.error(`Error updating question with id ${id}:`, error);
+        console.error("Error uploading image:", error);
         throw error;
     }
 };
 
 /**
- * 이미지 파일을 백엔드 서버를 통해 업로드합니다.
- * @param {File} imageFile - 업로드할 이미지 파일
+ * ✅ ID로 특정 질문을 수정합니다.
  */
-export const uploadImage = async (imageFile) => {
-    const formData = new FormData();
-    formData.append('file', imageFile);
-
+export const updateQuestion = async (id, questionData) => {
     try {
-        const response = await apiClient.post('/qna/upload-image', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
-        return response.data; // { "imageUrl": "..." }
+        const response = await apiClient.put(`/qna/${id}`, questionData);
+        return response.data;
     } catch (error) {
-        console.error('Error uploading image:', error);
+        console.error(`Error updating question with id ${id}:`, error);
         throw error;
     }
 };

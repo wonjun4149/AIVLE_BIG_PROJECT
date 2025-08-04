@@ -16,7 +16,8 @@ const QnaList = () => {
         const fetchQuestions = async (page) => {
             setLoading(true);
             try {
-                const data = await getAllQuestions(page);
+                // 페이지와 사이즈를 함께 전달 (기본 사이즈 10)
+                const data = await getAllQuestions(page, 10);
                 setPageData(data);
             } catch (err) {
                 setError('질문을 불러오는 데 실패했습니다.');
@@ -71,6 +72,11 @@ const QnaList = () => {
             pages.unshift(1);
         }
         
+        if (endPage < totalPages) {
+            pages.push('...');
+            pages.push(totalPages);
+        }
+        
         pages = [...new Set(pages)];
 
         return pages.map((page, index) => {
@@ -90,9 +96,9 @@ const QnaList = () => {
         });
     };
 
-    if (loading) return <div>로딩 중...</div>;
-    if (error) return <div>{error}</div>;
-    if (!pageData || !pageData.content) return <div>데이터가 없습니다.</div>; // 데이터가 없을 때의 처리
+    if (loading) return <div className="loading-spinner">로딩 중...</div>;
+    if (error) return <div className="error-message">{error}</div>;
+    if (!pageData || !pageData.content) return <div className="no-data-message">데이터가 없습니다.</div>;
 
     return (
         <div className="qna-container">
@@ -128,7 +134,6 @@ const QnaList = () => {
                 </tbody>
             </table>
 
-            {/* 페이지네이션 컨트롤 */}
             <div className="pagination-controls">
                 <button 
                     onClick={() => handlePageChange(currentPage - 1)} 
