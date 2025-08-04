@@ -1,60 +1,63 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 import vertexai
 import os
 from datetime import datetime
 from google.oauth2 import service_account
-from vertexai.preview.language_models import ChatModel
+from vertexai.generative_models import GenerativeModel  # ✅ 변경
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 import logging
-
+ 
+# Flask App 초기화 및 CORS 설정
 app = Flask(__name__)
-# ✅ CORS 강화
-CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
-
+CORS(app, resources={r"/api/*": {"origins": "*"}})
+ 
+# 로그 설정
 logging.basicConfig(level=logging.INFO)
-
+ 
+# Vertex AI 설정
 PROJECT_ID = "aivle-team0721"
 LOCATION = "us-central1"
-SERVICE_ACCOUNT_FILE = "/app/src/main/Python/aivle-team0721-c72ab84f2251.json"
-
-# ✅ Vertex AI 인증 강제
+SERVICE_ACCOUNT_FILE = "/app/src/main/Python/aivle-team0721-a14daf2bc8a8.json"
+ 
+# Vertex 인증
 credentials = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE)
 vertexai.init(project=PROJECT_ID, location=LOCATION, credentials=credentials)
-
-# LLM 모델 로드
-chat_model = ChatModel.from_pretrained("gemini-1.5-flash-001")
+ 
+# LLM 및 임베딩 모델 초기화
+gemini_model = GenerativeModel("gemini-2.0-flash")
 embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-CATEGORY_FOLDER_MAP = {
-    '예금': os.path.join(BASE_DIR, '예금약관'),
-    '적금': os.path.join(BASE_DIR, '적금약관'),
-    '주택담보대출': os.path.join(BASE_DIR, '대출약관'),
-    '암보험': os.path.join(BASE_DIR, '암보험약관'),
-    '자동차보험': os.path.join(BASE_DIR, '자동차보험약관')
-}
-
+ 
+# # 약관 PDF 폴더 경로
+# BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# CATEGORY_FOLDER_MAP = {
+#     '예금': os.path.join(BASE_DIR, '예금약관'),
+#     '적금': os.path.join(BASE_DIR, '적금약관'),
+#     '주택담보대출': os.path.join(BASE_DIR, '대출약관'),
+#     '암보험': os.path.join(BASE_DIR, '암보험약관'),
+#     '자동차보험': os.path.join(BASE_DIR, '자동차보험약관')
+# }
+ 
+# 프롬프트 템플릿
 PROMPT_TEMPLATE = """
 기업 이름은 다음과 같아:
 {company_name}
-
+ 
 상품 이름은 다음과 같아:
 {product_name}
-
+ 
 다음은 기업이 제공한 상품 정보야:
 {wishlist}
-
+ 
 다음은 해당 약관/계약의 시행 날짜야:
 {date}
-
+ 
 그리고 아래는 참고용 약관 문서야:
 {context}
-
+ 
 위의 상품 정보와 약관 문서를 참고해서 이 상품에 맞는 보험 약관 초안을 자세하게 작성해줘.
 기업에서 바로 약관으로 사용할 수 있을 정도로 자세하게 작성해주고, 독소조항과 소비자의 악용이 우려되는 내용은 특히 신경써줘.
 참고하라고 준 약관 이외에도 네가 이미 알고있는 약관을 참고해서 작성해도 돼. 최대한 자세하게 작성하는게 네 역할이야.
@@ -74,58 +77,58 @@ PROMPT_TEMPLATE = """
 가능하다면 절차를 진행할 방법을 하나만 두지 말고, 메인으로 진행하는 방법 하나와 해당 방법을 사용할 수 없을 때를 위한 예비 방법을 추가로 기재해줘.
 마지막으로 출력하기 전에 한 번 읽어보고 미흡한 점이나 독소조항, 리스크 등 수정할 부분을 확인하고 수정할 부분이 있다면 수정해서 출력해줘.
 """
-
+ 
+# CORS Header 강제 삽입
 @app.after_request
 def after_request(response):
-    response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
-
-@app.route('/api/generate', methods=['OPTIONS'])
-def preflight():
-    response = jsonify({'status': 'ok'})
-    response.headers.add("Access-Control-Allow-Origin", "*")
-    response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
-    response.headers.add("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS")
-    return response, 200
-
-@app.route('/api/generate', methods=['POST'])
+ 
+ 
+# API 엔드포인트
+@app.route('/api/generate', methods=['POST', 'OPTIONS'])
+@cross_origin(origin='*')
 def generate_terms():
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'}), 200
+ 
     try:
         data = request.get_json()
         if not data:
             return jsonify({"error": "요청 데이터가 없습니다."}), 400
-
+ 
         company_name = data.get('companyName')
         category = data.get('category')
         product_name = data.get('productName')
         wishlist = data.get('requirements')
-
+ 
         if not all([company_name, category, product_name, wishlist]):
             return jsonify({"error": "필수 입력값이 누락되었습니다."}), 400
-
-        pdf_dir_path = CATEGORY_FOLDER_MAP.get(category)
-        if not pdf_dir_path or not os.path.isdir(pdf_dir_path):
-            return jsonify({"error": f"{category}에 해당하는 약관 폴더가 없습니다."}), 400
-
-        loader = PyPDFDirectoryLoader(pdf_dir_path)
-        documents = loader.load()
-        if not documents:
-            return jsonify({"error": f"{category} 약관 PDF를 불러오지 못했습니다."}), 400
-
-        splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-        docs_chunked = splitter.split_documents(documents)
-
+ 
+        # # PDF 로드
+        # pdf_dir_path = CATEGORY_FOLDER_MAP.get(category)
+        # if not pdf_dir_path or not os.path.isdir(pdf_dir_path):
+        #     return jsonify({"error": f"{category}에 해당하는 약관 폴더가 없습니다."}), 400
+ 
+        # loader = PyPDFDirectoryLoader(pdf_dir_path)
+        # documents = loader.load()
+        # if not documents:
+        #     return jsonify({"error": f"{category} 약관 PDF를 불러오지 못했습니다."}), 400
+ 
+        # # 텍스트 분할
+        # splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+        # docs_chunked = splitter.split_documents(documents)
+ 
+        # 벡터스토어 검색
         vectorstore = Chroma.from_documents(docs_chunked, embedding)
         retriever = vectorstore.as_retriever()
-
         docs = retriever.invoke("약관 초안 작성에 필요한 정보")
+ 
         context = "\n\n".join([doc.page_content for doc in docs])
         current_date = datetime.now().strftime("%Y년 %m월 %d일")
-
-        # ✅ Vertex AI ChatModel 사용
-        chat = chat_model.start_chat()
+ 
+        # Gemini 호출
         prompt = PROMPT_TEMPLATE.format(
             context=context,
             company_name=company_name,
@@ -133,13 +136,14 @@ def generate_terms():
             wishlist=wishlist,
             date=current_date
         )
-        response = chat.send_message(prompt)
-
-        return jsonify({"terms": response.text})
-
+        response = gemini_model.generate_content(prompt)  # ✅ 변경
+ 
+        return jsonify({"terms": response.candidates[0].content.parts[0].text})
+ 
     except Exception as e:
         logging.exception("약관 생성 중 오류")
         return jsonify({"error": str(e)}), 500
-
+ 
+# 로컬 실행
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
