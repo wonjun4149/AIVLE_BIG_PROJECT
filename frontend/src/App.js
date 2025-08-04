@@ -49,7 +49,6 @@ function App() {
           <Route path="/qna" element={<QnaList />} />
           <Route path="/qna/write" element={<QnaWrite />} />
           <Route path="/qna/:id" element={<QnaDetail />} />
-          <Route path="/contracts" element={<ContractsPage />} />
           <Route path="/reset-password" element={<ResetPassword />} />
         </Route>
 
