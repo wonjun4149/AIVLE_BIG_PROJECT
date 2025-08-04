@@ -207,8 +207,8 @@ const Navbar = ({ user, onSignUpClick, onLoginClick }) => {
               <ul>
                 <li onClick={() => { navigate('/mypage'); setIsSidebarOpen(false); }}>마이페이지</li>
                 <li onClick={() => { navigate('/contracts'); setIsSidebarOpen(false); }}>계약서 관리</li>
-                <li onClick={() => { navigate('/qna'); setIsSidebarOpen(false); }}>질문 게시판</li>
                 <li onClick={() => { navigate('/points'); setIsSidebarOpen(false); }}>포인트 관리</li>
+                <li onClick={() => { navigate('/qna'); setIsSidebarOpen(false); }}>질문 게시판</li>
                 <li onClick={() => { navigate('/settings'); setIsSidebarOpen(false); }}>설정</li>
                 {user && (
                   <li onClick={() => { handleLogout(); setIsSidebarOpen(false); }}>로그아웃</li>

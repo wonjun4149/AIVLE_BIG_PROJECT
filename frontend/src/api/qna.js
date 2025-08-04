@@ -120,10 +120,11 @@ export const createAnswer = async (questionId, content) => {
  */
 export const uploadImage = async (imageFile) => {
     const formData = new FormData();
-    formData.append('image', imageFile);
+    formData.append('file', imageFile); // 백엔드(@RequestParam("file"))와 이름을 일치시킴
 
     try {
-        const response = await apiClient.post('/qna/upload', formData, {
+        // 백엔드 컨트롤러(@PostMapping("/upload-image"))와 주소를 일치시킴
+        const response = await apiClient.post('/qna/upload-image', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
