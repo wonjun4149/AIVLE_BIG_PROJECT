@@ -1,6 +1,6 @@
 # 기본 설정 (Docker 환경에서 사용)
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 spring:
   application:
