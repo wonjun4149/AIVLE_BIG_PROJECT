@@ -12,9 +12,11 @@ import { doc, setDoc } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../firebase';
 import { useNavigate } from 'react-router-dom';
 import googleLogo from '../assets/google-logo.png';
+import PDFModal from './PDFModal';
 
 function SignUp({ onHomeClick }) {
   const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     email: '',
     name: '',
@@ -30,6 +32,10 @@ function SignUp({ onHomeClick }) {
     marketing: false,
     all: false
   });
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalUrl, setModalUrl] = useState('');
+  const [modalTitle, setModalTitle] = useState('');
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -54,6 +60,18 @@ function SignUp({ onHomeClick }) {
       newAgreements.all = newAgreements.terms && newAgreements.privacy && newAgreements.marketing;
       setAgreements(newAgreements);
     }
+  };
+
+  const openModal = (title, url) => {
+    setModalTitle(title);
+    setModalUrl(url);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setModalUrl('');
+    setModalTitle('');
   };
 
   const handleSubmit = async () => {
@@ -83,11 +101,8 @@ function SignUp({ onHomeClick }) {
       const user = userCredential.user;
 
       await updateProfile(user, { displayName: formData.name });
-
-      // 이메일 인증 전송
       await sendEmailVerification(user);
 
-      // Firestore에 사용자 정보 저장
       await setDoc(doc(db, 'users', user.uid), {
         name: formData.name,
         company: formData.company,
@@ -147,100 +162,64 @@ function SignUp({ onHomeClick }) {
             </div>
 
             <div className="signup-form">
+              {/* 입력 폼 */}
               <div className="form-row">
-                <input
-                    type="email"
-                    placeholder="이메일"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    className="signup-input full-width"
-                />
+                <input type="email" placeholder="이메일" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)} className="signup-input full-width" />
               </div>
 
               <div className="form-row">
-                <input
-                    type="text"
-                    placeholder="이름"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    className="signup-input full-width"
-                />
+                <input type="text" placeholder="이름" value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} className="signup-input full-width" />
               </div>
 
               <div className="form-row relative-row">
-                <input
-                    type="text"
-                    placeholder="재직중인 회사 이름"
-                    value={formData.company}
-                    onChange={(e) => handleInputChange('company', e.target.value)}
-                    className="signup-input full-width"
-                />
+                <input type="text" placeholder="재직중인 회사 이름" value={formData.company} onChange={(e) => handleInputChange('company', e.target.value)} className="signup-input full-width" />
                 <div className="verification-check right-absolute">
-                  <input
-                      type="checkbox"
-                      id="company-verify"
-                      checked={formData.isVerified}
-                      onChange={(e) => handleInputChange('isVerified', e.target.checked)}
-                  />
+                  <input type="checkbox" id="company-verify" checked={formData.isVerified} onChange={(e) => handleInputChange('isVerified', e.target.checked)} />
                   <label htmlFor="company-verify">무직 체크</label>
                 </div>
               </div>
 
               <div className="form-row">
-                <input
-                    type="password"
-                    placeholder="비밀번호"
-                    value={formData.password}
-                    onChange={(e) => handleInputChange('password', e.target.value)}
-                    className="signup-input full-width"
-                />
+                <input type="password" placeholder="비밀번호" value={formData.password} onChange={(e) => handleInputChange('password', e.target.value)} className="signup-input full-width" />
               </div>
 
               <div className="form-row">
-                <input
-                    type="password"
-                    placeholder="비밀번호 확인"
-                    value={formData.confirmPassword}
-                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                    className="signup-input full-width"
-                />
+                <input type="password" placeholder="비밀번호 확인" value={formData.confirmPassword} onChange={(e) => handleInputChange('confirmPassword', e.target.value)} className="signup-input full-width" />
               </div>
 
+              {/* 약관 동의 */}
               <div className="agreements">
                 <div className="agreement-item">
-                  <input
-                      type="checkbox"
-                      id="terms"
-                      checked={agreements.terms}
-                      onChange={(e) => handleAgreementChange('terms', e.target.checked)}
-                  />
-                  <label htmlFor="terms">이용약관 및 처리방침 (필수)</label>
+                  <input type="checkbox" id="terms" checked={agreements.terms} onChange={(e) => handleAgreementChange('terms', e.target.checked)} />
+                  <label htmlFor="terms">이용약관 (필수)</label>
+                  <button className="view-btn" onClick={() => openModal('이용약관', 'https://firebasestorage.googleapis.com/v0/b/aivle-team0721.appspot.com/o/이용약관.pdf?alt=media')}>
+                    보기
+                  </button>
                 </div>
+
                 <div className="agreement-item">
-                  <input
-                      type="checkbox"
-                      id="privacy"
-                      checked={agreements.privacy}
-                      onChange={(e) => handleAgreementChange('privacy', e.target.checked)}
-                  />
+                  <input type="checkbox" id="privacy" checked={agreements.privacy} onChange={(e) => handleAgreementChange('privacy', e.target.checked)} />
                   <label htmlFor="privacy">개인정보 처리방침 (필수)</label>
+                  <button
+                      className="view-btn"
+                      onClick={() =>
+                          openModal(
+                              '개인정보 처리방침',
+                              'https://firebasestorage.googleapis.com/v0/b/aivle-team0721.firebasestorage.app/o/%E1%84%80%E1%85%A2%E1%84%8B%E1%85%B5%E1%86%AB%E1%84%8C%E1%85%A5%E1%86%BC%E1%84%87%E1%85%A9%20%E1%84%87%E1%85%A9%E1%84%92%E1%85%A9%E1%84%87%E1%85%A5%E1%86%B8(%E1%84%87%E1%85%A5%E1%86%B8%E1%84%85%E1%85%B2%E1%86%AF)(%E1%84%8C%E1%85%A619234%E1%84%92%E1%85%A9)(20250313).pdf?alt=media&token=57b960cc-050b-45d5-9c98-4786d16ecac2'
+                          )
+                      }
+                  >
+                    보기
+                  </button>
                 </div>
+
                 <div className="agreement-item">
-                  <input
-                      type="checkbox"
-                      id="marketing"
-                      checked={agreements.marketing}
-                      onChange={(e) => handleAgreementChange('marketing', e.target.checked)}
-                  />
+                  <input type="checkbox" id="marketing" checked={agreements.marketing} onChange={(e) => handleAgreementChange('marketing', e.target.checked)} />
                   <label htmlFor="marketing">마케팅 수신 동의 (선택)</label>
                 </div>
+
                 <div className="agreement-item">
-                  <input
-                      type="checkbox"
-                      id="all"
-                      checked={agreements.all}
-                      onChange={(e) => handleAgreementChange('all', e.target.checked)}
-                  />
+                  <input type="checkbox" id="all" checked={agreements.all} onChange={(e) => handleAgreementChange('all', e.target.checked)} />
                   <label htmlFor="all">모든 약관 동의</label>
                 </div>
               </div>
@@ -249,11 +228,7 @@ function SignUp({ onHomeClick }) {
                 회원가입
               </button>
 
-              <div
-                  className="login-link"
-                  onClick={() => navigate('/login')}
-                  style={{ cursor: 'pointer', marginTop: '10px' }}
-              >
+              <div className="login-link" onClick={() => navigate('/login')} style={{ cursor: 'pointer', marginTop: '10px' }}>
                 <span>이미 계정이 있으신가요? 로그인</span>
               </div>
 
@@ -264,6 +239,9 @@ function SignUp({ onHomeClick }) {
             </div>
           </div>
         </main>
+
+        {/* PDF 모달 */}
+        <PDFModal open={modalOpen} onClose={closeModal} pdfUrl={modalUrl} title={modalTitle} />
       </div>
   );
 }
