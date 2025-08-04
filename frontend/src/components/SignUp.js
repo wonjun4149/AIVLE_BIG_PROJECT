@@ -92,7 +92,7 @@ function SignUp({ onHomeClick }) {
     }
 
     if (!agreements.terms || !agreements.privacy) {
-      alert('필수 약관에 동의해주세요.');
+      alert('필수 약관에 동의 해주세요.');
       return;
     }
 
@@ -103,36 +103,64 @@ function SignUp({ onHomeClick }) {
       await updateProfile(user, { displayName: formData.name });
       await sendEmailVerification(user);
 
+      const timestamp = new Date().toISOString();
+
       await setDoc(doc(db, 'users', user.uid), {
         name: formData.name,
         company: formData.company,
         email: formData.email,
-        marketingAgreed: agreements.marketing,
-        createdAt: new Date()
+
+        createdAt: new Date(),
+        agreedTerms: {
+          termsOfService: agreements.terms,
+          privacyPolicy: agreements.privacy,
+          marketingAgreed: agreements.marketing,
+          timestamp: timestamp,
+
+          version: {
+            termsOfService: "v1.0",
+            privacyPolicy: "v1.1"
+          }
+        }
       });
 
       await signOut(auth);
 
-      alert('회원가입이 완료되었습니다. 이메일 인증 링크를 확인해주세요.');
+      alert('✅회원 가입이 완료 되었습니다. 이메일 인증 링크를 확인 해주세요.');
       navigate('/login');
       onHomeClick();
     } catch (error) {
-      console.error('회원가입 실패:', error);
+      console.error('😂회원가입 실패:', error);
       alert(error.message);
     }
   };
 
   const handleGoogleSignIn = async () => {
+    if (!agreements.terms || !agreements.privacy) {
+      alert('Google로 가입하기 전에 필수 약관에 동의해주세요.');
+      return;
+    }
+
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
+      const timestamp = new Date().toISOString();
 
       await setDoc(doc(db, 'users', user.uid), {
         name: user.displayName || '',
         email: user.email,
         company: '',
-        marketingAgreed: false,
-        createdAt: new Date()
+        createdAt: new Date(),
+        agreedTerms: {
+          termsOfService: true, // Google 가입은 약관 동의 후 진행되었음을 가정
+          privacyPolicy: true,
+          marketingAgreed: false,
+          timestamp: timestamp,
+          version: {
+            termsOfService: "v1.0",
+            privacyPolicy: "v1.1"
+          }
+        }
       });
 
       alert('Google 로그인 성공');
@@ -192,7 +220,9 @@ function SignUp({ onHomeClick }) {
                 <div className="agreement-item">
                   <input type="checkbox" id="terms" checked={agreements.terms} onChange={(e) => handleAgreementChange('terms', e.target.checked)} />
                   <label htmlFor="terms">이용약관 (필수)</label>
-                  <button className="view-btn" onClick={() => openModal('이용약관', 'https://firebasestorage.googleapis.com/v0/b/aivle-team0721.firebasestorage.app/o/%E1%84%87%E1%85%A9%E1%84%85%E1%85%A1%E1%84%80%E1%85%A8%E1%84%8B%E1%85%A3%E1%86%A8%20%E1%84%89%E1%85%A5%E1%84%87%E1%85%B5%E1%84%89%E1%85%B3%20%E1%84%8B%E1%85%B5%E1%84%8B%E1%85%AD%E1%86%BC%E1%84%8B%E1%85%A3%E1%86%A8%E1%84%80%E1%85%AA%E1%86%AB.pdf?alt=media&token=0c8c395e-02ef-46a5-ab44-91aa7d2619d9')}>
+                  <button className="view-btn" onClick={() => openModal(
+                      '이용약관',
+                      'https://firebasestorage.googleapis.com/v0/b/aivle-team0721.firebasestorage.app/o/%E1%84%87%E1%85%A9%E1%84%85%E1%85%A1%E1%84%80%E1%85%A8%E1%84%8B%E1%85%A3%E1%86%A8%20%E1%84%89%E1%85%A5%E1%84%87%E1%85%B5%E1%84%89%E1%85%B3%20%E1%84%8B%E1%85%B5%E1%84%8B%E1%85%AD%E1%86%BC%E1%84%8B%E1%85%A3%E1%86%A8%E1%84%80%E1%85%AA%E1%86%AB.pdf?alt=media&token=0c8c395e-02ef-46a5-ab44-91aa7d2619d9')}>
                     보기
                   </button>
                 </div>
