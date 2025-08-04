@@ -19,6 +19,7 @@ import ResetPassword from './components/ResetPassword';
 
 function App() {
   const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true); // 인증 로딩 상태 추가
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (userAuth) => {
@@ -33,6 +34,7 @@ function App() {
       } else {
         setUser(null);
       }
+      setAuthLoading(false); // 인증 상태 확인 완료
     });
     return () => unsubscribe();
   }, []);
@@ -41,7 +43,7 @@ function App() {
     <Router>
       <Routes>
         {/* 네비게이션 바가 있는 페이지들 */}
-        <Route element={<MainLayout user={user} />}>
+        <Route element={<MainLayout user={user} authLoading={authLoading} />}>
           <Route path="/" element={<Home user={user} />} />
           <Route path="/create-terms" element={<CreateTerms user={user} />} />
           <Route path="/create-standard" element={<CreateStandard user={user} />} />
