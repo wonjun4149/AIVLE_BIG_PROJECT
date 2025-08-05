@@ -70,7 +70,15 @@
     text-decoration: underline;
 }
 
-/* --- 댓글 수 스타일 --- */
+/* --- 제목 옆 아이콘들 스타일 --- */
+.image-icon {
+    margin-left: 8px;
+    color: #6c757d; /* 회색 아이콘 */
+    vertical-align: middle;
+    display: inline-flex;
+    align-items: center;
+}
+
 .answer-count {
     margin-left: 8px;
     color: #007bff;
@@ -78,16 +86,15 @@
     font-size: 0.9em;
 }
 
-/* --- New 배지 스타일 (더 작게 수정) --- */
 .new-badge {
     display: inline-block;
     margin-left: 6px;
-    padding: 2px 6px; /* 패딩 감소 */
+    padding: 2px 6px;
     background-color: #dc3545;
     color: white;
-    font-size: 0.65rem; /* 폰트 크기 감소 */
+    font-size: 0.65rem;
     font-weight: bold;
-    line-height: 1; /* 라인 높이 조정 */
+    line-height: 1;
     border-radius: 8px;
     vertical-align: middle;
 }
