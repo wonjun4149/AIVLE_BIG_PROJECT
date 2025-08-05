@@ -4,10 +4,10 @@ import { getAllQuestions } from '../api/qna';
 import './QnaList.css';
 
 const QnaList = () => {
-    const [pageData, setPageData] = useState(null); // 초기 상태를 null로 변경
+    const [pageData, setPageData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [currentPage, setCurrentPage] = useState(0); // 현재 페이지 상태 추가
+    const [currentPage, setCurrentPage] = useState(0);
     const { user } = useOutletContext();
     const navigate = useNavigate();
     const location = useLocation();
@@ -16,7 +16,6 @@ const QnaList = () => {
         const fetchQuestions = async (page) => {
             setLoading(true);
             try {
-                // 페이지와 사이즈를 함께 전달 (기본 사이즈 10)
                 const data = await getAllQuestions(page, 10);
                 setPageData(data);
             } catch (err) {
@@ -28,7 +27,7 @@ const QnaList = () => {
         };
 
         fetchQuestions(currentPage);
-    }, [currentPage]); // currentPage가 변경될 때마다 API 다시 호출
+    }, [currentPage]);
 
     const handleWriteClick = () => {
         if (user) {
@@ -51,49 +50,29 @@ const QnaList = () => {
         }
 
         const totalPages = pageData.totalPages;
-        const currentPageNumber = currentPage + 1; // 1-indexed
-        let pages = [];
-
         const pageLimit = 5;
-        let startPage = Math.max(1, currentPageNumber - Math.floor(pageLimit / 2));
-        let endPage = startPage + pageLimit - 1;
+        let startPage = Math.max(0, currentPage - Math.floor(pageLimit / 2));
+        let endPage = Math.min(totalPages - 1, startPage + pageLimit - 1);
 
-        if (endPage > totalPages) {
-            endPage = totalPages;
-            startPage = Math.max(1, endPage - pageLimit + 1);
+        if (endPage - startPage + 1 < pageLimit) {
+            startPage = Math.max(0, endPage - pageLimit + 1);
         }
 
+        const pages = [];
         for (let i = startPage; i <= endPage; i++) {
             pages.push(i);
         }
 
-        if (startPage > 1) {
-            pages.unshift('...');
-            pages.unshift(1);
-        }
-        
-        if (endPage < totalPages) {
-            pages.push('...');
-            pages.push(totalPages);
-        }
-        
-        pages = [...new Set(pages)];
-
-        return pages.map((page, index) => {
-            if (page === '...') {
-                return <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>;
-            }
-            return (
-                <button
-                    key={page}
-                    onClick={() => handlePageChange(page - 1)}
-                    disabled={currentPage === page - 1}
-                    className={currentPage === page - 1 ? 'active-page' : ''}
-                >
-                    {page}
-                </button>
-            );
-        });
+        return pages.map(page => (
+            <button
+                key={page}
+                onClick={() => handlePageChange(page)}
+                disabled={currentPage === page}
+                className={currentPage === page ? 'active-page' : ''}
+            >
+                {page + 1}
+            </button>
+        ));
     };
 
     if (error) return <div className="error-message">{error}</div>;
@@ -124,14 +103,24 @@ const QnaList = () => {
                             </td>
                         </tr>
                     ) : pageData && pageData.content.length > 0 ? (
-                        pageData.content.map((q) => (
-                            <tr key={q.id}>
-                                <td><Link to={`/qna/${q.id}`}>{q.title}</Link></td>
-                                <td>{q.authorName}</td>
-                                <td>{new Date(q.createdAt).toLocaleDateString()}</td>
-                                <td>{q.viewCount || 0}</td>
-                            </tr>
-                        ))
+                        pageData.content.map((q) => {
+                            const postDate = new Date(q.createdAt);
+                            const now = new Date();
+                            const diffHours = (now.getTime() - postDate.getTime()) / (1000 * 60 * 60);
+                            const isNew = diffHours < 24;
+
+                            return (
+                                <tr key={q.id}>
+                                    <td>
+                                        <Link to={`/qna/${q.id}`}>{q.title}</Link>
+                                        {isNew && <span className="new-badge">N</span>}
+                                    </td>
+                                    <td>{q.authorName}</td>
+                                    <td>{postDate.toLocaleDateString()}</td>
+                                    <td>{q.viewCount || 0}</td>
+                                </tr>
+                            );
+                        })
                     ) : (
                         <tr>
                             <td colSpan="4">게시글이 없습니다.</td>
@@ -140,7 +129,6 @@ const QnaList = () => {
                 </tbody>
             </table>
 
-            {/* 페이지네이션 컨트롤 */}
             <div className="pagination-controls">
                 <button 
                     onClick={() => handlePageChange(currentPage - 1)} 
