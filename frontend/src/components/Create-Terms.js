@@ -15,7 +15,13 @@ function CreateTerms({ user, onHomeClick, onSignUpClick }) {
     process.env.REACT_APP_CLOUD_RUN_API_BASE_URL ||
     'https://terms-api-service-eck6h26cxa-uc.a.run.app';
 
-  const categories = ['예금', '적금', '주택담보대출', '암보험', '자동차보험'];
+  const categories = [
+    { value: 'deposit', label: '예금' },
+    { value: 'savings', label: '적금' },
+    { value: 'loan', label: '주택담보대출' },
+    { value: 'cancer_insurance', label: '암보험' },
+    { value: 'car_insurance', label: '자동차보험' },
+  ];
 
   // ✅ 약관 생성 요청
   const handleSubmit = async () => {
@@ -106,8 +112,8 @@ function CreateTerms({ user, onHomeClick, onSignUpClick }) {
                   >
                     <option value="선택">선택</option>
                     {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
+                      <option key={cat.value} value={cat.value}>
+                        {cat.label}
                       </option>
                     ))}
                   </select>
