@@ -1,141 +1,97 @@
-/* src/components/PointPage.css */
 .point-page-container {
     max-width: 800px;
-    margin: 40px auto;
-    padding: 20px;
-    font-family: 'Noto Sans KR', sans-serif;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: #f9f9f9;
+    border-radius: 8px;
 }
 
-.point-page-title {
-    font-size: 2rem;
-    margin-bottom: 30px;
+.point-page-container h1 {
     text-align: center;
+    margin-bottom: 2rem;
     color: #333;
 }
 
-.point-card {
-    background-color: #ffffff;
-    border-radius: 12px;
-    padding: 25px;
-    margin-bottom: 25px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.point-card h2 {
-    font-size: 1.5rem;
-    margin-top: 0;
-    margin-bottom: 20px;
-    color: #555;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 15px;
-}
-
-.current-points p {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #6c63ff;
-    text-align: center;
-    margin: 10px 0 0;
-}
-
-.amount-selector {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 15px;
-}
-
-.amount-btn, .amount-input {
-    padding: 15px;
-    font-size: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background-color: #f9f9f9;
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
-    text-align: center;
-}
-
-.amount-btn:hover {
-    background-color: #e9e7ff;
-    border-color: #6c63ff;
-}
-
-.amount-btn.selected {
-    background-color: #6c63ff;
+.current-points-card {
+    background-color: #6c5ce7;
     color: white;
-    border-color: #6c63ff;
+    padding: 2rem;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.current-points-card h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.2rem;
+}
+
+.current-points-card p {
+    margin: 0;
+    font-size: 2.5rem;
     font-weight: bold;
 }
 
-.amount-input {
-    cursor: text;
-}
-.amount-input:focus {
-    outline: none;
-    border-color: #6c63ff;
-    box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.2);
+.charge-section, .history-section {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.payment-icons {
+.charge-section h2, .history-section h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1rem;
+}
+
+.charge-form {
     display: flex;
-    gap: 20px;
-    justify-content: center;
-    align-items: center;
+    gap: 1rem;
 }
 
-.payment-icon {
-    border: 2px solid #ddd;
-    border-radius: 10px;
-    padding: 20px 40px;
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.2rem;
-    font-weight: 500;
+.charge-form input {
+    flex-grow: 1;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }
 
-.payment-icon:hover {
-    border-color: #aaa;
-}
-
-.payment-icon.selected {
-    border-color: #6c63ff;
-    box-shadow: 0 0 10px rgba(108, 99, 255, 0.3);
-}
-
-.payment-icon img {
-    height: 40px;
-    width: auto;
-}
-
-.charge-submit-btn {
-    width: 100%;
-    padding: 18px;
-    font-size: 1.2rem;
-    font-weight: bold;
-    background-color: #6c63ff;
+.charge-form button {
+    padding: 0.75rem 1.5rem;
+    background-color: #5cb85c;
     color: white;
     border: none;
-    border-radius: 10px;
+    border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.2s;
+    font-weight: bold;
 }
 
-.charge-submit-btn:hover {
-    background-color: #5a54e1;
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
 }
 
-.charge-submit-btn:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
+.history-table th, .history-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
 }
 
-.loading-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 50vh;
-    font-size: 1.2rem;
+.history-table th {
+    background-color: #f8f9fa;
+}
+
+.history-table td:nth-child(1) { width: 25%; color: #666; }
+.history-table td:nth-child(2) { width: 50%; }
+.history-table td:nth-child(3) { width: 25%; text-align: right; font-weight: bold; }
+
+.history-table .charge {
+    color: #007bff;
+}
+
+.history-table .deduct {
+    color: #dc3545;
 }

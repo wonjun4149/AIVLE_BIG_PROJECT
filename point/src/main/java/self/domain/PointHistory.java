@@ -12,6 +12,7 @@ public class PointHistory {
     private String userId;
     private int amount;
     private String type; // "CHARGE", "DEDUCT" 등
+    private String description; // 변동 사유
     private Date timestamp;
 
     public PointHistory() {
@@ -49,6 +50,14 @@ public class PointHistory {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public Date getTimestamp() {

@@ -9,12 +9,11 @@ function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [failCount, setFailCount] = useState(0);
-  const [loginError, setLoginError] = useState(''); // 오류 메시지 상태 추가
+  const [loginError, setLoginError] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
 
-  // failCount가 변경될 때마다 실행되는 부수 효과
   useEffect(() => {
     if (failCount >= 3) {
       alert('비밀번호를 3회 이상 틀렸습니다. 비밀번호 찾기로 이동합니다.');
@@ -23,7 +22,7 @@ function Login() {
   }, [failCount, navigate]);
 
   const handleLogin = async () => {
-    setLoginError(''); // 로그인 시도 시 기존 오류 메시지 초기화
+    setLoginError('');
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
@@ -47,7 +46,6 @@ function Login() {
         setLoginError('로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
       }
 
-      // 단순히 실패 횟수만 1 증가시킴
       setFailCount(prev => prev + 1);
     }
   };
@@ -110,7 +108,6 @@ function Login() {
                 />
               </div>
 
-              {/* 로그인 오류 메시지 표시 */}
               {loginError && (
                   <div className="login-error-msg">
                     {loginError}

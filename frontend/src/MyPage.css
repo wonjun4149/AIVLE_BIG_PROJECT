@@ -1,29 +1,39 @@
+/* --- 전체 레이아웃 컨테이너 (PointLayout과 통일) --- */
+.mypage-layout-container {
+    max-width: 960px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.mypage-layout-container h1 {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+/* --- 메인 컨텐츠 카드 (PointLayout의 .point-view와 통일) --- */
+.mypage-view {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
 /* 로딩 컨테이너 */
 .loading-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    height: 80vh;
     font-family: sans-serif;
     color: #636e72;
 }
 
-.main-content {
-    max-width: 900px; /* 최대 너비 설정 */
-    margin: 0 auto; /* 좌우 여백을 자동으로 설정하여 중앙 정렬 */
-    padding: 2rem;
-    overflow-y: auto;
-    background-color: #ffffff;
-    min-height: calc(100vh - 80px); /* 최소 높이만 설정 */
-}
-
-/* 계정 정보 스타일 개선 */
+/* 계정 정보 스타일 */
 .account-info {
     background-color: #f8f9fa;
     padding: 1.5rem;
     border-radius: 8px;
     border: 1px solid #e9ecef;
-    margin-bottom: 2rem;
 }
 
 .account-info h3 {
@@ -44,8 +54,9 @@
     font-weight: 600;
 }
 
-/* 비밀번호 변경 폼 스타일 개선 */
+/* 비밀번호 변경 폼 스타일 */
 .password-form {
+    margin-top: 2rem; /* 계정 정보와의 간격 */
     background-color: #f8f9fa;
     padding: 1.5rem;
     border-radius: 8px;
@@ -101,54 +112,38 @@
     background-color: #5f4fcf;
 }
 
-.password-form button:active {
-    transform: translateY(1px);
+/* --- 비로그인 사용자 안내 --- */
+.login-prompt {
+    background-color: #fff;
+    padding: 3rem;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-    .mypage-container {
-        flex-direction: column;
-        height: auto;
-        min-height: calc(100vh - 80px);
-    }
-
-    .sidebar {
-        width: 100%;
-        height: auto;
-        order: 2;
-    }
-
-    .main-content {
-        order: 1;
-        padding: 1rem;
-    }
-
-    .password-form input {
-        padding: 0.6rem;
-    }
-
-    .password-form button {
-        padding: 0.7rem 1.2rem;
-    }
+.login-prompt h2 {
+    margin-top: 0;
+    font-size: 1.8rem;
+    color: #333;
 }
 
-@media (max-width: 480px) {
-    .main-content {
-        padding: 0.75rem;
-    }
+.login-prompt p {
+    font-size: 1.1rem;
+    color: #666;
+    margin-bottom: 2rem;
+}
 
-    .account-info,
-    .password-form {
-        padding: 1rem;
-    }
+.login-btn-link {
+    display: inline-block;
+    padding: 0.8rem 2rem;
+    background-color: #6c63ff;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
 
-    .password-form input {
-        padding: 0.5rem;
-    }
-
-    .password-form button {
-        padding: 0.6rem 1rem;
-        width: 100%;
-    }
+.login-btn-link:hover {
+    background-color: #5a54e1;
 }

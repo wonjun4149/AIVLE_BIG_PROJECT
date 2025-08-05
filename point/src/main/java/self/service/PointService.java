@@ -2,7 +2,9 @@ package self.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import self.domain.*;
 
@@ -24,7 +26,7 @@ public class PointService {
     private static final int DEDUCTION_AMOUNT = 5000;
     private static final int DAILY_CHARGE_LIMIT = 1000000;
 
-    // --- 이벤트 핸들러 메소드 (복원 및 리액티브 방식으로 수정) ---
+    // --- 이벤트 핸들러 메소드 ---
     public void reducePointForEvent(String userId, String reason) {
         pointRepository.findByUserId(userId).subscribe(point -> {
             if (point.getAmount() >= DEDUCTION_AMOUNT) {
@@ -34,6 +36,7 @@ public class PointService {
                     history.setUserId(userId);
                     history.setAmount(DEDUCTION_AMOUNT);
                     history.setType("DEDUCT");
+                    history.setDescription(reason);
                     pointHistoryRepository.save(history).subscribe();
 
                     PointReduced pointReduced = new PointReduced(savedPoint);
@@ -57,6 +60,7 @@ public class PointService {
             history.setUserId(event.getUserId());
             history.setAmount(100000);
             history.setType("INITIAL");
+            history.setDescription("신규 가입 축하 포인트");
             pointHistoryRepository.save(history).subscribe();
 
             PointPurchased pointPurchased = new PointPurchased(savedPoint);
@@ -73,6 +77,11 @@ public class PointService {
                     newPoint.setAmount(0);
                     return pointRepository.save(newPoint);
                 }));
+    }
+
+    public Flux<PointHistory> getPointHistory(String userId) {
+        // 정렬 기능을 우선 제거하여 기본적인 쿼리가 작동하는지 확인합니다.
+        return pointHistoryRepository.findByUserId(userId);
     }
 
     public Mono<Point> chargePoint(String userId, int amount) {
@@ -104,6 +113,7 @@ public class PointService {
                                 history.setUserId(userId);
                                 history.setAmount(amount);
                                 history.setType("CHARGE");
+                                history.setDescription("포인트 충전");
                                 return pointHistoryRepository.save(history).thenReturn(savedPoint);
                             })
                             .doOnSuccess(savedPoint -> {
@@ -127,6 +137,7 @@ public class PointService {
                     history.setUserId(userId);
                     history.setAmount(amount);
                     history.setType("DEDUCT_MANUAL");
+                    history.setDescription("수동 차감");
                     return pointHistoryRepository.save(history).thenReturn(savedPoint);
                 })
                 .doOnSuccess(savedPoint -> {

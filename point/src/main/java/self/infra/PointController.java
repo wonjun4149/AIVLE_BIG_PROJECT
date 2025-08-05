@@ -3,8 +3,10 @@ package self.infra;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import self.domain.Point;
+import self.domain.PointHistory;
 import self.service.PointService;
 import java.util.concurrent.CompletableFuture;
 
@@ -23,6 +25,12 @@ public class PointController {
                 .cast(ResponseEntity.class)
                 .onErrorResume(e -> Mono.just(ResponseEntity.badRequest().body("포인트 조회 실패: " + e.getMessage())))
                 .map(response -> (ResponseEntity<Object>) response);
+    }
+
+    // 포인트 변동 내역 조회 API
+    @GetMapping("/{firebaseUid}/history")
+    public Flux<PointHistory> getPointHistory(@PathVariable String firebaseUid) {
+        return pointService.getPointHistory(firebaseUid);
     }
 
     // 포인트 충전 API (비동기 처리)

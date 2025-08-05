@@ -1,0 +1,43 @@
+.point-history-container h3 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.history-table th, .history-table td {
+    padding: 0.85rem 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.history-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.history-table td:nth-child(1) { width: 25%; color: #666; }
+.history-table td:nth-child(2) { width: 50%; }
+.history-table td:nth-child(3) { width: 25%; text-align: right; font-weight: bold; }
+
+.history-table .charge {
+    color: #007bff;
+}
+
+.history-table .deduct {
+    color: #dc3545;
+}
+
+.error-message {
+    padding: 1rem;
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    text-align: center;
+}
