@@ -15,6 +15,7 @@ public class Question {
     private Date createdAt;
     private Date updatedAt;
     private int viewCount;
+    private int answerCount; // 댓글 수
     private String imageUrl;
     private transient List<Answer> answers; // DB에 저장하지 않고, 조회 시에만 채워넣는 필드
 

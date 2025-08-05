@@ -111,8 +111,13 @@ const QnaList = () => {
 
                             return (
                                 <tr key={q.id}>
-                                    <td>
+                                    <td className="qna-title-cell">
                                         <Link to={`/qna/${q.id}`}>{q.title}</Link>
+                                        {q.answerCount > 0 && (
+                                            <span className="answer-count">
+                                                [{q.answerCount}]
+                                            </span>
+                                        )}
                                         {isNew && <span className="new-badge">N</span>}
                                     </td>
                                     <td>{q.authorName}</td>

@@ -1,6 +1,7 @@
 package self.qna.service;
 
 import com.google.api.core.ApiFuture;
+import com.google.api.core.ApiFutures;
 import com.google.cloud.firestore.*;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
@@ -22,6 +23,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 @Service
 public class QnaService {
@@ -29,7 +31,7 @@ public class QnaService {
     public static final String COLLECTION_NAME = "questions";
     public static final String ANSWERS_SUBCOLLECTION = "answers";
 
-    // ... createQuestion, getAllQuestions ... (이전과 동일)
+    // ... createQuestion ...
     public String createQuestion(QuestionDto questionDto, String uid) throws ExecutionException, InterruptedException, FirebaseAuthException {
         UserRecord userRecord = FirebaseAuth.getInstance().getUser(uid);
         String authorName = userRecord.getDisplayName();
@@ -47,6 +49,7 @@ public class QnaService {
         question.setCreatedAt(new Date());
         question.setUpdatedAt(new Date());
         question.setViewCount(0);
+        question.setAnswerCount(0); // 생성 시 댓글 수는 0
 
         Firestore dbFirestore = FirestoreClient.getFirestore();
         dbFirestore.collection(COLLECTION_NAME).document(question.getId()).set(question).get();
@@ -67,6 +70,17 @@ public class QnaService {
                 .get();
         
         List<Question> questions = dataFuture.get().toObjects(Question.class);
+
+        // 각 질문의 댓글 수(answerCount)를 병렬로 가져와서 설정
+        List<ApiFuture<QuerySnapshot>> futures = new ArrayList<>();
+        for (Question question : questions) {
+            futures.add(dbFirestore.collection(COLLECTION_NAME).document(question.getId()).collection(ANSWERS_SUBCOLLECTION).get());
+        }
+
+        List<QuerySnapshot> answerSnapshots = ApiFutures.allAsList(futures).get();
+        for (int i = 0; i < questions.size(); i++) {
+            questions.get(i).setAnswerCount(answerSnapshots.get(i).size());
+        }
 
         PagedResponse<Question> response = new PagedResponse<>();
         response.setContent(questions);
@@ -91,6 +105,7 @@ public class QnaService {
                     .orderBy("createdAt", Query.Direction.ASCENDING).get();
             List<Answer> answers = answersFuture.get().toObjects(Answer.class);
             question.setAnswers(answers);
+            question.setAnswerCount(answers.size()); // 상세 조회 시에도 댓글 수 설정
 
             boolean shouldIncreaseView = uid != null && !uid.equals(question.getAuthorId());
             if (shouldIncreaseView) {
@@ -120,6 +135,8 @@ public class QnaService {
         if (question.getImageUrl() != null && !question.getImageUrl().isEmpty()) {
             deleteImageFromStorage(question.getImageUrl());
         }
+        // 하위 컬렉션의 모든 문서를 삭제하는 로직 추가 (필요 시)
+        // ...
         documentReference.delete();
     }
 
@@ -133,11 +150,17 @@ public class QnaService {
         answer.setAuthorId(uid);
         answer.setAuthorName(authorName);
         answer.setCreatedAt(new Date());
-        answer.setUpdatedAt(new Date()); // 생성 시에도 updatedAt 설정
+        answer.setUpdatedAt(new Date());
 
         Firestore dbFirestore = FirestoreClient.getFirestore();
-        dbFirestore.collection(COLLECTION_NAME).document(questionId)
-                   .collection(ANSWERS_SUBCOLLECTION).document(answer.getId()).set(answer).get();
+        DocumentReference questionRef = dbFirestore.collection(COLLECTION_NAME).document(questionId);
+        
+        // 트랜잭션을 사용하여 댓글 추가와 댓글 수 업데이트를 원자적으로 처리
+        dbFirestore.runTransaction(transaction -> {
+            transaction.set(questionRef.collection(ANSWERS_SUBCOLLECTION).document(answer.getId()), answer);
+            transaction.update(questionRef, "answerCount", FieldValue.increment(1));
+            return null;
+        }).get();
 
         return answer;
     }
@@ -162,12 +185,11 @@ public class QnaService {
 
     public void deleteAnswer(String questionId, String answerId, String uid) throws ExecutionException, InterruptedException {
         Firestore dbFirestore = FirestoreClient.getFirestore();
-        DocumentReference answerRef = dbFirestore.collection(COLLECTION_NAME).document(questionId)
-                                                 .collection(ANSWERS_SUBCOLLECTION).document(answerId);
+        DocumentReference questionRef = dbFirestore.collection(COLLECTION_NAME).document(questionId);
+        DocumentReference answerRef = questionRef.collection(ANSWERS_SUBCOLLECTION).document(answerId);
         
         DocumentSnapshot answerSnapshot = answerRef.get().get();
         if (!answerSnapshot.exists()) {
-            // 이미 삭제되었거나 없는 경우, 오류 대신 정상 종료
             return;
         }
 
@@ -176,7 +198,12 @@ public class QnaService {
             throw new SecurityException("User is not authorized to delete this answer.");
         }
 
-        answerRef.delete();
+        // 트랜잭션을 사용하여 댓글 삭제와 댓글 수 업데이트를 원자적으로 처리
+        dbFirestore.runTransaction(transaction -> {
+            transaction.delete(answerRef);
+            transaction.update(questionRef, "answerCount", FieldValue.increment(-1));
+            return null;
+        }).get();
     }
 
     // ... (updateQuestion, deleteImageFromStorage, uploadImage는 이전과 동일) ...

@@ -55,7 +55,7 @@
     font-weight: 600;
 }
 
-.qna-table td:first-child {
+.qna-table .qna-title-cell {
     text-align: left;
     width: 60%;
 }
@@ -68,6 +68,14 @@
 
 .qna-table a:hover {
     text-decoration: underline;
+}
+
+/* --- 댓글 수 스타일 --- */
+.answer-count {
+    margin-left: 8px;
+    color: #007bff;
+    font-weight: bold;
+    font-size: 0.9em;
 }
 
 /* --- New 배지 스타일 (더 작게 수정) --- */
