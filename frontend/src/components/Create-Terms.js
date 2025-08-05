@@ -13,7 +13,7 @@ function CreateTerms({ user, onHomeClick, onSignUpClick }) {
   // ✅ 환경 변수 또는 기본값 사용
   const CLOUD_RUN_API_BASE_URL =
     process.env.REACT_APP_CLOUD_RUN_API_BASE_URL ||
-    'https://terms-api-service-902267887946.us-central1.run.app';
+    'https://terms-api-service-eck6h26cxa-uc.a.run.app';
 
   const categories = ['예금', '적금', '주택담보대출', '암보험', '자동차보험'];
 

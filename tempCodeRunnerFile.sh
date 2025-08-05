@@ -8,7 +8,7 @@ TERMS_SERVICE_NAME="terms-api-service"
 TERMS_IMAGE="us-central1-docker.pkg.dev/${PROJECT}/cloud-run-repo/terms-api:latest"
 
 echo "=== 🔧 Docker 빌드: Terms API ==="
-docker build --no-cache --platform linux/amd64 -t $TERMS_IMAGE .
+docker build --platform linux/amd64 -t $TERMS_IMAGE .
 docker push $TERMS_IMAGE
 
 echo "=== ☁️ Cloud Run 배포: Terms API ==="

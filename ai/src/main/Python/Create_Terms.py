@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.INFO)
 # Vertex AI 설정
 PROJECT_ID = "aivle-team0721"
 LOCATION = "us-central1"
-SERVICE_ACCOUNT_FILE = "/app/src/main/Python/aivle-team0721-a14daf2bc8a8.json"
+SERVICE_ACCOUNT_FILE = "/app/src/main/Python/aivle-team0721-79f3f908cb54.json"
  
 # Vertex 인증
 credentials = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE)
@@ -30,34 +30,37 @@ vertexai.init(project=PROJECT_ID, location=LOCATION, credentials=credentials)
 # LLM 및 임베딩 모델 초기화
 gemini_model = GenerativeModel("gemini-2.0-flash")
 embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
- 
-# # 약관 PDF 폴더 경로
-# BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# CATEGORY_FOLDER_MAP = {
-#     '예금': os.path.join(BASE_DIR, '예금약관'),
-#     '적금': os.path.join(BASE_DIR, '적금약관'),
-#     '주택담보대출': os.path.join(BASE_DIR, '대출약관'),
-#     '암보험': os.path.join(BASE_DIR, '암보험약관'),
-#     '자동차보험': os.path.join(BASE_DIR, '자동차보험약관')
-# }
- 
+
+# ChromaDB 벡터 저장소 경로
+# BASE_DIR를 사용하여 동적으로 경로를 설정
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+VECTOR_DB_MAP = {
+    '대출': os.path.join(BASE_DIR, '대출'),
+    # ✅ 수정: 주택담보대출 카테고리가 대출 폴더를 참조하도록 추가
+    '주택담보대출': os.path.join(BASE_DIR, '대출'),
+    '암보험': os.path.join(BASE_DIR, '암보험'),
+    '예금': os.path.join(BASE_DIR, '예금'),
+    '자동차보험': os.path.join(BASE_DIR, '자동차보험'),
+    '적금': os.path.join(BASE_DIR, '적금')
+}
+
 # 프롬프트 템플릿
 PROMPT_TEMPLATE = """
 기업 이름은 다음과 같아:
 {company_name}
- 
+
 상품 이름은 다음과 같아:
 {product_name}
- 
+
 다음은 기업이 제공한 상품 정보야:
 {wishlist}
- 
+
 다음은 해당 약관/계약의 시행 날짜야:
 {date}
- 
+
 그리고 아래는 참고용 약관 문서야:
 {context}
- 
+
 위의 상품 정보와 약관 문서를 참고해서 이 상품에 맞는 보험 약관 초안을 자세하게 작성해줘.
 기업에서 바로 약관으로 사용할 수 있을 정도로 자세하게 작성해주고, 독소조항과 소비자의 악용이 우려되는 내용은 특히 신경써줘.
 참고하라고 준 약관 이외에도 네가 이미 알고있는 약관을 참고해서 작성해도 돼. 최대한 자세하게 작성하는게 네 역할이야.
@@ -77,57 +80,56 @@ PROMPT_TEMPLATE = """
 가능하다면 절차를 진행할 방법을 하나만 두지 말고, 메인으로 진행하는 방법 하나와 해당 방법을 사용할 수 없을 때를 위한 예비 방법을 추가로 기재해줘.
 마지막으로 출력하기 전에 한 번 읽어보고 미흡한 점이나 독소조항, 리스크 등 수정할 부분을 확인하고 수정할 부분이 있다면 수정해서 출력해줘.
 """
- 
+
 # CORS Header 강제 삽입
 @app.after_request
 def after_request(response):
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
- 
- 
+
+
 # API 엔드포인트
 @app.route('/api/generate', methods=['POST', 'OPTIONS'])
 @cross_origin(origin='*')
 def generate_terms():
     if request.method == 'OPTIONS':
         return jsonify({'status': 'ok'}), 200
- 
+
     try:
         data = request.get_json()
         if not data:
             return jsonify({"error": "요청 데이터가 없습니다."}), 400
- 
+
         company_name = data.get('companyName')
         category = data.get('category')
         product_name = data.get('productName')
         wishlist = data.get('requirements')
- 
+
         if not all([company_name, category, product_name, wishlist]):
             return jsonify({"error": "필수 입력값이 누락되었습니다."}), 400
- 
-        # # PDF 로드
-        # pdf_dir_path = CATEGORY_FOLDER_MAP.get(category)
-        # if not pdf_dir_path or not os.path.isdir(pdf_dir_path):
-        #     return jsonify({"error": f"{category}에 해당하는 약관 폴더가 없습니다."}), 400
- 
-        # loader = PyPDFDirectoryLoader(pdf_dir_path)
-        # documents = loader.load()
-        # if not documents:
-        #     return jsonify({"error": f"{category} 약관 PDF를 불러오지 못했습니다."}), 400
- 
-        # # 텍스트 분할
-        # splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-        # docs_chunked = splitter.split_documents(documents)
- 
-        # 벡터스토어 검색
-        vectorstore = Chroma.from_documents(docs_chunked, embedding)
-        retriever = vectorstore.as_retriever()
-        docs = retriever.invoke("약관 초안 작성에 필요한 정보")
- 
+        
+        # ✅ '주택담보대출'을 '대출'로 매핑하는 로직 추가
+        if category == '주택담보대출':
+            category = '대출'
+
+        persist_dir = VECTOR_DB_MAP.get(category)
+        if not persist_dir or not os.path.isdir(persist_dir):
+            return jsonify({"error": f"{category}에 해당하는 벡터 저장소 폴더가 없습니다."}), 400
+        
+        # ChromaDB에서 임베딩 모델과 함께 기존 벡터 저장소 로드
+        vectorstore = Chroma(
+            persist_directory=persist_dir, 
+            embedding_function=embedding
+        )
+        
+        # 유사성 검색(retriever)
+        retriever = vectorstore.as_retriever(search_kwargs={'k': 5})
+        docs = retriever.invoke(wishlist)
+
         context = "\n\n".join([doc.page_content for doc in docs])
         current_date = datetime.now().strftime("%Y년 %m월 %d일")
- 
+
         # Gemini 호출
         prompt = PROMPT_TEMPLATE.format(
             context=context,
@@ -136,14 +138,14 @@ def generate_terms():
             wishlist=wishlist,
             date=current_date
         )
-        response = gemini_model.generate_content(prompt)  # ✅ 변경
- 
+        response = gemini_model.generate_content(prompt)
+
         return jsonify({"terms": response.candidates[0].content.parts[0].text})
- 
+
     except Exception as e:
         logging.exception("약관 생성 중 오류")
         return jsonify({"error": str(e)}), 500
- 
+
 # 로컬 실행
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
