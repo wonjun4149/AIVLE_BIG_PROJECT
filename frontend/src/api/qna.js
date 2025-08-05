@@ -93,14 +93,37 @@ export const deleteQuestion = async (id) => {
 /**
  * ✅ 특정 질문에 새로운 답변(댓글)을 등록합니다.
  */
-export const createAnswer = async (questionId, content) => {
+export const createAnswer = async (questionId, answerData) => {
     try {
-        const response = await apiClient.post(`/qna/${questionId}/answers`, content, {
-            headers: { 'Content-Type': 'text/plain' }
-        });
+        // 데이터를 JSON 객체로 전송
+        const response = await apiClient.post(`/qna/${questionId}/answers`, answerData);
         return response.data;
     } catch (error) {
         console.error(`Error creating answer for question ${questionId}:`, error);
+        throw error;
+    }
+};
+
+/**
+ * ✅ 특정 질문의 특정 답변(댓글)을 삭제합니다.
+ */
+export const deleteAnswer = async (questionId, answerId) => {
+    try {
+        await apiClient.delete(`/qna/${questionId}/answers/${answerId}`);
+    } catch (error) {
+        console.error(`Error deleting answer ${answerId} from question ${questionId}:`, error);
+        throw error;
+    }
+};
+
+/**
+ * ✅ 특정 질문의 특정 답변(댓글)을 수정합니다.
+ */
+export const updateAnswer = async (questionId, answerId, answerData) => {
+    try {
+        await apiClient.put(`/qna/${questionId}/answers/${answerId}`, answerData);
+    } catch (error) {
+        console.error(`Error updating answer ${answerId} from question ${questionId}:`, error);
         throw error;
     }
 };

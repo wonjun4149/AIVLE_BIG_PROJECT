@@ -1,20 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import { getUserPoints, chargeUserPoints } from '../api/point';
 import './PointPage.css';
-// 아이콘 임포트 (실제 아이콘 파일이 필요합니다)
-// import kakaoPayIcon from '../assets/kakao-pay.png';
-// import tossPayIcon from '../assets/toss-pay.png';
 
 const PointPage = () => {
-    const { user, authLoading, refreshPoints } = useOutletContext(); // refreshPoints 함수를 context에서 가져옴
+    const { user, authLoading, refreshPoints } = useOutletContext();
     const navigate = useNavigate();
     const [points, setPoints] = useState(0);
     const [loadingPoints, setLoadingPoints] = useState(true);
     const [selectedAmount, setSelectedAmount] = useState(null);
     const [customAmount, setCustomAmount] = useState('');
-    const [paymentMethod, setPaymentMethod] = useState(null); // 'kakao' or 'toss'
+    const [paymentMethod, setPaymentMethod] = useState(null);
     const [isCharging, setIsCharging] = useState(false);
+
+    // 알림이 중복으로 뜨는 것을 방지하기 위한 ref
+    const alertShown = useRef(false);
 
     const predefinedAmounts = [5000, 10000, 50000, 100000, 500000];
 
@@ -32,11 +32,18 @@ const PointPage = () => {
     };
 
     useEffect(() => {
-        if (!authLoading && !user) {
-            alert('로그인이 필요한 페이지입니다.');
-            navigate('/login');
-        } else if (user) {
-            fetchCurrentPoints();
+        // 인증 상태 로딩이 끝났을 때만 로직 실행
+        if (!authLoading) {
+            if (!user) {
+                // ref를 확인하여 알림이 아직 표시되지 않았을 때만 실행
+                if (!alertShown.current) {
+                    alert('로그인이 필요한 페이지입니다.');
+                    alertShown.current = true; // 알림이 표시되었음을 기록
+                    navigate('/login');
+                }
+            } else {
+                fetchCurrentPoints();
+            }
         }
     }, [user, authLoading, navigate]);
 
@@ -68,9 +75,8 @@ const PointPage = () => {
             await chargeUserPoints(user.uid, selectedAmount);
             alert(`${selectedAmount.toLocaleString()}P가 성공적으로 충전되었습니다.`);
             
-            // --- 여기가 핵심! ---
-            await refreshPoints(); // MainLayout의 포인트 조회 함수 호출
-            await fetchCurrentPoints(); // 이 페이지의 포인트도 새로고침
+            await refreshPoints();
+            await fetchCurrentPoints();
 
             setSelectedAmount(null);
             setCustomAmount('');
@@ -124,14 +130,12 @@ const PointPage = () => {
                         className={`payment-icon ${paymentMethod === 'kakao' ? 'selected' : ''}`}
                         onClick={() => setPaymentMethod('kakao')}
                     >
-                        {/* <img src={kakaoPayIcon} alt="카카오페이" /> */}
                         <span>카카오페이</span>
                     </div>
                     <div
                         className={`payment-icon ${paymentMethod === 'toss' ? 'selected' : ''}`}
                         onClick={() => setPaymentMethod('toss')}
                     >
-                        {/* <img src={tossPayIcon} alt="토스" /> */}
                         <span>토스</span>
                     </div>
                 </div>

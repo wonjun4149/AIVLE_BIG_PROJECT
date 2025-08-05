@@ -13,6 +13,7 @@ import MyPage from './MyPage';
 import QnaList from './components/QnaList';
 import QnaWrite from './components/QnaWrite';
 import QnaDetail from './components/QnaDetail';
+import QnaEdit from './components/QnaEdit'; // 수정 컴포넌트 import
 import MainLayout from './components/MainLayout';
 import ResetPassword from './components/ResetPassword';
 import PointPage from './components/PointPage';
@@ -52,6 +53,7 @@ function App() {
           <Route path="/qna" element={<QnaList />} />
           <Route path="/qna/write" element={<QnaWrite />} />
           <Route path="/qna/:id" element={<QnaDetail />} />
+          <Route path="/qna/edit/:id" element={<QnaEdit />} /> {/* 수정 페이지 라우트 추가 */}
           <Route path="/points" element={<PointPage />} />
           <Route path="/reset-password" element={<ResetPassword />} />
         </Route>

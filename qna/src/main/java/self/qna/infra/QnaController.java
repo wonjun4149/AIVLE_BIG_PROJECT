@@ -5,14 +5,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import self.qna.domain.Answer;
-import self.qna.domain.PagedResponse;
-import self.qna.domain.Question;
-import self.qna.domain.QuestionDto;
+import self.qna.domain.*;
 import self.qna.service.QnaService;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -23,6 +19,7 @@ public class QnaController {
     @Autowired
     private QnaService qnaService;
 
+    // ... (질문 관련 CRUD는 동일) ...
     @PostMapping
     public ResponseEntity<String> createQuestion(@RequestBody QuestionDto questionDto,
                                                  @RequestHeader("X-Authenticated-User-Uid") String uid)
@@ -57,11 +54,11 @@ public class QnaController {
                                                @RequestHeader("X-Authenticated-User-Uid") String uid) {
         try {
             qnaService.deleteQuestion(id, uid);
-            return ResponseEntity.noContent().build(); // 성공 (204)
+            return ResponseEntity.noContent().build();
         } catch (SecurityException e) {
-            return ResponseEntity.status(403).build(); // 권한 없음 (403)
+            return ResponseEntity.status(403).build();
         } catch (Exception e) {
-            return ResponseEntity.status(500).build(); // 서버 내부 오류
+            return ResponseEntity.status(500).build();
         }
     }
 
@@ -71,25 +68,50 @@ public class QnaController {
                                                @RequestHeader("X-Authenticated-User-Uid") String uid) {
         try {
             qnaService.updateQuestion(id, questionDto, uid);
-            return ResponseEntity.ok().build(); // 성공 (200 OK)
+            return ResponseEntity.ok().build();
         } catch (SecurityException e) {
-            return ResponseEntity.status(403).build(); // 권한 없음 (403)
+            return ResponseEntity.status(403).build();
         } catch (Exception e) {
-            return ResponseEntity.status(500).build(); // 서버 내부 오류
+            return ResponseEntity.status(500).build();
         }
     }
 
     @PostMapping("/{questionId}/answers")
     public ResponseEntity<Answer> createAnswer(@PathVariable String questionId,
-                                               @RequestBody String content,
+                                               @RequestBody AnswerDto answerDto,
                                                @RequestHeader("X-Authenticated-User-Uid") String uid) {
         try {
-            // content가 JSON 문자열("내용")로 오는 경우 따옴표 제거
-            String plainContent = content.startsWith("\"") && content.endsWith("\"")
-                                ? content.substring(1, content.length() - 1)
-                                : content;
-            Answer answer = qnaService.createAnswer(questionId, plainContent, uid);
+            Answer answer = qnaService.createAnswer(questionId, answerDto.getContent(), uid);
             return ResponseEntity.ok(answer);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
+    }
+
+    @PutMapping("/{questionId}/answers/{answerId}")
+    public ResponseEntity<Void> updateAnswer(@PathVariable String questionId,
+                                             @PathVariable String answerId,
+                                             @RequestBody AnswerDto answerDto,
+                                             @RequestHeader("X-Authenticated-User-Uid") String uid) {
+        try {
+            qnaService.updateAnswer(questionId, answerId, answerDto.getContent(), uid);
+            return ResponseEntity.noContent().build();
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
+    }
+
+    @DeleteMapping("/{questionId}/answers/{answerId}")
+    public ResponseEntity<Void> deleteAnswer(@PathVariable String questionId,
+                                             @PathVariable String answerId,
+                                             @RequestHeader("X-Authenticated-User-Uid") String uid) {
+        try {
+            qnaService.deleteAnswer(questionId, answerId, uid);
+            return ResponseEntity.noContent().build();
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).build();
         } catch (Exception e) {
             return ResponseEntity.status(500).build();
         }
@@ -104,7 +126,7 @@ public class QnaController {
             response.put("imageUrl", imageUrl);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            e.printStackTrace(); // 강제로 오류 로그 출력
+            e.printStackTrace();
             return ResponseEntity.status(500).build();
         }
     }
