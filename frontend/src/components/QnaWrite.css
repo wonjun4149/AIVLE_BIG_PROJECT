@@ -1,15 +1,17 @@
+/* QnaWrite.css & QnaEdit.css */
 .qna-write-container {
-    width: 80%;
+    max-width: 900px;
     margin: 2rem auto;
     padding: 2rem;
-    border: 1px solid #ddd;
+    background-color: #fff;
     border-radius: 8px;
-    background-color: #f9f9f9;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .qna-write-container h1 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
     text-align: center;
-    margin-bottom: 2rem;
 }
 
 .qna-write-form .form-group {
@@ -19,95 +21,107 @@
 .qna-write-form label {
     display: block;
     margin-bottom: 0.5rem;
-    font-weight: bold;
+    font-weight: 600;
 }
 
-.qna-write-form input,
+.qna-write-form input[type="text"],
 .qna-write-form textarea {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid #ccc;
+    border: 1px solid #ced4da;
     border-radius: 4px;
-    box-sizing: border-box; /* To prevent padding from affecting width */
+    box-sizing: border-box;
 }
 
-.qna-write-form .form-actions {
+.qna-write-form textarea {
+    resize: vertical;
+    min-height: 200px;
+}
+
+.file-upload-wrapper {
     display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
+    align-items: center;
+    gap: 10px;
 }
 
-.qna-write-form button {
-    padding: 0.5rem 1.5rem;
+.file-select-btn {
+    padding: 0.5rem 1rem;
+    background-color: #6c757d;
+    color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
 }
 
-.qna-write-form button[type="submit"] {
-    background-color: #007bff;
-    color: white;
+.file-name-display {
+    color: #495057;
+    font-style: italic;
 }
 
-.qna-write-form button[type="button"] {
+/* --- 이미지 미리보기 및 삭제 아이콘 버튼 스타일 (QnaEdit.js용) --- */
+.image-preview {
+    position: relative; /* 자식 요소(버튼)의 기준점 */
+    display: inline-block; /* 컨테이너 크기를 이미지에 맞춤 */
+    margin-bottom: 1rem;
+}
+
+.image-preview img {
+    display: block; /* 이미지 아래 불필요한 공백 제거 */
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+.image-preview .file-cancel-btn {
+    position: absolute; /* 부모(image-preview) 기준으로 위치 지정 */
+    top: 8px;
+    right: 8px;
+    
+    /* 아이콘 버튼 스타일 */
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    background-color: rgba(0, 0, 0, 0.5); /* 반투명 검은색 배경 */
+    color: white;
+    border: none;
+    border-radius: 50%; /* 원형 버튼 */
+    cursor: pointer;
+    
+    /* 부드러운 전환 효과 */
+    transition: background-color 0.2s ease-in-out;
+}
+
+.image-preview .file-cancel-btn:hover {
+    background-color: rgba(220, 53, 69, 0.9); /* 호버 시 더 진한 빨간색 */
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.form-actions button {
+    padding: 0.6rem 1.5rem;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.form-actions button[type="button"] {
     background-color: #6c757d;
     color: white;
 }
 
-.file-upload-wrapper {
-    display: flex;
-    align-items: baseline; /* 정렬 기준을 baseline으로 변경 */
-    gap: 10px;
-}
-
-.file-upload-wrapper > * {
-    vertical-align: middle; /* 모든 자식 요소의 수직 정렬 기준을 중간으로 통일 */
-}
-
-.file-select-btn {
-    padding: 0.5rem 1rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background-color: #f0f0f0;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.file-select-btn:hover {
-    background-color: #e0e0e0;
-}
-
-.file-name-display {
-    color: #666;
-    font-size: 0.9rem;
-}
-
-.qna-write-form .file-cancel-btn {
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
-    border-radius: 50%;
-    width: 16px;
-    height: 16px;
-    line-height: 1; /* line-height 초기화 */
-    text-align: center;
-    cursor: pointer;
-    font-weight: bold;
-    color: #721c24;
-    font-size: 10px;
-    padding: 0;
-    transition: background-color 0.2s, color 0.2s;
-}
-
-.qna-write-form .file-cancel-btn:hover {
-    background-color: #d9534f; /* 호버 시 진한 빨간색 */
+.form-actions button[type="submit"] {
+    background-color: #007bff;
     color: white;
-    border-color: #d9534f;
-}
-
-.progress-bar-container {
-    margin-bottom: 1rem;
-}
-
-.progress-bar-container progress {
-    width: 100%;
 }
