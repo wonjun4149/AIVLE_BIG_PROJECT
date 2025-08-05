@@ -59,8 +59,8 @@ function App() {
         </Route>
 
         {/* 네비게이션 바가 없는 페이지들 */}
-        <Route path="/signup" element={<SignUp onHomeClick={() => window.location.href = '/'} />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<SignUp user={user} authLoading={authLoading} onHomeClick={() => window.location.href = '/'} />} />
+        <Route path="/login" element={<Login user={user} authLoading={authLoading} />} />
         <Route path="/complete-signup" element={<CompleteSignUp />} />
       </Routes>
     </Router>
