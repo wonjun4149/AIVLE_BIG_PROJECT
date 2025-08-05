@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 import self.domain.Point;
 import self.service.PointService;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping(value = "/api/points")
@@ -24,15 +25,19 @@ public class PointController {
                 .map(response -> (ResponseEntity<Object>) response);
     }
 
-    // 포인트 충전 API
+    // 포인트 충전 API (비동기 처리)
     @PostMapping("/{firebaseUid}/charge")
     public Mono<ResponseEntity<Object>> chargePoint(@PathVariable String firebaseUid, @RequestBody ChargeRequest chargeRequest) {
-        return pointService.chargePoint(firebaseUid, chargeRequest.getAmount())
-                .map(updatedPoint -> ResponseEntity.ok(new PointResponse(updatedPoint.getId(), updatedPoint.getUserId(), updatedPoint.getAmount())))
-                .cast(ResponseEntity.class)
-                .onErrorResume(IllegalArgumentException.class, e -> Mono.just(ResponseEntity.badRequest().body(e.getMessage())))
-                .onErrorResume(e -> Mono.just(ResponseEntity.status(500).body("포인트 충전 실패: " + e.getMessage())))
-                .map(response -> (ResponseEntity<Object>) response);
+        // 백그라운드에서 포인트 충전 로직 실행
+        CompletableFuture.runAsync(() -> {
+            pointService.chargePoint(firebaseUid, chargeRequest.getAmount()).subscribe(
+                updatedPoint -> System.out.println("포인트 충전 성공: " + updatedPoint.getUserId()),
+                error -> System.err.println("포인트 충전 실패: " + error.getMessage())
+            );
+        });
+
+        // 클라이언트에게 즉시 응답 반환
+        return Mono.just(ResponseEntity.ok().body("포인트 충전 요청이 성공적으로 접수되었습니다."));
     }
 
     // 포인트 수동 차감 API
