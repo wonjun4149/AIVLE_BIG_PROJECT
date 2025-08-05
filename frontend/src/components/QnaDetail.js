@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate, useOutletContext, useLocation } from 'react-router-dom';
-import { getQuestionById, deleteQuestion, createAnswer, updateQuestion, uploadImage, deleteAnswer, updateAnswer } from '../api/qna';
+import { getQuestionById, deleteQuestion, createAnswer, deleteAnswer, updateAnswer } from '../api/qna';
 import './QnaDetail.css';
 
 // 날짜 포맷팅 헬퍼 함수
@@ -25,15 +25,6 @@ const QnaDetail = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [newAnswer, setNewAnswer] = useState('');
-    
-    // 질문 수정 관련 state
-    const [isEditing, setIsEditing] = useState(false);
-    const [editedTitle, setEditedTitle] = useState('');
-    const [editedContent, setEditedContent] = useState('');
-    const [editedImageUrl, setEditedImageUrl] = useState(null);
-    const [newImageFile, setNewImageFile] = useState(null);
-    const [isUploading, setIsUploading] = useState(false);
-    const fileInputRef = useRef(null);
 
     // 댓글 수정 관련 state
     const [editingAnswerId, setEditingAnswerId] = useState(null);
@@ -60,7 +51,7 @@ const QnaDetail = () => {
         }
     }, [id]);
 
-    // --- 질문 핸들러 ---
+    // 질문 삭제 핸들러
     const handleQuestionDelete = async () => {
         if (window.confirm('정말로 이 질문을 삭제하시겠습니까?')) {
             try {
@@ -70,41 +61,6 @@ const QnaDetail = () => {
             } catch (err) {
                 alert('질문 삭제에 실패했습니다.');
             }
-        }
-    };
-
-    const handleQuestionEditStart = () => {
-        setIsEditing(true);
-        setEditedTitle(question.title);
-        setEditedContent(question.content);
-        setEditedImageUrl(question.imageUrl);
-        setNewImageFile(null);
-    };
-
-    const handleQuestionEditSave = async () => {
-        if (!editedTitle.trim() || !editedContent.trim()) {
-            alert('제목과 내용을 모두 입력해주세요.');
-            return;
-        }
-        setIsUploading(true);
-        let finalImageUrl = editedImageUrl;
-
-        try {
-            if (newImageFile) {
-                const uploadResponse = await uploadImage(newImageFile);
-                finalImageUrl = uploadResponse.imageUrl;
-            }
-            
-            await updateQuestion(id, { title: editedTitle, content: editedContent, imageUrl: finalImageUrl });
-            
-            setIsEditing(false);
-            fetchQuestion();
-            alert('질문이 성공적으로 수정되었습니다.');
-
-        } catch (err) {
-            alert('질문 수정에 실패했습니다.');
-        } finally {
-            setIsUploading(false);
         }
     };
 
@@ -168,65 +124,31 @@ const QnaDetail = () => {
 
     return (
         <div className="qna-detail-container" onClick={() => setActiveMenuAnswerId(null)}>
-            {isEditing ? (
-                // 질문 수정 모드 UI
-                <div className="edit-mode">
-                    <input type="text" value={editedTitle} onChange={(e) => setEditedTitle(e.target.value)} className="edit-title-input" />
-                    <textarea value={editedContent} onChange={(e) => setEditedContent(e.target.value)} className="edit-content-textarea" rows="15"></textarea>
-                    
-                    <div className="form-group">
-                        <label>이미지 첨부</label>
-                        {editedImageUrl && (
-                            <div className="image-preview">
-                                <img src={editedImageUrl} alt="미리보기" />
-                                <button type="button" onClick={() => { setEditedImageUrl(null); setNewImageFile(null); }} className="file-cancel-btn" title="이미지 삭제">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                                        <path fillRule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        )}
-                        <div className="file-upload-wrapper">
-                            <button type="button" className="file-select-btn" onClick={() => fileInputRef.current.click()}>파일 선택</button>
-                            <span className="file-name-display">{newImageFile ? newImageFile.name : '새 이미지 선택 안 함'}</span>
-                        </div>
-                        <input type="file" onChange={(e) => setNewImageFile(e.target.files[0])} accept="image/png, image/jpeg" style={{ display: 'none' }} ref={fileInputRef} />
-                    </div>
-
-                    <div className="actions">
-                        <button onClick={() => setIsEditing(false)} className="cancel-btn" disabled={isUploading}>취소</button>
-                        <button onClick={handleQuestionEditSave} className="save-btn" disabled={isUploading}>
-                            {isUploading ? '저장 중...' : '저장'}
-                        </button>
+            {/* 질문 보기 모드 UI */}
+            <>
+                <div className="question-header">
+                    <h1>{question.title}</h1>
+                    <div className="question-meta">
+                        <span>작성자: {question.authorName}</span>
+                        <span>작성일: {formatDateTime(question.createdAt)}</span>
+                        <span>조회수: {question.viewCount || 0}</span>
                     </div>
                 </div>
-            ) : (
-                // 질문 보기 모드 UI
-                <>
-                    <div className="question-header">
-                        <h1>{question.title}</h1>
-                        <div className="question-meta">
-                            <span>작성자: {question.authorName}</span>
-                            <span>작성일: {formatDateTime(question.createdAt)}</span>
-                            <span>조회수: {question.viewCount || 0}</span>
+                <div className="question-content">
+                    {question.imageUrl && <img src={question.imageUrl} alt="첨부 이미지" className="question-image" />}
+                    <div dangerouslySetInnerHTML={{ __html: question.content.replace(/\n/g, '<br />') }} />
+                </div>
+                <div className="actions">
+                    <Link to="/qna" className="list-btn">목록으로</Link>
+                    {isQuestionAuthor && (
+                        <div>
+                            {/* 수정 버튼 클릭 시 수정 페이지로 이동 */}
+                            <button onClick={() => navigate(`/qna/edit/${id}`)} className="edit-btn">수정</button>
+                            <button onClick={handleQuestionDelete} className="delete-btn">삭제</button>
                         </div>
-                    </div>
-                    <div className="question-content">
-                        {question.imageUrl && <img src={question.imageUrl} alt="첨부 이미지" className="question-image" />}
-                        <div dangerouslySetInnerHTML={{ __html: question.content.replace(/\n/g, '<br />') }} />
-                    </div>
-                    <div className="actions">
-                        <Link to="/qna" className="list-btn">목록으로</Link>
-                        {isQuestionAuthor && (
-                            <div>
-                                <button onClick={handleQuestionEditStart} className="edit-btn">수정</button>
-                                <button onClick={handleQuestionDelete} className="delete-btn">삭제</button>
-                            </div>
-                        )}
-                    </div>
-                </>
-            )}
+                    )}
+                </div>
+            </>
 
             {/* 댓글 섹션 */}
             <div className="answers-section">
@@ -245,7 +167,7 @@ const QnaDetail = () => {
                 <div className="answers-list">
                     {question.answers && question.answers.map(answer => {
                         const isAnswerAuthor = user && user.uid === answer.authorId;
-                        const isEdited = new Date(answer.updatedAt).getTime() > new Date(answer.createdAt).getTime() + 1000; // 1초 이상 차이나면 수정된 것으로 간주
+                        const isEdited = new Date(answer.updatedAt).getTime() > new Date(answer.createdAt).getTime() + 1000;
 
                         return (
                             <div key={answer.id} className="answer-item">
