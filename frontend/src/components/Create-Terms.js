@@ -83,100 +83,100 @@ function CreateTerms() {
 
   // ✅ 화면 렌더링
   return (
-    <div className="App">
-      <main className="terms-main">
-        <div className="terms-container">
-          {/* 미리보기 섹션 */}
-          <div className="preview-section">
-            <div className="preview-placeholder">
-              {isLoading ? (
-                <p>약관 초안을 생성 중입니다. 잠시만 기다려 주세요...</p>
-              ) : error ? (
-                <p className="error-message">{error}</p>
-              ) : generatedTerms ? (
-                <div className="generated-terms-content">
-                  <h3 style={{ textAlign: 'center', marginBottom: '20px' }}>
-                    {productName ? `${productName} 약관` : '생성된 약관'}
-                  </h3>
-                  <pre>{generatedTerms}</pre>
+      <div className="App">
+        <main className="terms-main">
+          <div className="terms-container">
+            {/* 입력 폼 섹션 (왼쪽) */}
+            <div className="form-section">
+              <div className="form-container">
+                <div className="form-group">
+                  <label className="form-label">회사 이름</label>
+                  <input
+                      type="text"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      className="form-input"
+                      placeholder="회사 이름을 입력하세요"
+                      disabled={isLoading || generatedTerms}
+                  />
                 </div>
-              ) : (
-                <p>AI 약관 초안이 여기에 표시됩니다.</p>
-              )}
-            </div>
-          </div>
 
-          {/* 입력 폼 섹션 */}
-          <div className="form-section">
-            <div className="form-container">
-              <div className="form-group">
-                <label className="form-label">회사 이름</label>
-                <input
-                  type="text"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  className="form-input"
-                  placeholder="회사 이름을 입력하세요"
-                  disabled={isLoading || generatedTerms}
-                />
-              </div>
+                <div className="form-group">
+                  <label className="form-label">초안 카테고리</label>
+                  <div className="select-container">
+                    <select
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        className="form-select"
+                        disabled={isLoading || generatedTerms}
+                    >
+                      <option value="선택">선택</option>
+                      {categories.map((cat) => (
+                          <option key={cat.value} value={cat.value}>
+                            {cat.label}
+                          </option>
+                      ))}
+                    </select>
+                    <div className="select-arrow">▼</div>
+                  </div>
+                </div>
 
-              <div className="form-group">
-                <label className="form-label">초안 카테고리</label>
-                <div className="select-container">
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="form-select"
+                <div className="form-group">
+                  <label className="form-label">상품 이름</label>
+                  <input
+                      type="text"
+                      value={productName}
+                      onChange={(e) => setProductName(e.target.value)}
+                      className="form-input"
+                      placeholder="상품 이름을 입력하세요"
+                      disabled={isLoading || generatedTerms}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">필수 조항 및 희망사항</label>
+                  <textarea
+                      value={requirements}
+                      onChange={(e) => setRequirements(e.target.value)}
+                      className="form-textarea"
+                      placeholder="필수 조항 및 희망사항을 입력하세요 (예: 보장 내용, 면책 조항, 특약 등)"
+                      rows={12}
+                      disabled={isLoading || generatedTerms}
+                  />
+                </div>
+
+                <button
+                    onClick={handleSubmit}
+                    className="ai-draft-btn"
                     disabled={isLoading || generatedTerms}
-                  >
-                    <option value="선택">선택</option>
-                    {categories.map((cat) => (
-                      <option key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="select-arrow">▼</div>
-                </div>
+                >
+                  {isLoading ? '생성 중...' : 'AI 초안 딸각 (5,000P)'}
+                </button>
               </div>
+            </div>
 
-              <div className="form-group">
-                <label className="form-label">상품 이름</label>
-                <input
-                  type="text"
-                  value={productName}
-                  onChange={(e) => setProductName(e.target.value)}
-                  className="form-input"
-                  placeholder="상품 이름을 입력하세요"
-                  disabled={isLoading || generatedTerms}
-                />
+            {/* 미리보기 섹션 (오른쪽) */}
+            <div className="preview-section">
+              <div className="preview-placeholder">
+                {isLoading ? (
+                    <p>약관 초안을 생성 중입니다. 잠시만 기다려 주세요...</p>
+                ) : error ? (
+                    <p className="error-message">{error}</p>
+                ) : generatedTerms ? (
+                    <div className="generated-terms-content">
+                      <h3 style={{ textAlign: 'center', marginBottom: '20px' }}>
+                        {productName ? `${productName} 약관` : '생성된 약관'}
+                      </h3>
+                      <pre>{generatedTerms}</pre>
+                    </div>
+                ) : (
+                    <p>AI 약관 초안이 여기에 표시됩니다.</p>
+                )}
               </div>
-
-              <div className="form-group">
-                <label className="form-label">필수 조항 및 희망사항</label>
-                <textarea
-                  value={requirements}
-                  onChange={(e) => setRequirements(e.target.value)}
-                  className="form-textarea"
-                  placeholder="필수 조항 및 희망사항을 입력하세요 (예: 보장 내용, 면책 조항, 특약 등)"
-                  rows={12}
-                  disabled={isLoading || generatedTerms}
-                />
-              </div>
-
-              <button
-                onClick={handleSubmit}
-                className="ai-draft-btn"
-                disabled={isLoading || generatedTerms}
-              >
-                {isLoading ? '생성 중...' : 'AI 초안 딸각 (5,000P)'}
-              </button>
             </div>
           </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
   );
 }
 
