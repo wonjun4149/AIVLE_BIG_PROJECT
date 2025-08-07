@@ -131,7 +131,7 @@ function CreateStandard() {
           <div className="preview-section">
             <div className="preview-placeholder">
               {isLoading ? (
-                  <p>약관 초안을 생성 중입니다. 잠시만 기다려 주세요...</p>
+                  <p className="blinking">약관 초안을 생성 중입니다. 잠시만 기다려 주세요...</p>
               ) : error ? (
                   <p className="error-message">{error}</p>
               ) : generatedTerms ? (
