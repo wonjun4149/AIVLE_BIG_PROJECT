@@ -22,7 +22,7 @@ public class GetPointViewHandler {
         @Payload UserSignedUp userSignedUp
     ) {
         try {
-            if (!userSignedUp.validate()) return;
+            userSignedUp.validate();
 
             // view 객체 생성
             GetPoint getPoint = new GetPoint();

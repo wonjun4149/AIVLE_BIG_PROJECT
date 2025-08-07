@@ -38,17 +38,7 @@ apiClient.interceptors.request.use(async (config) => {
 });
 
 /**
-<<<<<<< HEAD
-<<<<<<< HEAD
- * ✅ 모든 질문 목록을 가져옵니다.
-=======
- * 모든 질문 목록을 페이지별로 가져옵니다.
- * @param {number} page - 페이지 번호 (0부터 시작)
- * @param {number} size - 페이지당 게시글 수
->>>>>>> 775a33f (게시판 수정작업)
-=======
  * ✅ 모든 질문 목록을 가져옵니다. (페이징 지원)
->>>>>>> 80dec57 (시크릿매니저 사용으로 변경)
  */
 export const getAllQuestions = async (page = 0, size = 10) => {
     try {
@@ -103,14 +93,37 @@ export const deleteQuestion = async (id) => {
 /**
  * ✅ 특정 질문에 새로운 답변(댓글)을 등록합니다.
  */
-export const createAnswer = async (questionId, content) => {
+export const createAnswer = async (questionId, answerData) => {
     try {
-        const response = await apiClient.post(`/qna/${questionId}/answers`, content, {
-            headers: { 'Content-Type': 'text/plain' }
-        });
+        // 데이터를 JSON 객체로 전송
+        const response = await apiClient.post(`/qna/${questionId}/answers`, answerData);
         return response.data;
     } catch (error) {
         console.error(`Error creating answer for question ${questionId}:`, error);
+        throw error;
+    }
+};
+
+/**
+ * ✅ 특정 질문의 특정 답변(댓글)을 삭제합니다.
+ */
+export const deleteAnswer = async (questionId, answerId) => {
+    try {
+        await apiClient.delete(`/qna/${questionId}/answers/${answerId}`);
+    } catch (error) {
+        console.error(`Error deleting answer ${answerId} from question ${questionId}:`, error);
+        throw error;
+    }
+};
+
+/**
+ * ✅ 특정 질문의 특정 답변(댓글)을 수정합니다.
+ */
+export const updateAnswer = async (questionId, answerId, answerData) => {
+    try {
+        await apiClient.put(`/qna/${questionId}/answers/${answerId}`, answerData);
+    } catch (error) {
+        console.error(`Error updating answer ${answerId} from question ${questionId}:`, error);
         throw error;
     }
 };

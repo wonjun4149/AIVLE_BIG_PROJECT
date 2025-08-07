@@ -1,79 +1,126 @@
-.container {
+.account-info-container {
     display: flex;
-    height: 100vh;
-    font-family: 'Noto Sans KR', sans-serif;
+    flex-direction: column;
+    gap: 25px; /* 카드 사이의 간격 */
 }
 
-.sidebar {
-    width: 200px;
-    background-color: #f2f0f7;
-    padding: 20px;
+.mypage-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.sidebar h2 {
-    color: #5c2d91;
-}
-
-.username {
-    margin: 20px 0;
-    font-weight: bold;
-}
-
-.menu {
-    list-style: none;
-    padding: 0;
-}
-
-.menu li {
-    padding: 10px 0;
-    cursor: pointer;
-}
-
-.menu li.active {
-    background-color: #dcd6f7;
-    font-weight: bold;
-}
-
-.account-content {
-    max-width: 600px; /* 콘텐츠 최대 너비 설정 */
-    margin: 0 auto; /* 중앙 정렬 */
-    padding: 40px;
-    background-color: white;
-}
-
-.info-row {
-    display: grid; /* Grid 레이아웃 사용 */
-    grid-template-columns: 150px 1fr; /* 150px 너비의 레이블 열과 나머지 공간을 차지하는 값 열 */
-    align-items: center;
+.mypage-card h2 {
+    font-size: 1.5rem;
+    margin-top: 0;
     margin-bottom: 20px;
-    gap: 20px; /* 레이블과 값 사이의 간격 */
+    color: #555;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
 }
 
-.info-row label {
-    font-weight: bold;
-    text-align: right; /* 레이블 텍스트 오른쪽 정렬 */
+/* --- 계정 정보 섹션 --- */
+.info-field {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    font-size: 1rem;
 }
 
-.info-row span {
-    color: #333; /* 기본 텍스트 색상으로 변경 */
-    text-align: left;
+.info-field label {
+    font-weight: 600;
+    color: #333;
+    width: 120px; /* 라벨 너비 고정 */
+    flex-shrink: 0;
 }
 
-.info-row input {
-    padding: 8px;
-    width: 100%; /* 부모 컨테이너에 맞게 너비 조정 */
-    border: 1px solid #ccc;
-    border-radius: 4px;
+.info-field span {
+    color: #666;
+}
+
+/* --- 비밀번호 변경 섹션 --- */
+.form-field {
+    margin-bottom: 1rem;
+}
+
+.form-field label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-field input {
+    width: 100%;
+    padding: 12px;
+    padding-right: 40px; /* 아이콘 공간 확보 */
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    transition: all 0.2s ease-in-out;
+    box-sizing: border-box;
+}
+
+.form-field input:focus {
+    outline: none;
+    border-color: #6c63ff;
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2);
+}
+
+/* --- 비밀번호 토글 버튼 --- */
+.password-input-wrapper {
+    position: relative;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    color: #888;
+    display: flex;
+    align-items: center;
+}
+
+.password-toggle-btn:hover {
+    color: #333;
 }
 
 .save-button {
-    background-color: #5c2d91;
+    width: 100%;
+    padding: 15px;
+    margin-top: 1rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    background-color: #6c63ff;
     color: white;
-    padding: 10px 20px;
     border: none;
+    border-radius: 10px;
     cursor: pointer;
-    margin-top: 20px;
-    display: block; /* 버튼을 블록 요소로 만들어 margin:auto 적용 */
-    margin-left: auto; /* 오른쪽 정렬 효과 */
-    margin-right: 0;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(108, 99, 255, 0.2);
+}
+
+.save-button:hover {
+    background-color: #5a54e1;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(108, 99, 255, 0.3);
+}
+
+.message {
+    margin-top: 1rem;
+    text-align: center;
+    color: #dc3545; /* 오류 메시지 색상 */
+}
+.message:not(:empty) {
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #f8d7da;
 }

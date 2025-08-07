@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useOutletContext, Link } from 'react-router-dom';
 import './Create-Terms.css';
 
-function CreateTerms({ user, onHomeClick, onSignUpClick }) {
+function CreateTerms() {
+  const { user, authLoading } = useOutletContext();
   const [companyName, setCompanyName] = useState('');
   const [category, setCategory] = useState('선택');
   const [productName, setProductName] = useState('');
@@ -13,9 +15,15 @@ function CreateTerms({ user, onHomeClick, onSignUpClick }) {
   // ✅ 환경 변수 또는 기본값 사용
   const CLOUD_RUN_API_BASE_URL =
     process.env.REACT_APP_CLOUD_RUN_API_BASE_URL ||
-    'https://terms-api-service-902267887946.us-central1.run.app';
+    'https://terms-api-service-eck6h26cxa-uc.a.run.app';
 
-  const categories = ['예금', '적금', '주택담보대출', '암보험', '자동차보험'];
+  const categories = [
+    { value: 'deposit', label: '예금' },
+    { value: 'savings', label: '적금' },
+    { value: 'loan', label: '주택담보대출' },
+    { value: 'cancer_insurance', label: '암보험' },
+    { value: 'car_insurance', label: '자동차보험' },
+  ];
 
   // ✅ 약관 생성 요청
   const handleSubmit = async () => {
@@ -57,6 +65,22 @@ function CreateTerms({ user, onHomeClick, onSignUpClick }) {
     }
   };
 
+  if (authLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    return (
+      <div className="terms-main">
+        <div className="login-prompt" style={{ textAlign: 'center', paddingTop: '50px' }}>
+          <h2>로그인 필요</h2>
+          <p>이 페이지에 접근하려면 로그인이 필요합니다.</p>
+          <Link to="/login" className="login-btn-link">로그인 페이지로 이동</Link>
+        </div>
+      </div>
+    );
+  }
+
   // ✅ 화면 렌더링
   return (
     <div className="App">
@@ -93,6 +117,7 @@ function CreateTerms({ user, onHomeClick, onSignUpClick }) {
                   onChange={(e) => setCompanyName(e.target.value)}
                   className="form-input"
                   placeholder="회사 이름을 입력하세요"
+                  disabled={isLoading || generatedTerms}
                 />
               </div>
 
@@ -103,11 +128,12 @@ function CreateTerms({ user, onHomeClick, onSignUpClick }) {
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
                     className="form-select"
+                    disabled={isLoading || generatedTerms}
                   >
                     <option value="선택">선택</option>
                     {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
+                      <option key={cat.value} value={cat.value}>
+                        {cat.label}
                       </option>
                     ))}
                   </select>
@@ -123,6 +149,7 @@ function CreateTerms({ user, onHomeClick, onSignUpClick }) {
                   onChange={(e) => setProductName(e.target.value)}
                   className="form-input"
                   placeholder="상품 이름을 입력하세요"
+                  disabled={isLoading || generatedTerms}
                 />
               </div>
 
@@ -134,13 +161,14 @@ function CreateTerms({ user, onHomeClick, onSignUpClick }) {
                   className="form-textarea"
                   placeholder="필수 조항 및 희망사항을 입력하세요 (예: 보장 내용, 면책 조항, 특약 등)"
                   rows={12}
+                  disabled={isLoading || generatedTerms}
                 />
               </div>
 
               <button
                 onClick={handleSubmit}
                 className="ai-draft-btn"
-                disabled={isLoading}
+                disabled={isLoading || generatedTerms}
               >
                 {isLoading ? '생성 중...' : 'AI 초안 딸각 (5,000P)'}
               </button>

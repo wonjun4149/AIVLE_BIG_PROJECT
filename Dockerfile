@@ -18,21 +18,18 @@ RUN pip install --no-cache-dir --upgrade pip && \
         langchain-google-vertexai
 
 # 애플리케이션 소스 복사
-COPY ai/src/main/Python/ /app/src/main/Python/
-COPY point/ /app/point/
-COPY term/ /app/term/
-COPY user/ /app/user/
+COPY ai/src/main/Python /app
 
-# ✅ 서비스 계정 키 복사
-COPY ai/src/main/Python/aivle-team0721-c72ab84f2251.json /app/src/main/Python/aivle-team0721-c72ab84f2251.json
+# 
+# 키 파일은 이미 위 COPY 명령어로 /app에 복사되었습니다.
 
-# ✅ 환경변수 설정
-ENV GOOGLE_APPLICATION_CREDENTIALS=/app/src/main/Python/aivle-team0721-c72ab84f2251.json
+# 
+ENV GOOGLE_APPLICATION_CREDENTIALS=/app/aivle-team0721-c72ab84f2251.json
 ENV GOOGLE_CLOUD_PROJECT=aivle-team0721
 ENV PYTHONPATH=/app
 
-# ✅ 빌드 시 키파일 존재 여부 체크
-RUN test -f /app/src/main/Python/aivle-team0721-c72ab84f2251.json
+# 
+RUN test -f /app/aivle-team0721-c72ab84f2251.json
 
 # Gunicorn 서버 실행
-CMD ["gunicorn", "--bind", ":8080", "--workers", "1", "--threads", "8", "src.main.Python.Create_Terms:app"]
+CMD ["gunicorn", "--bind", ":8080", "--workers", "1", "--threads", "8", "Create_Terms:app"]

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './SignUp.css';
 import logo from '../assets/logo.png';
 import {
@@ -14,8 +14,16 @@ import { useNavigate } from 'react-router-dom';
 import googleLogo from '../assets/google-logo.png';
 import PDFModal from './PDFModal';
 
-function SignUp({ onHomeClick }) {
+function SignUp({ user, authLoading, onHomeClick }) { // user와 authLoading props를 받음
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // 인증 로딩이 끝나고 사용자가 이미 로그인된 상태라면, 알림 후 메인으로 이동
+    if (!authLoading && user) {
+      alert('이미 로그인되어 있습니다. 메인 페이지로 이동합니다.');
+      navigate('/', { replace: true });
+    }
+  }, [user, authLoading, navigate]);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -170,6 +178,11 @@ function SignUp({ onHomeClick }) {
       alert(error.message);
     }
   };
+
+  // 인증 로딩 중이거나, 이미 로그인된 사용자라서 리디렉션될 예정이라면 로딩 화면 표시
+  if (authLoading || user) {
+    return <div className="loading-spinner"></div>;
+  }
 
   return (
       <div className="signup-page">

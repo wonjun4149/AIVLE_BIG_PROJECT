@@ -13,7 +13,9 @@ import MyPage from './MyPage';
 import QnaList from './components/QnaList';
 import QnaWrite from './components/QnaWrite';
 import QnaDetail from './components/QnaDetail';
+import QnaEdit from './components/QnaEdit'; // 수정 컴포넌트 import
 import MainLayout from './components/MainLayout';
+import PointLayout from './components/PointLayout';
 import ResetPassword from './components/ResetPassword';
 
 
@@ -45,18 +47,20 @@ function App() {
         {/* 네비게이션 바가 있는 페이지들 */}
         <Route element={<MainLayout user={user} authLoading={authLoading} />}>
           <Route path="/" element={<Home user={user} />} />
-          <Route path="/create-terms" element={<CreateTerms user={user} />} />
-          <Route path="/create-standard" element={<CreateStandard user={user} />} />
+          <Route path="/create-terms" element={<CreateTerms />} />
+          <Route path="/create-standard" element={<CreateStandard />} />
           <Route path="/mypage" element={<MyPage />} />
+          <Route path="/points" element={<PointLayout />} />
           <Route path="/qna" element={<QnaList />} />
           <Route path="/qna/write" element={<QnaWrite />} />
           <Route path="/qna/:id" element={<QnaDetail />} />
+          <Route path="/qna/edit/:id" element={<QnaEdit />} /> {/* 수정 페이지 라우트 추가 */}
           <Route path="/reset-password" element={<ResetPassword />} />
         </Route>
 
         {/* 네비게이션 바가 없는 페이지들 */}
-        <Route path="/signup" element={<SignUp onHomeClick={() => window.location.href = '/'} />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<SignUp user={user} authLoading={authLoading} onHomeClick={() => window.location.href = '/'} />} />
+        <Route path="/login" element={<Login user={user} authLoading={authLoading} />} />
         <Route path="/complete-signup" element={<CompleteSignUp />} />
       </Routes>
     </Router>

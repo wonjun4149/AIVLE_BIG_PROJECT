@@ -55,6 +55,13 @@
 			<artifactId>spring-cloud-starter-sleuth</artifactId>
 		</dependency>
 
+		<!-- Spring Cloud GCP Firestore Starter -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-gcp-starter-data-firestore</artifactId>
+			<version>1.2.8.RELEASE</version>
+		</dependency>
+
 		<!-- kafka streams -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>

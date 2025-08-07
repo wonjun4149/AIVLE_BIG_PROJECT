@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useOutletContext, Link } from 'react-router-dom';
 import './Create-Terms.css'; // 동일한 CSS 파일 사용
 
-function CreateStandard({ user, onHomeClick, onSignUpClick }) {
+function CreateStandard() {
+  const { user, authLoading } = useOutletContext();
   const [companyName, setCompanyName] = useState('');
   const [clientName, setClientName] = useState(''); // 거래처 이름 추가
   const [category, setCategory] = useState('선택');
@@ -20,6 +22,22 @@ function CreateStandard({ user, onHomeClick, onSignUpClick }) {
       requirements
     });
   };
+
+  if (authLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    return (
+      <div className="terms-main">
+        <div className="login-prompt" style={{ textAlign: 'center', paddingTop: '50px' }}>
+          <h2>로그인 필요</h2>
+          <p>이 페이지에 접근하려면 로그인이 필요합니다.</p>
+          <Link to="/login" className="login-btn-link">로그인 페이지로 이동</Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="App">

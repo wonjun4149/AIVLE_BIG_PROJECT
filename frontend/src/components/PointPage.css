@@ -1,0 +1,97 @@
+.point-page-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+}
+
+.point-page-container h1 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #333;
+}
+
+.current-points-card {
+    background-color: #6c5ce7;
+    color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.current-points-card h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.2rem;
+}
+
+.current-points-card p {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+.charge-section, .history-section {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.charge-section h2, .history-section h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1rem;
+}
+
+.charge-form {
+    display: flex;
+    gap: 1rem;
+}
+
+.charge-form input {
+    flex-grow: 1;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.charge-form button {
+    padding: 0.75rem 1.5rem;
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.history-table th, .history-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.history-table th {
+    background-color: #f8f9fa;
+}
+
+.history-table td:nth-child(1) { width: 25%; color: #666; }
+.history-table td:nth-child(2) { width: 50%; }
+.history-table td:nth-child(3) { width: 25%; text-align: right; font-weight: bold; }
+
+.history-table .charge {
+    color: #007bff;
+}
+
+.history-table .deduct {
+    color: #dc3545;
+}

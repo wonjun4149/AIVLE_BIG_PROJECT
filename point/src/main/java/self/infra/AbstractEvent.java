@@ -1,18 +1,11 @@
-package self.infra;
+package self.infra; // 패키지를 infra로 변경
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.BeanUtils;
-import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.support.MessageBuilder;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.MimeTypeUtils;
-import self.PointApplication;
-import self.config.kafka.KafkaProcessor;
 
-//<<< Clean Arch / Outbound Adaptor
 public class AbstractEvent {
 
     String eventType;
@@ -20,44 +13,11 @@ public class AbstractEvent {
 
     public AbstractEvent(Object aggregate) {
         this();
-        BeanUtils.copyProperties(aggregate, this);
+        this.eventType = aggregate.getClass().getSimpleName();
     }
 
     public AbstractEvent() {
-        this.setEventType(this.getClass().getSimpleName());
         this.timestamp = System.currentTimeMillis();
-    }
-
-    public void publish() {
-        /**
-         * spring streams 방식
-         */
-        KafkaProcessor processor = PointApplication.applicationContext.getBean(
-            KafkaProcessor.class
-        );
-        MessageChannel outputChannel = processor.outboundTopic();
-
-        outputChannel.send(
-            MessageBuilder
-                .withPayload(this)
-                .setHeader(
-                    MessageHeaders.CONTENT_TYPE,
-                    MimeTypeUtils.APPLICATION_JSON
-                )
-                .setHeader("type", getEventType())
-                .build()
-        );
-    }
-
-    public void publishAfterCommit() {
-        TransactionSynchronizationManager.registerSynchronization(
-            new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    AbstractEvent.this.publish();
-                }
-            }
-        );
     }
 
     public String getEventType() {
@@ -76,21 +36,17 @@ public class AbstractEvent {
         this.timestamp = timestamp;
     }
 
-    public boolean validate() {
-        return getEventType().equals(getClass().getSimpleName());
-    }
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     public String toJson() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        String json = null;
-
         try {
-            json = objectMapper.writeValueAsString(this);
+            return objectMapper.writeValueAsString(this);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("JSON format exception", e);
         }
+    }
 
-        return json;
+    public void publish() {
+        // Spring Cloud Stream을 통해 메시지를 발행하는 로직 (필요 시 구현)
     }
 }
-//>>> Clean Arch / Outbound Adaptor
