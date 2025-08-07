@@ -54,8 +54,12 @@ public class PointController {
         return pointService.reducePointManually(firebaseUid, amount)
                 .map(updatedPoint -> ResponseEntity.ok(new PointResponse(updatedPoint.getId(), updatedPoint.getUserId(), updatedPoint.getAmount())))
                 .cast(ResponseEntity.class)
-                .onErrorResume(IllegalArgumentException.class, e -> Mono.just(ResponseEntity.badRequest().body(e.getMessage())))
-                .onErrorResume(e -> Mono.just(ResponseEntity.status(500).body("포인트 차감 실패: " + e.getMessage())))
+                .onErrorResume(IllegalArgumentException.class, e -> 
+                    Mono.just(ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage())))
+                )
+                .onErrorResume(e -> 
+                    Mono.just(ResponseEntity.status(500).body(new ErrorResponse("포인트 차감 실패: " + e.getMessage())))
+                )
                 .map(response -> (ResponseEntity<Object>) response);
     }
 
@@ -82,5 +86,17 @@ public class PointController {
         public String getId() { return id; }
         public String getUserId() { return userId; }
         public Integer getAmount() { return amount; }
+    }
+
+    // Error Response DTO
+    public static class ErrorResponse {
+        private String error;
+
+        public ErrorResponse(String error) {
+            this.error = error;
+        }
+
+        // Getter
+        public String getError() { return error; }
     }
 }

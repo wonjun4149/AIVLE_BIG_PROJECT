@@ -74,3 +74,10 @@ firebase-adminsdk.json
 # Build output
 **/target/
 spring-cloud-gcp-dependencies-1.2.8.RELEASE.pom
+deploy_qna.sh
+
+# ai의 venv 폴더
+**/.venv/
+ai/src/main/Python/예금/chroma.sqlite3
+ai/src/main/Python/자동차보험/chroma.sqlite3
+deploy_ai.sh

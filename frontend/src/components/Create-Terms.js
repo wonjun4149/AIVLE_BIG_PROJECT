@@ -28,7 +28,12 @@ function CreateTerms() {
   // ✅ 약관 생성 요청
   const handleSubmit = async () => {
     if (!companyName || category === '선택' || !productName || !requirements) {
-      setError('모든 필드를 입력해주세요.');
+      alert('모든 필드를 입력해주세요.');
+      return;
+    }
+
+    if (!user || !user.uid) {
+      alert('사용자 인증 정보가 없습니다. 다시 로그인해주세요.');
       return;
     }
 
@@ -41,6 +46,7 @@ function CreateTerms() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-authenticated-user-uid': user.uid,
         },
         body: JSON.stringify({
           companyName,
@@ -50,16 +56,29 @@ function CreateTerms() {
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || '약관 생성에 실패했습니다.');
+        throw new Error(data.error || '약관 생성 중 알 수 없는 오류가 발생했습니다.');
+      }
+      
+      setGeneratedTerms(data.terms);
+
+      if(data.warning) {
+        alert(data.warning);
       }
 
-      const data = await response.json();
-      setGeneratedTerms(data.terms);
     } catch (err) {
       console.error('Error generating terms:', err);
-      setError(err.message || '약관 생성 중 오류가 발생했습니다.');
+      const errorMessage = err.message || "";
+
+      // 포인트 관련 에러일 경우, "포인트가 부족합니다." 문구로 통일
+      if (errorMessage.includes("포인트")) {
+        alert("포인트가 부족합니다.");
+      } else {
+        // 그 외 모든 에러는 일반적인 메시지로 통일
+        alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      }
     } finally {
       setIsLoading(false);
     }
