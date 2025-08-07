@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { useOutletContext, Link } from 'react-router-dom';
+import { useOutletContext, Link, useNavigate } from 'react-router-dom';
 import './Create-Terms.css';
 
 function CreateTerms() {
   const { user, authLoading } = useOutletContext();
+  const navigate = useNavigate();
   const [companyName, setCompanyName] = useState('');
   const [category, setCategory] = useState('선택');
   const [productName, setProductName] = useState('');
@@ -63,6 +64,10 @@ function CreateTerms() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleGoToTranslation = () => {
+    navigate('/translation');
   };
 
   if (authLoading) {
@@ -172,6 +177,14 @@ function CreateTerms() {
               >
                 {isLoading ? '생성 중...' : 'AI 초안 딸각 (5,000P)'}
               </button>
+              {generatedTerms && (
+                <button
+                  onClick={handleGoToTranslation}
+                  className="translate-redirect-btn"
+                >
+                  번역 페이지로 이동
+                </button>
+              )}
             </div>
           </div>
         </div>
