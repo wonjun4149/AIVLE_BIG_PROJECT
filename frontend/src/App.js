@@ -47,8 +47,8 @@ function App() {
         {/* 네비게이션 바가 있는 페이지들 */}
         <Route element={<MainLayout user={user} authLoading={authLoading} />}>
           <Route path="/" element={<Home user={user} />} />
-          <Route path="/create-terms" element={<CreateTerms user={user} />} />
-          <Route path="/create-standard" element={<CreateStandard user={user} />} />
+          <Route path="/create-terms" element={<CreateTerms />} />
+          <Route path="/create-standard" element={<CreateStandard />} />
           <Route path="/mypage" element={<MyPage />} />
           <Route path="/points" element={<PointLayout />} />
           <Route path="/qna" element={<QnaList />} />
