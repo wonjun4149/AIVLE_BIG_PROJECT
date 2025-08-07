@@ -110,7 +110,7 @@ PROMPT_TEMPLATE = """
 약관의 목적이 상품 정보 전달 뿐만 아니라, 고객과의 오해 소지를 최소화하고, 기업의 내부 정책 및 절차를 더욱 명확히 하여 분쟁 발생 시 기업의 입장을 더욱 공고히 하려는 목적도 있음을 명심하고 작성해.
 반복되는 문구, 예를 들어서 '중과실' 같은 내용이 여러 조항에서 반복된다면, 매번 설명하지 말고 용어를 정의하는 조항에 작성해서 간결하게 작성해줘.
 가능하다면 절차를 진행할 방법을 하나만 두지 말고, 메인으로 진행하는 방법 하나와 해당 방법을 사용할 수 없을 때를 위한 예비 방법을 추가로 기재해줘.
-마지막으로 출력하기 전에 한 번 읽어보고 미흡한 점이나 독소조항, 리스크 등 수정할 부분이 있다면 수정해서 출력해줘.
+마지막으로 출력하기 전에 한 번 읽어보고 미흡한 점이나 독소조항, 리스크 등 수정할 부분을 확인하고 수정할 부분이 있다면 수정해서 출력해줘.
 """
 
 # CORS Header 강제 삽입
@@ -154,7 +154,7 @@ def generate_terms():
             point_response = requests.post(point_deduction_url)
             
             if not point_response.ok:
-                error_message = "포인트가 부족합니다." # 기본 에러 메시지
+                error_message = "포인트가 부족합니다."
                 try:
                     error_data = point_response.json()
                     if "error" in error_data:
@@ -220,7 +220,7 @@ def generate_terms():
                 "warning": "AI 초안은 생성되었지만, 서버 저장에 실패했습니다. 포인트가 차감되었을 수 있으니 관리자에게 문의하세요."
             }), 200
 
-        return jsonify({"terms": generated_text})
+        return jsonify({"terms": generated_text}), 200
 
     except Exception as e:
         logging.exception("약관 생성 중 오류 발생")
