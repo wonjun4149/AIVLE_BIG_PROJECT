@@ -115,10 +115,6 @@ public class PointService {
                                 history.setType("CHARGE");
                                 history.setDescription("포인트 충전");
                                 return pointHistoryRepository.save(history).thenReturn(savedPoint);
-                            })
-                            .doOnSuccess(savedPoint -> {
-                                PointPurchased pointPurchased = new PointPurchased(savedPoint);
-                                streamBridge.send("event-out", pointPurchased);
                             });
                 });
     }
@@ -139,10 +135,22 @@ public class PointService {
                     history.setType("DEDUCT_MANUAL");
                     history.setDescription("수동 차감");
                     return pointHistoryRepository.save(history).thenReturn(savedPoint);
+                });
+    }
+
+    public Mono<Point> addPoint(String userId, int amount) {
+        return getOrCreatePoint(userId)
+                .flatMap(point -> {
+                    point.setAmount(point.getAmount() + amount);
+                    return pointRepository.save(point);
                 })
-                .doOnSuccess(savedPoint -> {
-                    PointReduced pointReduced = new PointReduced(savedPoint);
-                    streamBridge.send("event-out", pointReduced);
+                .flatMap(savedPoint -> {
+                    PointHistory history = new PointHistory();
+                    history.setUserId(userId);
+                    history.setAmount(amount);
+                    history.setType("REFUND");
+                    history.setDescription("오류로 인한 포인트 환불");
+                    return pointHistoryRepository.save(history).thenReturn(savedPoint);
                 });
     }
 }

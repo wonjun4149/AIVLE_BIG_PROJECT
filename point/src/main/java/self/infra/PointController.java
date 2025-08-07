@@ -63,6 +63,18 @@ public class PointController {
                 .map(response -> (ResponseEntity<Object>) response);
     }
 
+    // 포인트 환불 API (롤백용)
+    @PostMapping("/{firebaseUid}/add")
+    public Mono<ResponseEntity<Object>> addPoint(@PathVariable String firebaseUid, @RequestParam Integer amount) {
+        return pointService.addPoint(firebaseUid, amount)
+                .map(updatedPoint -> ResponseEntity.ok(new PointResponse(updatedPoint.getId(), updatedPoint.getUserId(), updatedPoint.getAmount())))
+                .cast(ResponseEntity.class)
+                .onErrorResume(e -> 
+                    Mono.just(ResponseEntity.status(500).body(new ErrorResponse("포인트 환불 실패: " + e.getMessage())))
+                )
+                .map(response -> (ResponseEntity<Object>) response);
+    }
+
     // Request DTO for charging points
     public static class ChargeRequest {
         private Integer amount;

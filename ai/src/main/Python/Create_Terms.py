@@ -148,7 +148,9 @@ def generate_terms():
         # 1. 포인트 차감 요청
         try:
             deduction_amount = 5000
-            point_deduction_url = f"{POINT_SERVICE_URL}/{user_id}/reduce?amount={deduction_amount}"
+            # URL을 안전하게 조합 (기본 URL 끝에 /가 있든 없든 처리)
+            base_url = POINT_SERVICE_URL.rstrip('/')
+            point_deduction_url = f"{base_url}/api/points/{user_id}/reduce?amount={deduction_amount}"
             logging.info(f"포인트 차감 요청: {point_deduction_url}")
             
             point_response = requests.post(point_deduction_url)
@@ -209,16 +211,32 @@ def generate_terms():
             }
             
             logging.info(f"Term 서비스로 데이터 전송: {TERM_SERVICE_URL}")
-            term_response = requests.post(TERM_SERVICE_URL, json=term_payload, headers=headers)
+            # URL을 안전하게 조합 (기본 URL 끝에 /가 있든 없든 처리하고 /terms 경로 추가)
+            base_url = TERM_SERVICE_URL.rstrip('/')
+            term_creation_url = f"{base_url}/terms"
+            term_response = requests.post(term_creation_url, json=term_payload, headers=headers)
             term_response.raise_for_status()
             logging.info(f"Term 서비스 응답: {term_response.status_code}")
 
         except requests.exceptions.RequestException as e:
-            logging.exception("Term 서비스 호출 실패")
-            return jsonify({
-                "terms": generated_text,
-                "warning": "AI 초안은 생성되었지만, 서버 저장에 실패했습니다. 포인트가 차감되었을 수 있으니 관리자에게 문의하세요."
-            }), 200
+            logging.exception("Term 서비스 호출 실패. 포인트 환불을 시도합니다.")
+            
+            # === 롤백 로직 시작 ===
+            try:
+                point_refund_url = f"{POINT_SERVICE_URL.rstrip('/')}/api/points/{user_id}/add?amount={deduction_amount}"
+                logging.info(f"포인트 환불 요청: {point_refund_url}")
+                refund_response = requests.post(point_refund_url)
+                refund_response.raise_for_status()
+                logging.info("포인트 환불 성공")
+                
+                # 사용자에게는 최종 실패 메시지를 전달
+                return jsonify({"error": "약관 저장에 실패하여 포인트가 환불되었습니다."}), 500
+
+            except requests.exceptions.RequestException as refund_e:
+                logging.exception("!!! 포인트 환불 실패 !!!")
+                # 사용자에게는 최종 실패 메시지와 함께, 수동 확인이 필요함을 강력하게 경고
+                return jsonify({"error": "치명적인 오류: 약관 저장에 실패했으며 포인트 환불에도 실패했습니다. 즉시 관리자에게 문의하세요."}), 500
+            # === 롤백 로직 끝 ===
 
         return jsonify({"terms": generated_text}), 200
 
