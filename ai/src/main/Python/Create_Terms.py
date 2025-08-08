@@ -21,7 +21,7 @@ CORS(app, resources={r"/api/*": {"origins": "*"}})
 # 로그 설정
 logging.basicConfig(level=logging.INFO)
 
-# 서비스 URL 정의
+# 서비스 URL 정의 (이제 이 파일에서는 Term 서비스 직접 호출 안 함)
 TERM_SERVICE_URL = os.environ.get("TERM_SERVICE_URL", "http://localhost:8083/terms")
 POINT_SERVICE_URL = os.environ.get("POINT_SERVICE_URL", "http://localhost:8085/api/points")
 
@@ -32,7 +32,6 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 LOCAL_KEY_FILE = os.path.join(BASE_DIR, "firebase-adminsdk.json")
 
 try:
-    # GCP 환경에서는 Secret Manager에서 키를 가져옴
     secret_client = secretmanager.SecretManagerServiceClient()
     secret_name = f"projects/{PROJECT_ID}/secrets/firebase-adminsdk/versions/latest"
     response = secret_client.access_secret_version(name=secret_name)
@@ -40,13 +39,11 @@ try:
     credentials_info = json.loads(secret_payload)
     credentials = service_account.Credentials.from_service_account_info(credentials_info)
     logging.info("Secret Manager에서 서비스 계정 키 로드 성공")
-
 except Exception as e:
     logging.warning(f"Secret Manager 접근 실패: {e}. 로컬 키 파일로 대체합니다.")
-    # 로컬 환경에서는 파일에서 키를 가져옴 (기존 방식)
     try:
         if not os.path.exists(LOCAL_KEY_FILE):
-             raise FileNotFoundError("로컬 서비스 계정 키 파일을 찾을 수 없습니다: " + LOCAL_KEY_FILE)
+            raise FileNotFoundError("로컬 서비스 계정 키 파일을 찾을 수 없습니다: " + LOCAL_KEY_FILE)
         credentials = service_account.Credentials.from_service_account_file(LOCAL_KEY_FILE)
         logging.info("로컬 파일에서 서비스 계정 키 로드 성공")
     except Exception as file_e:
@@ -73,10 +70,8 @@ VECTOR_DB_MAP = {
     'car_insurance': os.path.join(BASE_DIR, '자동차보험'),
     'savings': os.path.join(BASE_DIR, '적금')
 }
-# --- 설정 완료 ---
 
-
-# 프롬프트 템플릿 (기존과 동일)
+# 프롬프트 템플릿
 PROMPT_TEMPLATE = """
 기업 이름은 다음과 같아:
 {company_name}
@@ -140,21 +135,19 @@ def generate_terms():
         product_name = data.get('productName')
         wishlist = data.get('requirements')
         user_id = request.headers.get('x-authenticated-user-uid')
+        effective_date = data.get('effectiveDate')
 
-        if not all([company_name, category, product_name, wishlist, user_id]):
-            logging.warning(f"필수 입력값 누락")
+        if not all([company_name, category, product_name, wishlist, user_id, effective_date]):
+            logging.warning("필수 입력값 누락")
             return jsonify({"error": "필수 입력값이 누락되었습니다."}),
-        
-        # 1. 포인트 차감 요청
+
+        # 1) 포인트 차감
         try:
             deduction_amount = 5000
-            # URL을 안전하게 조합 (기본 URL 끝에 /가 있든 없든 처리)
             base_url = POINT_SERVICE_URL.rstrip('/')
             point_deduction_url = f"{base_url}/api/points/{user_id}/reduce?amount={deduction_amount}"
             logging.info(f"포인트 차감 요청: {point_deduction_url}")
-            
             point_response = requests.post(point_deduction_url)
-            
             if not point_response.ok:
                 error_message = "포인트가 부족합니다."
                 try:
@@ -163,17 +156,14 @@ def generate_terms():
                         error_message = error_data["error"]
                 except requests.exceptions.JSONDecodeError:
                     error_message = point_response.text if point_response.text else error_message
-                
                 logging.warning(f"포인트 차감 실패: {error_message}")
                 return jsonify({"error": error_message}), 400
-
             logging.info(f"포인트 차감 성공: {point_response.json()}")
-
-        except requests.exceptions.RequestException as e:
+        except requests.exceptions.RequestException:
             logging.exception("Point 서비스 호출 실패 (네트워크 오류)")
             return jsonify({"error": "포인트 서비스에 연결할 수 없습니다."}), 500
 
-        # 2. 약관 생성 (포인트 차감 성공 시)
+        # 2) 약관 생성 (RAG)
         db_category_key = VECTOR_DB_MAP.get(category)
         if not db_category_key:
             logging.error(f"'{category}'에 해당하는 약관 유형을 찾을 수 없습니다.")
@@ -188,59 +178,32 @@ def generate_terms():
         retriever = vectorstore.as_retriever(search_kwargs={'k': 5})
         docs = retriever.invoke(wishlist)
         context = "\n\n".join([doc.page_content for doc in docs])
-        current_date = datetime.now().strftime("%Y년 %m월 %d일")
 
         prompt = PROMPT_TEMPLATE.format(
-            context=context, company_name=company_name, product_name=product_name,
-            wishlist=wishlist, date=current_date
+            context=context,
+            company_name=company_name,
+            product_name=product_name,
+            wishlist=wishlist,
+            date=effective_date
         )
         response = gemini_model.generate_content(prompt)
         generated_text = response.candidates[0].content.parts[0].text
 
-        # 3. term 서비스에 저장 요청
-        try:
-            term_payload = {
-                "title": f"{product_name} 이용 약관", "content": generated_text,
-                "category": category, "productName": product_name,
-                "requirement": wishlist, "userCompany": company_name,
-                "termType": "AI_DRAFT"
+        # 3) 여기서 더 이상 자동 저장하지 않음
+        #    프론트의 Edit-Terms에서 최초 저장(POST) 수행
+
+        return jsonify({
+            "terms": generated_text,
+            "meta": {
+                "companyName": company_name,
+                "category": category,
+                "productName": product_name,
+                "requirements": wishlist,
+                "effectiveDate": effective_date
             }
-            headers = {
-                'Content-Type': 'application/json',
-                'x-authenticated-user-uid': user_id
-            }
-            
-            logging.info(f"Term 서비스로 데이터 전송: {TERM_SERVICE_URL}")
-            # URL을 안전하게 조합 (기본 URL 끝에 /가 있든 없든 처리하고 /terms 경로 추가)
-            base_url = TERM_SERVICE_URL.rstrip('/')
-            term_creation_url = f"{base_url}/terms"
-            term_response = requests.post(term_creation_url, json=term_payload, headers=headers)
-            term_response.raise_for_status()
-            logging.info(f"Term 서비스 응답: {term_response.status_code}")
+        }), 200
 
-        except requests.exceptions.RequestException as e:
-            logging.exception("Term 서비스 호출 실패. 포인트 환불을 시도합니다.")
-            
-            # === 롤백 로직 시작 ===
-            try:
-                point_refund_url = f"{POINT_SERVICE_URL.rstrip('/')}/api/points/{user_id}/add?amount={deduction_amount}"
-                logging.info(f"포인트 환불 요청: {point_refund_url}")
-                refund_response = requests.post(point_refund_url)
-                refund_response.raise_for_status()
-                logging.info("포인트 환불 성공")
-                
-                # 사용자에게는 최종 실패 메시지를 전달
-                return jsonify({"error": "약관 저장에 실패하여 포인트가 환불되었습니다."}), 500
-
-            except requests.exceptions.RequestException as refund_e:
-                logging.exception("!!! 포인트 환불 실패 !!!")
-                # 사용자에게는 최종 실패 메시지와 함께, 수동 확인이 필요함을 강력하게 경고
-                return jsonify({"error": "치명적인 오류: 약관 저장에 실패했으며 포인트 환불에도 실패했습니다. 즉시 관리자에게 문의하세요."}), 500
-            # === 롤백 로직 끝 ===
-
-        return jsonify({"terms": generated_text}), 200
-
-    except Exception as e:
+    except Exception:
         logging.exception("약관 생성 중 오류 발생")
         return jsonify({"error": "약관 생성 중 서버에서 오류가 발생했습니다."}), 500
 

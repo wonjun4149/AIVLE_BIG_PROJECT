@@ -18,11 +18,11 @@ import MainLayout from './components/MainLayout';
 import PointLayout from './components/PointLayout';
 import ResetPassword from './components/ResetPassword';
 import ContractManagement from './ContractManagement';
-
+import EditTerms from './components/Edit-Terms'; // ✅ 한 번만 import
 
 function App() {
   const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true); // 인증 로딩 상태 추가
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (userAuth) => {
@@ -37,7 +37,7 @@ function App() {
       } else {
         setUser(null);
       }
-      setAuthLoading(false); // 인증 상태 확인 완료
+      setAuthLoading(false);
     });
     return () => unsubscribe();
   }, []);
@@ -55,13 +55,26 @@ function App() {
           <Route path="/qna" element={<QnaList />} />
           <Route path="/qna/write" element={<QnaWrite />} />
           <Route path="/qna/:id" element={<QnaDetail />} />
-          <Route path="/qna/edit/:id" element={<QnaEdit />} /> {/* 수정 페이지 라우트 추가 */}
+          <Route path="/qna/edit/:id" element={<QnaEdit />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/contracts" element={<ContractManagement />} />
+
+          {/* 생성 후 편집 페이지 라우트 */}
+          <Route path="/terms/new/edit" element={<EditTerms />} />
+          <Route path="/terms/:termId/edit" element={<EditTerms />} />
         </Route>
 
         {/* 네비게이션 바가 없는 페이지들 */}
-        <Route path="/signup" element={<SignUp user={user} authLoading={authLoading} onHomeClick={() => window.location.href = '/'} />} />
+        <Route
+          path="/signup"
+          element={
+            <SignUp
+              user={user}
+              authLoading={authLoading}
+              onHomeClick={() => (window.location.href = '/')}
+            />
+          }
+        />
         <Route path="/login" element={<Login user={user} authLoading={authLoading} />} />
         <Route path="/complete-signup" element={<CompleteSignUp />} />
       </Routes>
