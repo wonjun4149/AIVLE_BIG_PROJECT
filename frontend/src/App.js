@@ -17,6 +17,7 @@ import QnaEdit from './components/QnaEdit'; // 수정 컴포넌트 import
 import MainLayout from './components/MainLayout';
 import PointLayout from './components/PointLayout';
 import ResetPassword from './components/ResetPassword';
+import ContractManagement from './ContractManagement';
 
 
 function App() {
@@ -56,6 +57,7 @@ function App() {
           <Route path="/qna/:id" element={<QnaDetail />} />
           <Route path="/qna/edit/:id" element={<QnaEdit />} /> {/* 수정 페이지 라우트 추가 */}
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/contracts" element={<ContractManagement />} />
         </Route>
 
         {/* 네비게이션 바가 없는 페이지들 */}

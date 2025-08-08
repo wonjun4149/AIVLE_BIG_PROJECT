@@ -33,6 +33,10 @@ public class TermService {
         return termRepository.findById(id);
     }
 
+    public List<Term> findAllByUserId(String userId) throws ExecutionException, InterruptedException {
+        return termRepository.findByUserId(userId);
+    }
+
     public Term save(Term term) throws ExecutionException, InterruptedException {
         termRepository.save(term);
 
