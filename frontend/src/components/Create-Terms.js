@@ -14,7 +14,6 @@ function CreateTerms() {
   const [error, setError] = useState('');
   const [effectiveDate, setEffectiveDate] = useState('');
 
-  // ✅ 환경 변수 또는 기본값 사용 (생성 API)
   const CLOUD_RUN_API_BASE_URL =
     process.env.REACT_APP_CLOUD_RUN_API_BASE_URL ||
     'https://terms-api-service-eck6h26cxa-uc.a.run.app';
@@ -27,13 +26,11 @@ function CreateTerms() {
     { value: 'car_insurance', label: '자동차보험' },
   ];
 
-  // ✅ 약관 생성 요청
   const handleSubmit = async () => {
     if (!companyName || category === '선택' || !productName || !requirements || !effectiveDate) {
       alert('모든 필드를 입력해주세요.');
       return;
     }
-
     if (!user || !user.uid) {
       alert('사용자 인증 정보가 없습니다. 다시 로그인해주세요.');
       return;
@@ -60,49 +57,37 @@ function CreateTerms() {
       });
 
       const data = await response.json();
-
       if (!response.ok) {
         throw new Error(data.error || '약관 생성 중 알 수 없는 오류가 발생했습니다.');
       }
 
-      // 자동 저장된 termId가 있다면 편집 페이지로 이동
-      if (data.termId) {
-        navigate(`/terms/${data.termId}/edit`, {
-          state: {
-            termId: data.termId,
-            title: data.title || `${productName} 이용 약관`,
-            content: data.terms,
-            createdAt: data.createdAt, // 서버가 주지 않으면 페이지에서 오늘 날짜로 대체
-          },
-          replace: true,
-        });
-        return;
-      }
-
-      // 혹시 termId를 못 받았을 때는 기존처럼 화면에 보여주기
-      setGeneratedTerms(data.terms);
-
-      if (data.warning) {
-        alert(data.warning);
-      }
+      // 자동 저장 제거 → 새 초안 편집 페이지로 이동 (아직 termId 없음)
+      navigate(`/terms/new/edit`, {
+        state: {
+          content: data.terms,
+          meta: data.meta,
+          // 기본 계약서 이름 제안
+          title: `${productName} 이용 약관`,
+          // 최초 생성일: 오늘 날짜
+          createdAt: new Date().toISOString().slice(0, 10),
+        },
+        replace: true,
+      });
     } catch (err) {
       console.error('Error generating terms:', err);
-      const errorMessage = err.message || '';
-
-      if (errorMessage.includes('포인트')) {
+      const msg = err.message || '';
+      if (msg.includes('포인트')) {
         alert('포인트가 부족합니다.');
       } else {
         alert('오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
       }
-      setError(errorMessage);
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (authLoading) {
-    return <div>Loading...</div>;
-  }
+  if (authLoading) return <div>Loading...</div>;
 
   if (!user) {
     return (
@@ -116,7 +101,6 @@ function CreateTerms() {
     );
   }
 
-  // ✅ 화면 렌더링
   return (
     <div className="App">
       <main className="terms-main">
