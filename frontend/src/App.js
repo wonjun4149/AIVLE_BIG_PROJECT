@@ -18,6 +18,8 @@ import MainLayout from './components/MainLayout';
 import PointLayout from './components/PointLayout';
 import ResetPassword from './components/ResetPassword';
 
+// ✅ 새로 추가
+import EditTerms from './components/Edit-Terms';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -56,10 +58,22 @@ function App() {
           <Route path="/qna/:id" element={<QnaDetail />} />
           <Route path="/qna/edit/:id" element={<QnaEdit />} /> {/* 수정 페이지 라우트 추가 */}
           <Route path="/reset-password" element={<ResetPassword />} />
+
+          {/* ✅ 생성 후 편집 페이지 라우트 추가 */}
+          <Route path="/terms/:termId/edit" element={<EditTerms />} />
         </Route>
 
         {/* 네비게이션 바가 없는 페이지들 */}
-        <Route path="/signup" element={<SignUp user={user} authLoading={authLoading} onHomeClick={() => window.location.href = '/'} />} />
+        <Route
+          path="/signup"
+          element={
+            <SignUp
+              user={user}
+              authLoading={authLoading}
+              onHomeClick={() => (window.location.href = '/')}
+            />
+          }
+        />
         <Route path="/login" element={<Login user={user} authLoading={authLoading} />} />
         <Route path="/complete-signup" element={<CompleteSignUp />} />
       </Routes>

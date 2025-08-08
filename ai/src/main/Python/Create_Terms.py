@@ -140,21 +140,20 @@ def generate_terms():
         product_name = data.get('productName')
         wishlist = data.get('requirements')
         user_id = request.headers.get('x-authenticated-user-uid')
+        effective_date = data.get('effectiveDate')
 
-        if not all([company_name, category, product_name, wishlist, user_id]):
-            logging.warning(f"필수 입력값 누락")
+        if not all([company_name, category, product_name, wishlist, user_id, effective_date]):
+            logging.warning("필수 입력값 누락")
             return jsonify({"error": "필수 입력값이 누락되었습니다."}),
-        
+
         # 1. 포인트 차감 요청
         try:
             deduction_amount = 5000
-            # URL을 안전하게 조합 (기본 URL 끝에 /가 있든 없든 처리)
             base_url = POINT_SERVICE_URL.rstrip('/')
             point_deduction_url = f"{base_url}/api/points/{user_id}/reduce?amount={deduction_amount}"
             logging.info(f"포인트 차감 요청: {point_deduction_url}")
             
             point_response = requests.post(point_deduction_url)
-            
             if not point_response.ok:
                 error_message = "포인트가 부족합니다."
                 try:
@@ -163,13 +162,12 @@ def generate_terms():
                         error_message = error_data["error"]
                 except requests.exceptions.JSONDecodeError:
                     error_message = point_response.text if point_response.text else error_message
-                
                 logging.warning(f"포인트 차감 실패: {error_message}")
                 return jsonify({"error": error_message}), 400
 
             logging.info(f"포인트 차감 성공: {point_response.json()}")
 
-        except requests.exceptions.RequestException as e:
+        except requests.exceptions.RequestException:
             logging.exception("Point 서비스 호출 실패 (네트워크 오류)")
             return jsonify({"error": "포인트 서비스에 연결할 수 없습니다."}), 500
 
@@ -188,22 +186,29 @@ def generate_terms():
         retriever = vectorstore.as_retriever(search_kwargs={'k': 5})
         docs = retriever.invoke(wishlist)
         context = "\n\n".join([doc.page_content for doc in docs])
-        current_date = datetime.now().strftime("%Y년 %m월 %d일")
 
         prompt = PROMPT_TEMPLATE.format(
-            context=context, company_name=company_name, product_name=product_name,
-            wishlist=wishlist, date=current_date
+            context=context,
+            company_name=company_name,
+            product_name=product_name,
+            wishlist=wishlist,
+            date=effective_date
         )
         response = gemini_model.generate_content(prompt)
         generated_text = response.candidates[0].content.parts[0].text
 
-        # 3. term 서비스에 저장 요청
+        # 3. term 서비스에 저장 요청 (자동 저장)
         try:
             term_payload = {
-                "title": f"{product_name} 이용 약관", "content": generated_text,
-                "category": category, "productName": product_name,
-                "requirement": wishlist, "userCompany": company_name,
-                "termType": "AI_DRAFT"
+                "title": f"{product_name} 이용 약관",
+                "content": generated_text,
+                "category": category,
+                "productName": product_name,
+                "requirement": wishlist,
+                "userCompany": company_name,
+                "termType": "AI_DRAFT",
+                # 필요한 경우 시행일 저장 필드가 있으면 전달
+                "effectiveDate": effective_date
             }
             headers = {
                 'Content-Type': 'application/json',
@@ -211,16 +216,32 @@ def generate_terms():
             }
             
             logging.info(f"Term 서비스로 데이터 전송: {TERM_SERVICE_URL}")
-            # URL을 안전하게 조합 (기본 URL 끝에 /가 있든 없든 처리하고 /terms 경로 추가)
             base_url = TERM_SERVICE_URL.rstrip('/')
             term_creation_url = f"{base_url}/terms"
             term_response = requests.post(term_creation_url, json=term_payload, headers=headers)
             term_response.raise_for_status()
             logging.info(f"Term 서비스 응답: {term_response.status_code}")
 
-        except requests.exceptions.RequestException as e:
+            term_json = {}
+            try:
+                term_json = term_response.json()
+            except Exception:
+                logging.warning("Term 서비스 JSON 파싱 실패, 빈 객체로 처리")
+
+            # 여러 스키마 대비 안전 추출
+            term_id = (
+                term_json.get("id")
+                or term_json.get("termId")
+                or (term_json.get("data", {}) if isinstance(term_json.get("data", {}), dict) else {}).get("id")
+            )
+
+            created_at = (
+                term_json.get("createdAt")
+                or datetime.now().strftime("%Y-%m-%d")
+            )
+
+        except requests.exceptions.RequestException:
             logging.exception("Term 서비스 호출 실패. 포인트 환불을 시도합니다.")
-            
             # === 롤백 로직 시작 ===
             try:
                 point_refund_url = f"{POINT_SERVICE_URL.rstrip('/')}/api/points/{user_id}/add?amount={deduction_amount}"
@@ -228,19 +249,21 @@ def generate_terms():
                 refund_response = requests.post(point_refund_url)
                 refund_response.raise_for_status()
                 logging.info("포인트 환불 성공")
-                
-                # 사용자에게는 최종 실패 메시지를 전달
                 return jsonify({"error": "약관 저장에 실패하여 포인트가 환불되었습니다."}), 500
-
-            except requests.exceptions.RequestException as refund_e:
+            except requests.exceptions.RequestException:
                 logging.exception("!!! 포인트 환불 실패 !!!")
-                # 사용자에게는 최종 실패 메시지와 함께, 수동 확인이 필요함을 강력하게 경고
                 return jsonify({"error": "치명적인 오류: 약관 저장에 실패했으며 포인트 환불에도 실패했습니다. 즉시 관리자에게 문의하세요."}), 500
             # === 롤백 로직 끝 ===
 
-        return jsonify({"terms": generated_text}), 200
+        # 프론트 편집 페이지로 이동할 수 있도록 termId 등 반환
+        return jsonify({
+            "terms": generated_text,
+            "termId": term_id,
+            "title": term_payload["title"],
+            "createdAt": created_at
+        }), 200
 
-    except Exception as e:
+    except Exception:
         logging.exception("약관 생성 중 오류 발생")
         return jsonify({"error": "약관 생성 중 서버에서 오류가 발생했습니다."}), 500
 
