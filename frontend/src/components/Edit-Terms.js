@@ -19,9 +19,12 @@ function EditTerms() {
   const [loading, setLoading] = useState(!initial.content && !!termId); // id있고 state없으면 조회
   const [error, setError] = useState('');
 
-  // Term 서비스 베이스 URL (Term 서비스가 Firestore에 저장)
+  // ✅ Term 서비스 베이스 URL (환경변수 > 호스트 자동 분기)
   const TERM_SERVICE_BASE_URL =
-    process.env.REACT_APP_TERM_SERVICE_BASE_URL || 'http://localhost:8083';
+    process.env.REACT_APP_TERM_SERVICE_BASE_URL ||
+    (window.location.hostname === 'localhost'
+      ? 'http://localhost:8083'
+      : 'https://term-service-902267887946.us-central1.run.app');
 
   // 신규 초안 메타(회사/카테고리 등) — POST 시 예전 스키마 + memo만 추가해서 전달
   const meta = initial.meta || {};
@@ -57,10 +60,8 @@ function EditTerms() {
         setContent(data.content || '');
         // createdAt/modifiedAt은 서버 관리. 여기선 표시만.
         if (data.createdAt) {
-          // 서버가 문자열/타임스탬프로 줄 수 있어 가볍게 normalize
-          const dateStr = typeof data.createdAt === 'string'
-            ? data.createdAt.slice(0, 10)
-            : createdDate;
+          const dateStr =
+            typeof data.createdAt === 'string' ? data.createdAt.slice(0, 10) : createdDate;
           setCreatedDate(dateStr || createdDate);
         }
         setMemo(data.memo || '');
@@ -116,14 +117,14 @@ function EditTerms() {
       } else {
         // ✅ 신규 생성(최초 저장) : 기존 자동저장 스키마에 memo만 추가해서 POST
         const payload = {
-          title: contractName,                 // "<상품명> 이용 약관" 의미
-          content: content,                    // 본문
-          category: meta.category,             // 카테고리
-          productName: meta.productName,       // 상품명
-          requirement: meta.requirements,      // 요구사항 원문
-          userCompany: meta.companyName,       // 회사명
-          termType: 'AI_DRAFT',                // 고정
-          memo: memo || '',                    // ✅ memo만 추가
+          title: contractName,
+          content: content,
+          category: meta.category,
+          productName: meta.productName,
+          requirement: meta.requirements,
+          userCompany: meta.companyName,
+          termType: 'AI_DRAFT',
+          memo: memo || '',
         };
 
         const res = await fetch(`${TERM_SERVICE_BASE_URL}/terms`, {
@@ -139,8 +140,7 @@ function EditTerms() {
           throw new Error(d.error || '계약서 저장(생성) 중 오류가 발생했습니다.');
         }
         const saved = await res.json().catch(() => ({}));
-        const newId =
-          saved.id || saved.termId || (saved.data && saved.data.id);
+        const newId = saved.id || saved.termId || (saved.data && saved.data.id);
 
         alert('계약서가 저장되었습니다.');
 
