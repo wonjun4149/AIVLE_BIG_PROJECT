@@ -50,7 +50,18 @@
 
 .item-data.title {
     font-weight: 600;
-    color: #007bff;
+}
+
+/* 링크 스타일 수정 */
+.item-data.title a {
+    color: #333; /* 기본 색상 검은색 계열 */
+    text-decoration: none; /* 밑줄 제거 */
+    transition: color 0.2s ease-in-out; /* 색상 변경 애니메이션 */
+}
+
+/* 마우스 올렸을 때 스타일 */
+.item-data.title a:hover {
+    color: #007bff; /* 마우스 올리면 파란색으로 변경 */
 }
 
 .no-memo {

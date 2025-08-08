@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, Link } from 'react-router-dom'; // Link import
 import { getContracts } from './api/term';
-import LoadingSpinner from './components/LoadingSpinner'; // 스피너 컴포넌트 import
+import LoadingSpinner from './components/LoadingSpinner';
 import './ContractManagement.css';
 
 const ContractManagement = () => {
@@ -11,11 +11,10 @@ const ContractManagement = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // 인증 정보 로딩이 끝나고, 유저 정보가 있을 때만 API를 호출
     if (!authLoading && user) {
       const fetchContracts = async () => {
         try {
-          setLoading(true); // API 호출 시작 시 로딩 상태로 설정
+          setLoading(true);
           const data = await getContracts();
           const sortedData = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
           setContracts(sortedData);
@@ -26,16 +25,13 @@ const ContractManagement = () => {
           setLoading(false);
         }
       };
-
       fetchContracts();
     } else if (!authLoading && !user) {
-      // 로딩이 끝났는데 유저가 없는 경우 (로그아웃 상태)
       setError('로그인이 필요합니다.');
       setLoading(false);
     }
-  }, [user, authLoading]); // user와 authLoading 상태가 변경될 때마다 이 effect를 재실행
+  }, [user, authLoading]);
 
-  // authLoading 또는 데이터 로딩 중일 때 스피너를 표시
   if (authLoading || loading) {
     return <LoadingSpinner />;
   }
@@ -57,7 +53,9 @@ const ContractManagement = () => {
         {contracts.length > 0 ? (
           contracts.map((contract) => (
             <div key={contract.id} className="contract-item">
-              <div className="item-data title">{contract.title}</div>
+              <div className="item-data title">
+                <Link to={`/contracts/${contract.id}`}>{contract.title}</Link>
+              </div>
               <div className="item-data memo">
                 {contract.memo ? (
                   <span>{contract.memo}</span>

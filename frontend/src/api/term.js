@@ -46,3 +46,16 @@ export const getContracts = async () => {
     throw error;
   }
 };
+
+/**
+ * 특정 ID의 계약서 정보를 가져옵니다.
+ */
+export const getContractById = async (id) => {
+  try {
+    const response = await apiClient.get(`/terms/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`ID가 ${id}인 계약서를 가져오는 중 오류가 발생했습니다.`, error);
+    throw error;
+  }
+};

@@ -18,7 +18,8 @@ import MainLayout from './components/MainLayout';
 import PointLayout from './components/PointLayout';
 import ResetPassword from './components/ResetPassword';
 import ContractManagement from './ContractManagement';
-import EditTerms from './components/Edit-Terms'; // ✅ 한 번만 import
+import EditTerms from './components/Edit-Terms';
+import ContractDetail from './components/ContractDetail'; // 상세 페이지 import
 
 function App() {
   const [user, setUser] = useState(null);
@@ -58,6 +59,7 @@ function App() {
           <Route path="/qna/edit/:id" element={<QnaEdit />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/contracts" element={<ContractManagement />} />
+          <Route path="/contracts/:id" element={<ContractDetail />} /> {/* 상세 페이지 라우트 추가 */}
 
           {/* 생성 후 편집 페이지 라우트 */}
           <Route path="/terms/new/edit" element={<EditTerms />} />
@@ -83,5 +85,3 @@ function App() {
 }
 
 export default App;
-
-//

@@ -12,6 +12,7 @@ import self.service.TermService;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/terms")
@@ -72,6 +73,29 @@ public class TermController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Failed to verify Firebase ID token: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error fetching terms: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getTermById(@PathVariable String id, @RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            String userId = getUidFromToken(authorizationHeader);
+            Optional<Term> termOptional = termService.findById(id);
+
+            if (termOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Term not found with id: " + id);
+            }
+
+            Term term = termOptional.get();
+            if (!term.getUserId().equals(userId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User does not have permission to access this term.");
+            }
+
+            return ResponseEntity.ok(term);
+        } catch (FirebaseAuthException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token verification failed: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error fetching term: " + e.getMessage());
         }
     }
 
