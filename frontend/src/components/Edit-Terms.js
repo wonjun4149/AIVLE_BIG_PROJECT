@@ -69,12 +69,17 @@ function EditTerms() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading]);
 
-  // 초기 contentEditable 채우기
+ // 초기 contentEditable 채우기
   useEffect(() => {
     if (editorRef.current) {
-      editorRef.current.innerText = termsContent || '';
+      // 컴포넌트가 마운트될 때, termsContent가 있을 경우에만 innerText를 설정합니다.
+      // 이후에는 사용자의 입력에 따라 상태가 업데이트됩니다.
+      if (termsContent) {
+        editorRef.current.innerText = termsContent;
+      }
     }
-  }, [termsContent]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 빈 배열을 넣어 컴포넌트가 마운트될 때 한 번만 실행되도록 합니다.
 
   const handleEditorInput = useCallback(() => {
     if (!editorRef.current) return;
@@ -199,10 +204,8 @@ function EditTerms() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">메타 정보</label>
+                <label className="form-label">정보</label>
                 <div style={{ fontSize: '0.9rem', color: '#555' }}>
-                  <div>회사명: {companyName || '-'}</div>
-                  <div>카테고리: {category || '-'}</div>
                   <div>상품명: {productName || '-'}</div>
                   <div>시행 날짜: {effectiveDate || '-'}</div>
                 </div>
@@ -216,9 +219,7 @@ function EditTerms() {
                 {saving ? '저장 중...' : '계약서 저장'}
               </button>
 
-              <div style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: '#666' }}>
-                ⌘/Ctrl + S 로도 저장할 수 있어요.
-              </div>
+            
             </div>
           </div>
 
