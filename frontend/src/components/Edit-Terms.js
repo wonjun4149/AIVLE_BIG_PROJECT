@@ -2,22 +2,29 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useOutletContext, useLocation, useNavigate } from 'react-router-dom';
 
-// ✅ Term 서비스 API 베이스 URL (환경에 따라 자동 선택)
+// ✅ Term 서비스 API 베이스 URL
 const TERM_SERVICE_BASE_URL =
   window.location.hostname === 'localhost'
-    ? 'http://localhost:8083' // 로컬 개발용
-    : 'https://term-service-902267887946.us-central1.run.app'; // 배포용(절대경로)
+    ? 'http://localhost:8083'
+    : 'https://term-service-902267887946.us-central1.run.app';
 
 function EditTerms() {
   const { user, authLoading } = useOutletContext();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Create-Terms.js에서 push한 state (초안 결과) 받기
-  const {
-    terms = '',                // 생성된 약관 본문
-    meta = {},                 // 생성 시 메타
-  } = location.state || {};
+  // 1) location.state 우선, 2) sessionStorage 보조
+  const statePayload = location.state || (() => {
+    try {
+      const saved = sessionStorage.getItem('draftPayload');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  })();
+
+  const termsInit = statePayload?.terms || '';
+  const metaInit = statePayload?.meta || {};
 
   const {
     companyName = '',
@@ -25,26 +32,22 @@ function EditTerms() {
     productName = '',
     requirements = '',
     effectiveDate = '',
-  } = meta;
+  } = metaInit;
 
   // 화면 상태
   const [title, setTitle] = useState(productName ? `${productName} 이용 약관` : '');
   const [memo, setMemo] = useState('');
   const [createdAt] = useState(() => {
-    // 최초 생성일(당일) 표기용
     const d = new Date();
-    // YYYY-MM-DD
     const yyyy = d.getFullYear();
     const mm = `${d.getMonth() + 1}`.padStart(2, '0');
     const dd = `${d.getDate()}`.padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
   });
 
-  // 오른쪽 편집 영역(contentEditable)
   const editorRef = useRef(null);
-  const [termsContent, setTermsContent] = useState(terms || '');
+  const [termsContent, setTermsContent] = useState(termsInit);
 
-  // 편의상 로딩/에러
   const [saving, setSaving] = useState(false);
 
   // 로그인 체크
@@ -55,23 +58,30 @@ function EditTerms() {
     }
   }, [authLoading, user, navigate]);
 
-  // 초기 컨텐츠 주입 (contentEditable에 HTML로 넣으면 줄바꿈/공백 보존 쉬움)
+  // 초안이 하나도 없으면 Create 페이지로
+  useEffect(() => {
+    if (!authLoading) {
+      if (!termsInit || !companyName || !category || !productName) {
+        alert('초안 데이터가 없습니다. 먼저 초안을 생성해주세요.');
+        navigate('/create-terms');
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading]);
+
+  // 초기 contentEditable 채우기
   useEffect(() => {
     if (editorRef.current) {
-      // pre-wrap과 유사하게 보이도록 <div> 안에 텍스트로만 넣고 CSS에서 처리
       editorRef.current.innerText = termsContent || '';
     }
   }, [termsContent]);
 
-  // contentEditable 변경 처리
   const handleEditorInput = useCallback(() => {
     if (!editorRef.current) return;
-    // innerText로 가져와서 순수 텍스트 보존
-    const txt = editorRef.current.innerText;
-    setTermsContent(txt);
+    setTermsContent(editorRef.current.innerText);
   }, []);
 
-  // Ctrl/Cmd+S 저장 단축키
+  // Ctrl/Cmd + S 로 저장
   useEffect(() => {
     const onKeyDown = async (e) => {
       const isMac = navigator.platform.toUpperCase().includes('MAC');
@@ -85,7 +95,6 @@ function EditTerms() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title, memo, termsContent, companyName, category, productName, requirements]);
 
-  // 저장 핸들러
   const onClickSave = useCallback(async () => {
     if (!user || !user.uid) {
       alert('로그인이 필요합니다.');
@@ -102,32 +111,24 @@ function EditTerms() {
 
     try {
       setSaving(true);
-
-      // ✅ Firebase ID 토큰을 Authorization 헤더로
       const idToken = await user.getIdToken();
 
-      // 서버가 기대하는 페이로드(A안: 기존 호환 유지 + memo만 추가)
       const payload = {
         title: title,
         category: category,
         productName: productName,
-        content: termsContent,     // 편집된 전체 본문
-        requirement: requirements, // 생성에 사용된 요구사항 원문
+        content: termsContent,
+        requirement: requirements,
         userCompany: companyName,
         termType: 'AI_DRAFT',
-        // 선택 필드들(있으면 서버가 저장하거나 무시)
-        memo: memo,                // 🔹 추가 필드 (A안)
-        // effectiveDate 자체는 생성 프롬프트에만 쓰였고,
-        // 저장 스키마에 없다면 서버가 무시할 수 있음. 필요 시 payload에 넣고 서버 DTO에 필드 추가.
+        memo: memo, // A안: memo만 추가
       };
 
       const res = await fetch(`${TERM_SERVICE_BASE_URL}/terms`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // 서버 로그에 'Missing request header Authorization'가 있었으므로 필수
           'Authorization': `Bearer ${idToken}`,
-          // 예전 호환 유지(서버가 헤더에서 userId 읽을 수도 있음)
           'x-authenticated-user-uid': user.uid,
         },
         body: JSON.stringify(payload),
@@ -140,14 +141,8 @@ function EditTerms() {
         return;
       }
 
-      // 성공
-      try {
-        const json = JSON.parse(text);
-        // json.id 등이 있으면 여기서 활용 가능
-      } catch (_e) {
-        // 바디가 비어있거나 Non-JSON일 수 있음 → 무시
-      }
-
+      // 저장 성공 후, draftPayload 정리(선택)
+      sessionStorage.removeItem('draftPayload');
       alert('저장 완료되었습니다.');
     } catch (e) {
       console.error(e);
@@ -157,18 +152,17 @@ function EditTerms() {
     }
   }, [user, title, termsContent, requirements, companyName, category, productName, memo]);
 
-  if (authLoading) return <div>Loading...</div>;
-  if (!user) return null;
+  if (authLoading || !termsInit) {
+    return <div>Loading...</div>;
+  }
 
-  // UI: Create-Terms와 동일 레이아웃 유지 (좌: 요약/입력, 우: 편집기)
   return (
     <div className="App">
       <main className="terms-main">
         <div className="terms-container">
-          {/* 왼쪽: 정보/입력 섹션 */}
+          {/* 왼쪽 폼 */}
           <div className="form-section">
             <div className="form-container">
-              {/* 계약서 이름(제목) */}
               <div className="form-group">
                 <label className="form-label">계약서 이름</label>
                 <input
@@ -181,7 +175,6 @@ function EditTerms() {
                 />
               </div>
 
-              {/* 최초 생성일(읽기 전용) */}
               <div className="form-group">
                 <label className="form-label">최초 생성일</label>
                 <input
@@ -193,7 +186,6 @@ function EditTerms() {
                 />
               </div>
 
-              {/* 수정 메모 */}
               <div className="form-group">
                 <label className="form-label">수정 메모</label>
                 <textarea
@@ -206,7 +198,6 @@ function EditTerms() {
                 />
               </div>
 
-              {/* 메타(참고용, 읽기 전용) */}
               <div className="form-group">
                 <label className="form-label">메타 정보</label>
                 <div style={{ fontSize: '0.9rem', color: '#555' }}>
@@ -217,7 +208,6 @@ function EditTerms() {
                 </div>
               </div>
 
-              {/* 저장 버튼 */}
               <button
                 onClick={onClickSave}
                 className="ai-draft-btn"
@@ -232,14 +222,13 @@ function EditTerms() {
             </div>
           </div>
 
-          {/* 오른쪽: 편집 섹션 (클릭/타이핑 가능) */}
+          {/* 오른쪽 편집 영역 */}
           <div className="preview-section">
             <div className="generated-terms-content" style={{ outline: 'none' }}>
               <h3 style={{ textAlign: 'center', marginBottom: '20px' }}>
                 {title || '계약서 제목'}
               </h3>
 
-              {/* 편집기: contentEditable */}
               <div
                 ref={editorRef}
                 onInput={handleEditorInput}

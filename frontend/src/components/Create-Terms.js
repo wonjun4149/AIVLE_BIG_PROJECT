@@ -7,23 +7,19 @@ function CreateTerms() {
   const { user, authLoading } = useOutletContext();
   const navigate = useNavigate();
 
-  // 입력값
   const [companyName, setCompanyName] = useState('');
   const [category, setCategory] = useState('선택');
   const [productName, setProductName] = useState('');
   const [requirements, setRequirements] = useState('');
   const [effectiveDate, setEffectiveDate] = useState('');
 
-  // 상태값
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // ✅ AI 생성 서비스 베이스 URL (환경변수 > 호스트 자동 분기)
+  // ✅ 환경 변수 또는 기본값 사용 (AI 초안 생성 API)
   const CLOUD_RUN_API_BASE_URL =
     process.env.REACT_APP_CLOUD_RUN_API_BASE_URL ||
-    (window.location.hostname === 'localhost'
-      ? 'http://localhost:8080' // 로컬에서 AI 서비스 포트(다르면 수정)
-      : 'https://terms-api-service-eck6h26cxa-uc.a.run.app'); // 배포 AI 서비스 URL
+    'https://terms-api-service-eck6h26cxa-uc.a.run.app';
 
   const categories = [
     { value: 'deposit', label: '예금' },
@@ -33,7 +29,7 @@ function CreateTerms() {
     { value: 'car_insurance', label: '자동차보험' },
   ];
 
-  // ✅ 약관 생성 요청 → 성공 시 즉시 Edit-Terms로 네비게이트
+  // ✅ 약관 생성 요청
   const handleSubmit = async () => {
     if (!companyName || category === '선택' || !productName || !requirements || !effectiveDate) {
       alert('모든 필드를 입력해주세요.');
@@ -69,27 +65,21 @@ function CreateTerms() {
         throw new Error(data.error || '약관 생성 중 알 수 없는 오류가 발생했습니다.');
       }
 
-      // ✅ 즉시 편집 페이지로 이동 (이 페이지에서는 미리보기 표시 안 함)
-      const today = new Date();
-      const createdAt = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(
-        today.getDate()
-      ).padStart(2, '0')}`;
-
-      navigate('/terms/new/edit', {
-        state: {
-          title: `${productName} 이용 약관`,
-          content: data.terms, // 백엔드가 내려준 초안
-          createdAt,           // 표시용(서버 저장 아님)
-          meta: {
-            companyName,
-            category,
-            productName,
-            requirements,
-            effectiveDate,
-          },
+      // ✅ 세션 스토리지에 저장 (새로고침/직접 접근 대비)
+      const draftPayload = {
+        terms: data.terms,
+        meta: data.meta || {
+          companyName,
+          category,
+          productName,
+          requirements,
+          effectiveDate,
         },
-        replace: true,
-      });
+      };
+      sessionStorage.setItem('draftPayload', JSON.stringify(draftPayload));
+
+      // ✅ Edit 페이지로 이동 (state와 함께 전달)
+      navigate('/terms/new/edit', { state: draftPayload });
 
       if (data.warning) {
         alert(data.warning);
@@ -97,13 +87,12 @@ function CreateTerms() {
     } catch (err) {
       console.error('Error generating terms:', err);
       const errorMessage = err.message || '';
-      setError(errorMessage);
-
       if (errorMessage.includes('포인트')) {
         alert('포인트가 부족합니다.');
       } else {
         alert('오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
       }
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -125,7 +114,7 @@ function CreateTerms() {
     );
   }
 
-  // ✅ 화면 렌더링 (좌측 폼 + 우측 미리보기 영역은 레이아웃만 유지, 내용 표시 없음)
+  // ✅ 화면 렌더링
   return (
     <div className="App">
       <main className="terms-main">
@@ -207,15 +196,13 @@ function CreateTerms() {
               >
                 {isLoading ? '생성 중...' : 'AI 초안 딸각 (5,000P)'}
               </button>
-
-              {error && <p className="error-message" style={{ marginTop: '12px' }}>{error}</p>}
             </div>
           </div>
 
-          {/* 미리보기 섹션 (오른쪽) — UI 통일성만 유지, 아무 내용도 표시하지 않음 */}
+          {/* 미리보기 섹션 (오른쪽) - UI 통일성만, 내용 비움 */}
           <div className="preview-section">
             <div className="preview-placeholder">
-              {/* 비워둠: 생성되면 즉시 편집 페이지로 이동 */}
+              <p>AI 약관 초안은 생성 후 편집 화면에서 바로 열립니다.</p>
             </div>
           </div>
         </div>
