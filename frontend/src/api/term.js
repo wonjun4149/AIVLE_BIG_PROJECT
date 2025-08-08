@@ -3,11 +3,11 @@ import axios from 'axios';
 import { auth } from '../firebase';
 
 const getApiUrl = () => {
-  // 1. Cloud Run 환경 변수가 있으면 최우선으로 사용
-  if (process.env.REACT_APP_CLOUD_RUN_TERM_API_BASE_URL) {
-    return process.env.REACT_APP_CLOUD_RUN_TERM_API_BASE_URL;
+  if (process.env.NODE_ENV === 'production') {
+    // GCP 배포 환경
+    return 'https://term-service-902267887946.us-central1.run.app';
   }
-  // 2. 로컬 개발 환경의 기본 URL
+  // 로컬 개발 환경
   return 'http://localhost:8088';
 };
 
@@ -36,7 +36,6 @@ apiClient.interceptors.request.use(
 
 /**
  * 사용자의 모든 계약서 목록을 가져옵니다.
- * (백엔드에 /terms GET 엔드포인트 구현이 필요합니다)
  */
 export const getContracts = async () => {
   try {
