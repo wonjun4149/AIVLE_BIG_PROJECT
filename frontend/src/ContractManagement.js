@@ -1,31 +1,41 @@
 import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { getContracts } from './api/term';
 import './ContractManagement.css';
 
 const ContractManagement = () => {
+  const { user, authLoading } = useOutletContext();
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchContracts = async () => {
-      try {
-        const data = await getContracts();
-        // 백엔드 응답이 createdAt 기준으로 정렬되지 않았다면 프론트에서 정렬
-        const sortedData = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        setContracts(sortedData);
-      } catch (err) {
-        setError('계약서 목록을 불러오는 데 실패했습니다.');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    // 인증 정보 로딩이 끝나고, 유저 정보가 있을 때만 API를 호출
+    if (!authLoading && user) {
+      const fetchContracts = async () => {
+        try {
+          setLoading(true); // API 호출 시작 시 로딩 상태로 설정
+          const data = await getContracts();
+          const sortedData = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          setContracts(sortedData);
+        } catch (err) {
+          setError('계약서 목록을 불러오는 데 실패했습니다.');
+          console.error(err);
+        } finally {
+          setLoading(false);
+        }
+      };
 
-    fetchContracts();
-  }, []);
+      fetchContracts();
+    } else if (!authLoading && !user) {
+      // 로딩이 끝났는데 유저가 없는 경우 (로그아웃 상태)
+      setError('로그인이 필요합니다.');
+      setLoading(false);
+    }
+  }, [user, authLoading]); // user와 authLoading 상태가 변경될 때마다 이 effect를 재실행
 
-  if (loading) {
+  // authLoading이 true일 동안은 초기 로딩 상태를 표시
+  if (authLoading || loading) {
     return <div className="contract-management-container"><h1>로딩 중...</h1></div>;
   }
 
