@@ -2,6 +2,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 100%;
+  min-height: 50vh; /* 뷰포트 높이의 50%를 최소 높이로 설정 */
   padding: 4rem;
 }
 
