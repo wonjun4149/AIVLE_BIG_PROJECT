@@ -36,6 +36,11 @@ public class TermService {
     public Term save(Term term) throws ExecutionException, InterruptedException {
         termRepository.save(term);
 
+        // AI가 직접 생성한 초안의 경우, 별도의 이벤트를 발행하지 않음
+        if ("AI_DRAFT".equals(term.getTermType())) {
+            return term;
+        }
+
         // updateType에 따라 적절한 이벤트 발행
         String updateType = term.getUpdateType();
         if ("v1".equals(term.getVersion()) && updateType == null) {

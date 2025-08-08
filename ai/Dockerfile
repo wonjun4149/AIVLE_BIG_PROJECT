@@ -12,9 +12,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ai/src/main/Python/ .
 
-# ✅ 서비스 계정 키 파일 복사
-COPY ai/src/main/Python/aivle-team0721-79f3f908cb54.json /app/aivle-team0721-79f3f908cb54.json
-
 # ✅ ChromaDB 벡터 저장소 폴더 복사
 COPY ai/src/main/Python/대출 /app/대출
 COPY ai/src/main/Python/암보험 /app/암보험

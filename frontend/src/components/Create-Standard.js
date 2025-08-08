@@ -10,6 +10,11 @@ function CreateStandard() {
   const [productName, setProductName] = useState('');
   const [requirements, setRequirements] = useState('');
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [generatedTerms, setGeneratedTerms] = useState('');
+
+
   const categories = ['예금', '적금', '주택담보대출', '암보험', '자동차보험'];
 
   const handleSubmit = () => {
@@ -44,37 +49,30 @@ function CreateStandard() {
       
       <main className="terms-main">
         <div className="terms-container">
-          {/* 왼쪽 미리보기 영역 */}
-          <div className="preview-section">
-            <div className="preview-placeholder">
-              {/* 미리보기 내용이 들어갈 영역 */}
-            </div>
-          </div>
-
-          {/* 오른쪽 입력 폼 영역 */}
+          {/* 왼쪽 입력 폼 섹션 */}
           <div className="form-section">
             <div className="form-container">
               {/* 회사 이름 */}
               <div className="form-group">
                 <label className="form-label">회사 이름</label>
                 <input
-                  type="text"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  className="form-input"
-                  placeholder="회사 이름을 입력하세요"
+                    type="text"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    className="form-input"
+                    placeholder="회사 이름을 입력하세요"
                 />
               </div>
 
-              {/* 거래처 이름 (새로 추가된 필드) */}
+              {/* 거래처 이름 */}
               <div className="form-group">
                 <label className="form-label">거래처 이름</label>
                 <input
-                  type="text"
-                  value={clientName}
-                  onChange={(e) => setClientName(e.target.value)}
-                  className="form-input"
-                  placeholder="거래처 이름을 입력하세요"
+                    type="text"
+                    value={clientName}
+                    onChange={(e) => setClientName(e.target.value)}
+                    className="form-input"
+                    placeholder="거래처 이름을 입력하세요"
                 />
               </div>
 
@@ -83,15 +81,15 @@ function CreateStandard() {
                 <label className="form-label">초안 카테고리</label>
                 <div className="select-container">
                   <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="form-select"
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="form-select"
                   >
                     <option value="선택">선택</option>
                     {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
                     ))}
                   </select>
                   <div className="select-arrow">▼</div>
@@ -102,11 +100,11 @@ function CreateStandard() {
               <div className="form-group">
                 <label className="form-label">상품 이름</label>
                 <input
-                  type="text"
-                  value={productName}
-                  onChange={(e) => setProductName(e.target.value)}
-                  className="form-input"
-                  placeholder="상품 이름을 입력하세요"
+                    type="text"
+                    value={productName}
+                    onChange={(e) => setProductName(e.target.value)}
+                    className="form-input"
+                    placeholder="상품 이름을 입력하세요"
                 />
               </div>
 
@@ -114,21 +112,39 @@ function CreateStandard() {
               <div className="form-group">
                 <label className="form-label">필수 조항 및 희망사항</label>
                 <textarea
-                  value={requirements}
-                  onChange={(e) => setRequirements(e.target.value)}
-                  className="form-textarea"
-                  placeholder="필수 조항 및 희망사항을 입력하세요"
-                  rows={12}
+                    value={requirements}
+                    onChange={(e) => setRequirements(e.target.value)}
+                    className="form-textarea"
+                    placeholder="필수 조항 및 희망사항을 입력하세요"
+                    rows={12}
                 />
               </div>
 
               {/* AI 초안 생성 버튼 */}
-              <button
-                onClick={handleSubmit}
-                className="ai-draft-btn"
-              >
+              <button onClick={handleSubmit} className="ai-draft-btn">
                 AI 초안 딸각 (5,000P)
               </button>
+            </div>
+          </div>
+
+          {/* 오른쪽 미리보기 섹션 */}
+          <div className="preview-section">
+            <div className="preview-placeholder">
+              {isLoading ? (
+                  <p className="blinking">약관 초안을 생성 중입니다. 잠시만 기다려 주세요...</p>
+              ) : error ? (
+                  <p className="error-message">{error}</p>
+              ) : generatedTerms ? (
+                  <div className="generated-terms-content">
+                    <h3 style={{ textAlign: 'center', marginBottom: '20px' }}>
+                      {productName ? `${productName} 약관` : '생성된 약관'}
+                    </h3>
+                    <pre>{generatedTerms}</pre>
+                  </div>
+              ) : (
+                  <p>AI 약관 초안이 여기에 표시됩니다.</p>
+              )}
+
             </div>
           </div>
         </div>

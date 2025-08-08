@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // useNavigate import
-import { auth } from '../firebase'; 
+import { auth } from '../firebase';
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, signOut } from 'firebase/auth'; // signOut import
 import './AccountInfo.css';
 
@@ -10,7 +10,7 @@ const EyeSlashIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" he
 
 const AccountInfo = () => {
     const user = auth.currentUser;
-    const navigate = useNavigate(); // useNavigate 훅 사용
+    const navigate = useNavigate();
 
     const [currentPwd, setCurrentPwd] = useState('');
     const [newPwd, setNewPwd] = useState('');
@@ -18,6 +18,8 @@ const AccountInfo = () => {
     const [message, setMessage] = useState('');
     const [showNewPwd, setShowNewPwd] = useState(false);
     const [showConfirmPwd, setShowConfirmPwd] = useState(false);
+
+    const isGoogleUser = user?.providerData?.[0]?.providerId === "google.com";
 
     const handleSave = async (e) => {
         e.preventDefault();
@@ -32,10 +34,10 @@ const AccountInfo = () => {
             const credential = EmailAuthProvider.credential(user.email, currentPwd);
             await reauthenticateWithCredential(user, credential);
             await updatePassword(user, newPwd);
-            
+
             alert("비밀번호가 성공적으로 변경되었습니다. 보안을 위해 다시 로그인해주세요.");
-            await signOut(auth); // 로그아웃 처리
-            navigate('/login'); // 로그인 페이지로 이동
+            await signOut(auth);
+            navigate('/login');
 
         } catch (error) {
             console.error(error);
@@ -63,34 +65,41 @@ const AccountInfo = () => {
                 </div>
             </div>
 
-            <form onSubmit={handleSave} className="mypage-card">
-                <h2>비밀번호 변경</h2>
-                <div className="form-field">
-                    <label htmlFor="current-pwd">현재 비밀번호</label>
-                    <input id="current-pwd" type="password" value={currentPwd} onChange={(e) => setCurrentPwd(e.target.value)} required />
+            {isGoogleUser ? (
+                <div className="mypage-card">
+                    <h2>비밀번호 변경</h2>
+                    <p style={{ color: 'gray' }}>Google 계정으로 로그인한 사용자는 비밀번호를 변경할 수 없습니다.</p>
                 </div>
-                <div className="form-field">
-                    <label htmlFor="new-pwd">새 비밀번호</label>
-                    <div className="password-input-wrapper">
-                        <input id="new-pwd" type={showNewPwd ? 'text' : 'password'} value={newPwd} onChange={(e) => setNewPwd(e.target.value)} required />
-                        <button type="button" className="password-toggle-btn" onClick={() => setShowNewPwd(!showNewPwd)}>
-                            {showNewPwd ? <EyeSlashIcon /> : <EyeIcon />}
-                        </button>
+            ) : (
+                <form onSubmit={handleSave} className="mypage-card">
+                    <h2>비밀번호 변경</h2>
+                    <div className="form-field">
+                        <label htmlFor="current-pwd">현재 비밀번호</label>
+                        <input id="current-pwd" type="password" value={currentPwd} onChange={(e) => setCurrentPwd(e.target.value)} required />
                     </div>
-                </div>
-                <div className="form-field">
-                    <label htmlFor="confirm-pwd">새 비밀번호 확인</label>
-                    <div className="password-input-wrapper">
-                        <input id="confirm-pwd" type={showConfirmPwd ? 'text' : 'password'} value={confirmPwd} onChange={(e) => setConfirmPwd(e.target.value)} required />
-                        <button type="button" className="password-toggle-btn" onClick={() => setShowConfirmPwd(!showConfirmPwd)}>
-                            {showConfirmPwd ? <EyeSlashIcon /> : <EyeIcon />}
-                        </button>
+                    <div className="form-field">
+                        <label htmlFor="new-pwd">새 비밀번호</label>
+                        <div className="password-input-wrapper">
+                            <input id="new-pwd" type={showNewPwd ? 'text' : 'password'} value={newPwd} onChange={(e) => setNewPwd(e.target.value)} required />
+                            <button type="button" className="password-toggle-btn" onClick={() => setShowNewPwd(!showNewPwd)}>
+                                {showNewPwd ? <EyeSlashIcon /> : <EyeIcon />}
+                            </button>
+                        </div>
                     </div>
-                </div>
-                
-                <button type="submit" className="save-button">비밀번호 변경</button>
-                {message && <p className="message">{message}</p>}
-            </form>
+                    <div className="form-field">
+                        <label htmlFor="confirm-pwd">새 비밀번호 확인</label>
+                        <div className="password-input-wrapper">
+                            <input id="confirm-pwd" type={showConfirmPwd ? 'text' : 'password'} value={confirmPwd} onChange={(e) => setConfirmPwd(e.target.value)} required />
+                            <button type="button" className="password-toggle-btn" onClick={() => setShowConfirmPwd(!showConfirmPwd)}>
+                                {showConfirmPwd ? <EyeSlashIcon /> : <EyeIcon />}
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" className="save-button">비밀번호 변경</button>
+                    {message && <p className="message">{message}</p>}
+                </form>
+            )}
         </div>
     );
 };

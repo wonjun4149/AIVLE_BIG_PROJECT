@@ -29,7 +29,12 @@ function CreateTerms() {
   // ✅ 약관 생성 요청
   const handleSubmit = async () => {
     if (!companyName || category === '선택' || !productName || !requirements) {
-      setError('모든 필드를 입력해주세요.');
+      alert('모든 필드를 입력해주세요.');
+      return;
+    }
+
+    if (!user || !user.uid) {
+      alert('사용자 인증 정보가 없습니다. 다시 로그인해주세요.');
       return;
     }
 
@@ -42,6 +47,7 @@ function CreateTerms() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-authenticated-user-uid': user.uid, // 2. user.uid 헤더 추가
         },
         body: JSON.stringify({
           companyName,
@@ -51,16 +57,28 @@ function CreateTerms() {
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || '약관 생성에 실패했습니다.');
+        throw new Error(data.error || '약관 생성 중 알 수 없는 오류가 발생했습니다.');
+      }
+      
+      setGeneratedTerms(data.terms);
+
+      if(data.warning) {
+        alert(data.warning);
       }
 
-      const data = await response.json();
-      setGeneratedTerms(data.terms);
     } catch (err) {
+      // 3. alert()를 사용한 오류 처리
       console.error('Error generating terms:', err);
-      setError(err.message || '약관 생성 중 오류가 발생했습니다.');
+      const errorMessage = err.message || "";
+
+      if (errorMessage.includes("포인트")) {
+        alert("포인트가 부족합니다.");
+      } else {
+        alert("오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -88,87 +106,67 @@ function CreateTerms() {
 
   // ✅ 화면 렌더링
   return (
-    <div className="App">
-      <main className="terms-main">
-        <div className="terms-container">
-          {/* 미리보기 섹션 */}
-          <div className="preview-section">
-            <div className="preview-placeholder">
-              {isLoading ? (
-                <p>약관 초안을 생성 중입니다. 잠시만 기다려 주세요...</p>
-              ) : error ? (
-                <p className="error-message">{error}</p>
-              ) : generatedTerms ? (
-                <div className="generated-terms-content">
-                  <h3 style={{ textAlign: 'center', marginBottom: '20px' }}>
-                    {productName ? `${productName} 약관` : '생성된 약관'}
-                  </h3>
-                  <pre>{generatedTerms}</pre>
+      <div className="App">
+        <main className="terms-main">
+          <div className="terms-container">
+            {/* 입력 폼 섹션 (왼쪽) */}
+            <div className="form-section">
+              <div className="form-container">
+                <div className="form-group">
+                  <label className="form-label">회사 이름</label>
+                  <input
+                      type="text"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      className="form-input"
+                      placeholder="회사 이름을 입력하세요"
+                      disabled={isLoading || generatedTerms}
+                  />
                 </div>
-              ) : (
-                <p>AI 약관 초안이 여기에 표시됩니다.</p>
-              )}
-            </div>
-          </div>
 
-          {/* 입력 폼 섹션 */}
-          <div className="form-section">
-            <div className="form-container">
-              <div className="form-group">
-                <label className="form-label">회사 이름</label>
-                <input
-                  type="text"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  className="form-input"
-                  placeholder="회사 이름을 입력하세요"
-                  disabled={isLoading || generatedTerms}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">초안 카테고리</label>
-                <div className="select-container">
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="form-select"
-                    disabled={isLoading || generatedTerms}
-                  >
-                    <option value="선택">선택</option>
-                    {categories.map((cat) => (
-                      <option key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="select-arrow">▼</div>
+                <div className="form-group">
+                  <label className="form-label">초안 카테고리</label>
+                  <div className="select-container">
+                    <select
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        className="form-select"
+                        disabled={isLoading || generatedTerms}
+                    >
+                      <option value="선택">선택</option>
+                      {categories.map((cat) => (
+                          <option key={cat.value} value={cat.value}>
+                            {cat.label}
+                          </option>
+                      ))}
+                    </select>
+                    <div className="select-arrow">▼</div>
+                  </div>
                 </div>
-              </div>
 
-              <div className="form-group">
-                <label className="form-label">상품 이름</label>
-                <input
-                  type="text"
-                  value={productName}
-                  onChange={(e) => setProductName(e.target.value)}
-                  className="form-input"
-                  placeholder="상품 이름을 입력하세요"
-                  disabled={isLoading || generatedTerms}
-                />
-              </div>
+                <div className="form-group">
+                  <label className="form-label">상품 이름</label>
+                  <input
+                      type="text"
+                      value={productName}
+                      onChange={(e) => setProductName(e.target.value)}
+                      className="form-input"
+                      placeholder="상품 이름을 입력하세요"
+                      disabled={isLoading || generatedTerms}
+                  />
+                </div>
 
-              <div className="form-group">
-                <label className="form-label">필수 조항 및 희망사항</label>
-                <textarea
-                  value={requirements}
-                  onChange={(e) => setRequirements(e.target.value)}
-                  className="form-textarea"
-                  placeholder="필수 조항 및 희망사항을 입력하세요 (예: 보장 내용, 면책 조항, 특약 등)"
-                  rows={12}
-                  disabled={isLoading || generatedTerms}
-                />
-              </div>
+                <div className="form-group">
+                  <label className="form-label">필수 조항 및 희망사항</label>
+                  <textarea
+                      value={requirements}
+                      onChange={(e) => setRequirements(e.target.value)}
+                      className="form-textarea"
+                      placeholder="필수 조항 및 희망사항을 입력하세요 (예: 보장 내용, 면책 조항, 특약 등)"
+                      rows={12}
+                      disabled={isLoading || generatedTerms}
+                  />
+                </div>
 
               <button
                 onClick={handleSubmit}
