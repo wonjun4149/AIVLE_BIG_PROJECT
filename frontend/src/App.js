@@ -17,14 +17,11 @@ import QnaEdit from './components/QnaEdit'; // 수정 컴포넌트 import
 import MainLayout from './components/MainLayout';
 import PointLayout from './components/PointLayout';
 import ResetPassword from './components/ResetPassword';
-import EditTerms from './components/Edit-Terms';
-
-// ✅ 새로 추가
-import EditTerms from './components/Edit-Terms';
+import EditTerms from './components/Edit-Terms'; // ✅ 한 번만 import
 
 function App() {
   const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true); // 인증 로딩 상태 추가
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (userAuth) => {
@@ -39,7 +36,7 @@ function App() {
       } else {
         setUser(null);
       }
-      setAuthLoading(false); // 인증 상태 확인 완료
+      setAuthLoading(false);
     });
     return () => unsubscribe();
   }, []);
@@ -57,13 +54,11 @@ function App() {
           <Route path="/qna" element={<QnaList />} />
           <Route path="/qna/write" element={<QnaWrite />} />
           <Route path="/qna/:id" element={<QnaDetail />} />
-          <Route path="/qna/edit/:id" element={<QnaEdit />} /> {/* 수정 페이지 라우트 추가 */}
+          <Route path="/qna/edit/:id" element={<QnaEdit />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+
+          {/* 생성 후 편집 페이지 라우트 */}
           <Route path="/terms/new/edit" element={<EditTerms />} />
-          <Route path="/terms/:termId/edit" element={<EditTerms />} /> 
-
-
-          {/* ✅ 생성 후 편집 페이지 라우트 추가 */}
           <Route path="/terms/:termId/edit" element={<EditTerms />} />
         </Route>
 
