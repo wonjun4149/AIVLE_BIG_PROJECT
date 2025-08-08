@@ -21,9 +21,9 @@
     font-weight: 600;
 }
 
-.history-table td:nth-child(1) { width: 25%; color: #666; }
-.history-table td:nth-child(2) { width: 50%; }
-.history-table td:nth-child(3) { width: 25%; text-align: right; font-weight: bold; }
+.history-table td:nth-child(1) { width: 23%; color: #666; }
+.history-table td:nth-child(2) { width: 51%; }
+.history-table td:nth-child(3) { width: 26%; text-align: right; font-weight: bold; }
 
 .history-table .charge {
     color: #007bff;
