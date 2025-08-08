@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { getContracts } from './api/term';
+import LoadingSpinner from './components/LoadingSpinner'; // 스피너 컴포넌트 import
 import './ContractManagement.css';
 
 const ContractManagement = () => {
@@ -34,9 +35,9 @@ const ContractManagement = () => {
     }
   }, [user, authLoading]); // user와 authLoading 상태가 변경될 때마다 이 effect를 재실행
 
-  // authLoading이 true일 동안은 초기 로딩 상태를 표시
+  // authLoading 또는 데이터 로딩 중일 때 스피너를 표시
   if (authLoading || loading) {
-    return <div className="contract-management-container"><h1>로딩 중...</h1></div>;
+    return <LoadingSpinner />;
   }
 
   if (error) {
