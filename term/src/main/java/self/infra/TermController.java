@@ -49,6 +49,7 @@ public class TermController {
             term.setUserCompany(createCommand.getUserCompany());
             term.setClient(createCommand.getClient());
             term.setTermType(createCommand.getTermType());
+            term.setMemo(createCommand.getMemo()); // 수정 메모 설정
             term.setVersion("v1");
 
             Term createdTerm = termService.createTerm(term);
