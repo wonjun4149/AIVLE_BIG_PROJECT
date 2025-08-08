@@ -37,6 +37,11 @@ const ContractDetail = () => {
     }
   }, [id, user, authLoading, navigate]);
 
+  const handleEditClick = () => {
+    // 수정 페이지로 이동하면서 현재 계약서 데이터를 state로 전달
+    navigate(`/terms/${id}/edit`, { state: { contract } });
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
@@ -79,10 +84,10 @@ const ContractDetail = () => {
           </div>
         </div>
         <div className="actions-box">
-          <button className="action-btn primary">직접 수정하기</button>
-          <button className="action-btn primary">조항별 연관도 시각화</button>
-          <button className="action-btn primary">해외 법률에 부합하는 초안 생성</button>
-          <button className="action-btn primary">AI 딸깍 버튼</button>
+          <button className="action-btn primary" onClick={handleEditClick}>직접 수정하기</button>
+          <button className="action-btn">조항별 연관도 시각화</button>
+          <button className="action-btn">해외 법률에 부합하는 초안 생성</button>
+          <button className="action-btn">AI 딸깍 버튼</button>
         </div>
       </div>
     </div>

@@ -1,56 +1,60 @@
-// src/components/Edit-Terms.js
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { useOutletContext, useLocation, useNavigate } from 'react-router-dom';
+import { useOutletContext, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { updateContract } from '../api/term';
+import LoadingSpinner from './LoadingSpinner';
 
-// ✅ Term 서비스 API 베이스 URL
 const TERM_SERVICE_BASE_URL =
   window.location.hostname === 'localhost'
-    ? 'http://localhost:8083'
+    ? 'http://localhost:8088'
     : 'https://term-service-902267887946.us-central1.run.app';
 
 function EditTerms() {
   const { user, authLoading } = useOutletContext();
   const navigate = useNavigate();
   const location = useLocation();
+  const { termId } = useParams();
 
-  // 1) location.state 우선, 2) sessionStorage 보조
-  const statePayload = location.state || (() => {
+  const isEditMode = !!termId;
+
+  const getInitialData = () => {
+    if (isEditMode) return location.state?.contract;
     try {
       const saved = sessionStorage.getItem('draftPayload');
       return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
+    } catch { return null; }
+  };
+
+  const initialData = getInitialData();
+
+  const [title, setTitle] = useState(() => {
+    if (!initialData) return '';
+    if (isEditMode) return initialData.title || '';
+    return `${initialData.meta?.productName || ''} 이용 약관`;
+  });
+  const [memo, setMemo] = useState(initialData?.memo || '');
+  const [termsContent, setTermsContent] = useState(initialData?.content || initialData?.terms || '');
+  const [createdAt, setCreatedAt] = useState(() => {
+    if (!initialData) return '';
+    const dateToSet = initialData.createdAt ? new Date(initialData.createdAt) : new Date();
+    return dateToSet.toISOString().split('T')[0];
+  });
+  const [metaInfo, setMetaInfo] = useState(() => {
+    if (!initialData) return {};
+    if (isEditMode) {
+      return {
+        companyName: initialData.userCompany,
+        category: initialData.category,
+        productName: initialData.productName,
+        requirements: initialData.requirement,
+      };
     }
-  })();
-
-  const termsInit = statePayload?.terms || '';
-  const metaInit = statePayload?.meta || {};
-
-  const {
-    companyName = '',
-    category = '',
-    productName = '',
-    requirements = '',
-    effectiveDate = '',
-  } = metaInit;
-
-  // 화면 상태
-  const [title, setTitle] = useState(productName ? `${productName} 이용 약관` : '');
-  const [memo, setMemo] = useState('');
-  const [createdAt] = useState(() => {
-    const d = new Date();
-    const yyyy = d.getFullYear();
-    const mm = `${d.getMonth() + 1}`.padStart(2, '0');
-    const dd = `${d.getDate()}`.padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
+    return initialData.meta || {};
   });
 
   const editorRef = useRef(null);
-  const [termsContent, setTermsContent] = useState(termsInit);
-
   const [saving, setSaving] = useState(false);
+  const [submissionSuccess, setSubmissionSuccess] = useState(false); // 저장 성공 상태 추가
 
-  // 로그인 체크
   useEffect(() => {
     if (!authLoading && !user) {
       alert('로그인이 필요합니다.');
@@ -58,139 +62,99 @@ function EditTerms() {
     }
   }, [authLoading, user, navigate]);
 
-  // 초안이 하나도 없으면 Create 페이지로
+  // 데이터 없을 시 리디렉션 (저장 성공 시에는 실행되지 않도록 수정)
   useEffect(() => {
-    if (!authLoading) {
-      if (!termsInit || !companyName || !category || !productName) {
-        alert('초안 데이터가 없습니다. 먼저 초안을 생성해주세요.');
-        navigate('/create-terms');
-      }
+    if (!authLoading && !initialData && !submissionSuccess) {
+      alert('계약서 데이터가 없습니다. 이전 페이지로 돌아갑니다.');
+      navigate(isEditMode ? `/contracts/${termId}` : '/create-terms');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading]);
+  }, [authLoading, initialData, submissionSuccess, navigate, isEditMode, termId]);
 
- // 초기 contentEditable 채우기
   useEffect(() => {
     if (editorRef.current) {
-      // 컴포넌트가 마운트될 때, termsContent가 있을 경우에만 innerText를 설정합니다.
-      // 이후에는 사용자의 입력에 따라 상태가 업데이트됩니다.
-      if (termsContent) {
-        editorRef.current.innerText = termsContent;
+      const initialContent = initialData?.content || initialData?.terms || '';
+      if (editorRef.current.innerText !== initialContent) {
+        editorRef.current.innerText = initialContent;
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // 빈 배열을 넣어 컴포넌트가 마운트될 때 한 번만 실행되도록 합니다.
+  }, [initialData]);
 
   const handleEditorInput = useCallback(() => {
-    if (!editorRef.current) return;
-    setTermsContent(editorRef.current.innerText);
+    if (editorRef.current) {
+      setTermsContent(editorRef.current.innerText);
+    }
   }, []);
 
-  // Ctrl/Cmd + S 로 저장
-  useEffect(() => {
-    const onKeyDown = async (e) => {
-      const isMac = navigator.platform.toUpperCase().includes('MAC');
-      if ((isMac && e.metaKey && e.key.toLowerCase() === 's') || (!isMac && e.ctrlKey && e.key.toLowerCase() === 's')) {
-        e.preventDefault();
-        await onClickSave();
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, memo, termsContent, companyName, category, productName, requirements]);
-
   const onClickSave = useCallback(async () => {
-    if (!user || !user.uid) {
-      alert('로그인이 필요합니다.');
-      return;
-    }
-    if (!title || !termsContent) {
+    if (!user || !title || !termsContent) {
       alert('제목과 본문은 비어 있을 수 없습니다.');
       return;
     }
-    if (!companyName || !category || !productName) {
-      alert('회사/카테고리/상품명 정보가 없습니다. 처음 화면에서 다시 시도해주세요.');
-      return;
-    }
+    setSaving(true);
 
     try {
-      setSaving(true);
-      const idToken = await user.getIdToken();
-
-      const payload = {
-        title: title,
-        category: category,
-        productName: productName,
-        content: termsContent,
-        requirement: requirements,
-        userCompany: companyName,
-        termType: 'AI_DRAFT',
-        memo: memo, // A안: memo만 추가
-      };
-
-      const res = await fetch(`${TERM_SERVICE_BASE_URL}/terms`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`,
-          'x-authenticated-user-uid': user.uid,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const text = await res.text();
-      if (!res.ok) {
-        console.error('Save failed:', res.status, text);
-        alert(text || `저장 실패: ${res.status}`);
-        return;
+      let finalTermId;
+      if (isEditMode) {
+        const payload = { title, content: termsContent, memo };
+        const updatedTerm = await updateContract(termId, payload);
+        finalTermId = updatedTerm.id;
+        alert('수정이 완료되었습니다.');
+      } else {
+        const idToken = await user.getIdToken();
+        const payload = {
+          title,
+          category: metaInfo.category,
+          productName: metaInfo.productName,
+          content: termsContent,
+          requirement: metaInfo.requirements,
+          userCompany: metaInfo.companyName,
+          termType: 'AI_DRAFT',
+          memo,
+        };
+        const res = await fetch(`${TERM_SERVICE_BASE_URL}/terms`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || `저장 실패: ${res.status}`);
+        }
+        const newTerm = await res.json();
+        finalTermId = newTerm.id;
+        sessionStorage.removeItem('draftPayload');
+        alert('저장이 완료되었습니다.');
       }
+      
+      setSubmissionSuccess(true); // 저장 성공 상태로 변경
+      navigate(`/contracts/${finalTermId}`); // 상세 페이지로 이동
 
-      // 저장 성공 후, draftPayload 정리(선택)
-      sessionStorage.removeItem('draftPayload');
-      alert('저장 완료되었습니다.');
     } catch (e) {
       console.error(e);
       alert(`저장 실패: ${e.message}`);
     } finally {
       setSaving(false);
     }
-  }, [user, title, termsContent, requirements, companyName, category, productName, memo]);
+  }, [user, title, termsContent, memo, isEditMode, termId, navigate, metaInfo]);
 
-  if (authLoading || !termsInit) {
-    return <div>Loading...</div>;
+  if (authLoading || !initialData) {
+    return <LoadingSpinner />;
   }
 
   return (
     <div className="App">
       <main className="terms-main">
         <div className="terms-container">
-          {/* 왼쪽 폼 */}
           <div className="form-section">
             <div className="form-container">
               <div className="form-group">
                 <label className="form-label">계약서 이름</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="계약서 이름을 입력하세요"
-                  disabled={saving}
-                />
+                <input type="text" className="form-input" value={title} onChange={(e) => setTitle(e.target.value)} disabled={saving} />
               </div>
-
               <div className="form-group">
-                <label className="form-label">최초 생성일</label>
-                <input
-                  type="date"
-                  className="form-input"
-                  value={createdAt}
-                  readOnly
-                  disabled
-                />
+                <label className="form-label">{isEditMode ? '최초 생성일' : '생성일'}</label>
+                <input type="date" className="form-input" value={createdAt} readOnly disabled />
               </div>
-
               <div className="form-group">
                 <label className="form-label">수정 메모</label>
                 <textarea
@@ -202,52 +166,23 @@ function EditTerms() {
                   disabled={saving}
                 />
               </div>
-
               <div className="form-group">
-                <label className="form-label">정보</label>
+                <label className="form-label">메타 정보</label>
                 <div style={{ fontSize: '0.9rem', color: '#555' }}>
-                  <div>상품명: {productName || '-'}</div>
-                  <div>시행 날짜: {effectiveDate || '-'}</div>
+                  <div>회사명: {metaInfo.companyName || '-'}</div>
+                  <div>카테고리: {metaInfo.category || '-'}</div>
+                  <div>상품명: {metaInfo.productName || '-'}</div>
                 </div>
               </div>
-
-              <button
-                onClick={onClickSave}
-                className="ai-draft-btn"
-                disabled={saving}
-              >
-                {saving ? '저장 중...' : '계약서 저장'}
+              <button onClick={onClickSave} className="ai-draft-btn" disabled={saving}>
+                {saving ? '저장 중...' : (isEditMode ? '수정 완료' : '계약서 저장')}
               </button>
-
-            
             </div>
           </div>
-
-          {/* 오른쪽 편집 영역 */}
           <div className="preview-section">
-            <div className="generated-terms-content" style={{ outline: 'none' }}>
-              <h3 style={{ textAlign: 'center', marginBottom: '20px' }}>
-                {title || '계약서 제목'}
-              </h3>
-
-              <div
-                ref={editorRef}
-                onInput={handleEditorInput}
-                contentEditable
-                suppressContentEditableWarning
-                style={{
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word',
-                  fontFamily: 'inherit',
-                  fontSize: '0.95rem',
-                  minHeight: '60vh',
-                  padding: '0.5rem',
-                  border: '1px solid #e0e0e0',
-                  borderRadius: '6px',
-                  background: '#fff',
-                }}
-                spellCheck={false}
-              />
+            <div className="generated-terms-content">
+              <h3 style={{ textAlign: 'center', marginBottom: '20px' }}>{title}</h3>
+              <div ref={editorRef} onInput={handleEditorInput} contentEditable suppressContentEditableWarning style={{ whiteSpace: 'pre-wrap', border: '1px solid #e0e0e0', padding: '1rem' }} />
             </div>
           </div>
         </div>

@@ -4,10 +4,10 @@ import { auth } from '../firebase';
 
 const getApiUrl = () => {
   if (process.env.NODE_ENV === 'production') {
-    // GCP 배포 환경
+        // GCP 배포 환경
     return 'https://term-service-902267887946.us-central1.run.app';
   }
-  // 로컬 개발 환경
+    // 로컬 개발 환경
   return 'http://localhost:8088';
 };
 
@@ -56,6 +56,19 @@ export const getContractById = async (id) => {
     return response.data;
   } catch (error) {
     console.error(`ID가 ${id}인 계약서를 가져오는 중 오류가 발생했습니다.`, error);
+    throw error;
+  }
+};
+
+/**
+ * 특정 ID의 계약서를 직접 수정합니다.
+ */
+export const updateContract = async (id, updateData) => {
+  try {
+    const response = await apiClient.put(`/terms/${id}/direct-update`, updateData);
+    return response.data;
+  } catch (error) {
+    console.error(`ID가 ${id}인 계약서를 수정하는 중 오류가 발생했습니다.`, error);
     throw error;
   }
 };
