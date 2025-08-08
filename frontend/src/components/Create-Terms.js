@@ -1,19 +1,22 @@
+// src/components/Create-Terms.js
 import React, { useState } from 'react';
 import { useOutletContext, Link, useNavigate } from 'react-router-dom';
 import './Create-Terms.css';
 
 function CreateTerms() {
-  const navigate = useNavigate();
   const { user, authLoading } = useOutletContext();
+  const navigate = useNavigate();
+
   const [companyName, setCompanyName] = useState('');
   const [category, setCategory] = useState('선택');
   const [productName, setProductName] = useState('');
   const [requirements, setRequirements] = useState('');
-  const [generatedTerms, setGeneratedTerms] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
   const [effectiveDate, setEffectiveDate] = useState('');
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [error] = useState(''); // 미리보기는 더 이상 안 쓰므로 에러 메시지 표시도 생략 가능
+
+  // ✅ 환경 변수 또는 기본값 사용
   const CLOUD_RUN_API_BASE_URL =
     process.env.REACT_APP_CLOUD_RUN_API_BASE_URL ||
     'https://terms-api-service-eck6h26cxa-uc.a.run.app';
@@ -26,19 +29,19 @@ function CreateTerms() {
     { value: 'car_insurance', label: '자동차보험' },
   ];
 
+  // ✅ 약관 생성 요청
   const handleSubmit = async () => {
     if (!companyName || category === '선택' || !productName || !requirements || !effectiveDate) {
       alert('모든 필드를 입력해주세요.');
       return;
     }
+
     if (!user || !user.uid) {
       alert('사용자 인증 정보가 없습니다. 다시 로그인해주세요.');
       return;
     }
 
-    setError('');
     setIsLoading(true);
-    setGeneratedTerms('');
 
     try {
       const response = await fetch(`${CLOUD_RUN_API_BASE_URL}/api/generate`, {
@@ -57,37 +60,53 @@ function CreateTerms() {
       });
 
       const data = await response.json();
+
       if (!response.ok) {
         throw new Error(data.error || '약관 생성 중 알 수 없는 오류가 발생했습니다.');
       }
 
-      // 자동 저장 제거 → 새 초안 편집 페이지로 이동 (아직 termId 없음)
-      navigate(`/terms/new/edit`, {
+      // ✅ 생성된 초안을 즉시 Edit 화면으로 넘김 (이 페이지에서 표시하지 않음)
+      const today = new Date();
+      const createdAt = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(
+        today.getDate()
+      ).padStart(2, '0')}`;
+
+      navigate('/terms/new/edit', {
         state: {
-          content: data.terms,
-          meta: data.meta,
-          // 기본 계약서 이름 제안
           title: `${productName} 이용 약관`,
-          // 최초 생성일: 오늘 날짜
-          createdAt: new Date().toISOString().slice(0, 10),
+          content: data.terms, // 백엔드가 내려준 초안
+          createdAt,           // 표시용(서버 저장 아님)
+          meta: {
+            companyName,
+            category,
+            productName,
+            requirements,
+            effectiveDate,
+          },
         },
         replace: true,
       });
+
+      if (data.warning) {
+        alert(data.warning);
+      }
     } catch (err) {
       console.error('Error generating terms:', err);
-      const msg = err.message || '';
-      if (msg.includes('포인트')) {
+      const errorMessage = err.message || '';
+
+      if (errorMessage.includes('포인트')) {
         alert('포인트가 부족합니다.');
       } else {
         alert('오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
       }
-      setError(msg);
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (authLoading) return <div>Loading...</div>;
+  if (authLoading) {
+    return <div>Loading...</div>;
+  }
 
   if (!user) {
     return (
@@ -101,12 +120,13 @@ function CreateTerms() {
     );
   }
 
+  // ✅ 화면 렌더링 (이제 우측 미리보기는 사용하지 않으므로 깔끔히 입력만 남김)
   return (
     <div className="App">
       <main className="terms-main">
         <div className="terms-container">
-          {/* 입력 폼 섹션 (왼쪽) */}
-          <div className="form-section">
+          {/* 왼쪽 입력 폼만 사용 */}
+          <div className="form-section" style={{ width: '100%', maxWidth: 640, margin: '0 auto' }}>
             <div className="form-container">
               <div className="form-group">
                 <label className="form-label">회사 이름</label>
@@ -116,7 +136,7 @@ function CreateTerms() {
                   onChange={(e) => setCompanyName(e.target.value)}
                   className="form-input"
                   placeholder="회사 이름을 입력하세요"
-                  disabled={isLoading || generatedTerms}
+                  disabled={isLoading}
                 />
               </div>
 
@@ -127,7 +147,7 @@ function CreateTerms() {
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
                     className="form-select"
-                    disabled={isLoading || generatedTerms}
+                    disabled={isLoading}
                   >
                     <option value="선택">선택</option>
                     {categories.map((cat) => (
@@ -148,7 +168,7 @@ function CreateTerms() {
                   onChange={(e) => setProductName(e.target.value)}
                   className="form-input"
                   placeholder="상품 이름을 입력하세요"
-                  disabled={isLoading || generatedTerms}
+                  disabled={isLoading}
                 />
               </div>
 
@@ -159,7 +179,7 @@ function CreateTerms() {
                   value={effectiveDate}
                   onChange={(e) => setEffectiveDate(e.target.value)}
                   className="form-input"
-                  disabled={isLoading || generatedTerms}
+                  disabled={isLoading}
                 />
               </div>
 
@@ -171,39 +191,17 @@ function CreateTerms() {
                   className="form-textarea"
                   placeholder="필수 조항 및 희망사항을 입력하세요 (예: 보장 내용, 면책 조항, 특약 등)"
                   rows={12}
-                  disabled={isLoading || generatedTerms}
+                  disabled={isLoading}
                 />
               </div>
 
-              <button
-                onClick={handleSubmit}
-                className="ai-draft-btn"
-                disabled={isLoading || generatedTerms}
-              >
+              <button onClick={handleSubmit} className="ai-draft-btn" disabled={isLoading}>
                 {isLoading ? '생성 중...' : 'AI 초안 딸각 (5,000P)'}
               </button>
             </div>
           </div>
 
-          {/* 미리보기 섹션 (오른쪽) */}
-          <div className="preview-section">
-            <div className="preview-placeholder">
-              {isLoading ? (
-                <p className="blinking-text">약관 초안을 생성 중입니다. 잠시만 기다려 주세요...</p>
-              ) : error ? (
-                <p className="error-message">{error}</p>
-              ) : generatedTerms ? (
-                <div className="generated-terms-content">
-                  <h3 style={{ textAlign: 'center', marginBottom: '20px' }}>
-                    {productName ? `${productName} 약관` : '생성된 약관'}
-                  </h3>
-                  <pre>{generatedTerms}</pre>
-                </div>
-              ) : (
-                <p>AI 약관 초안이 여기에 표시됩니다.</p>
-              )}
-            </div>
-          </div>
+          {/* 오른쪽 미리보기 섹션 제거 → Edit 페이지에서 편집/표시 */}
         </div>
       </main>
     </div>
