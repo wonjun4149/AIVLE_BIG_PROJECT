@@ -1,261 +1,263 @@
 // src/components/Edit-Terms.js
-import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate, useOutletContext, useParams, Link } from 'react-router-dom';
-import './Edit-Terms.css';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useOutletContext, useLocation, useNavigate } from 'react-router-dom';
+
+// ✅ Term 서비스 API 베이스 URL (환경에 따라 자동 선택)
+const TERM_SERVICE_BASE_URL =
+  window.location.hostname === 'localhost'
+    ? 'http://localhost:8083' // 로컬 개발용
+    : 'https://term-service-902267887946.us-central1.run.app'; // 배포용(절대경로)
 
 function EditTerms() {
   const { user, authLoading } = useOutletContext();
   const navigate = useNavigate();
-  const { termId } = useParams(); // 신규 초안이면 없음
   const location = useLocation();
 
-  // 생성 화면에서 넘겨준 값들 (신규 초안일 때 존재)
-  const initial = (location && location.state) || {};
+  // Create-Terms.js에서 push한 state (초안 결과) 받기
+  const {
+    terms = '',                // 생성된 약관 본문
+    meta = {},                 // 생성 시 메타
+  } = location.state || {};
 
-  const [contractName, setContractName] = useState(initial.title || '');
-  const [createdDate, setCreatedDate] = useState(initial.createdAt || ''); // 표시용(서버 전송 X)
-  const [memo, setMemo] = useState(''); // ✅ memo만 서버 전송
-  const [content, setContent] = useState(initial.content || '');
-  const [loading, setLoading] = useState(!initial.content && !!termId); // id있고 state없으면 조회
-  const [error, setError] = useState('');
+  const {
+    companyName = '',
+    category = '',
+    productName = '',
+    requirements = '',
+    effectiveDate = '',
+  } = meta;
 
-  // ✅ Term 서비스 베이스 URL (환경변수 > 호스트 자동 분기)
-  const TERM_SERVICE_BASE_URL =
-    process.env.REACT_APP_TERM_SERVICE_BASE_URL ||
-    (window.location.hostname === 'localhost'
-      ? 'http://localhost:8083'
-      : 'https://term-service-902267887946.us-central1.run.app');
+  // 화면 상태
+  const [title, setTitle] = useState(productName ? `${productName} 이용 약관` : '');
+  const [memo, setMemo] = useState('');
+  const [createdAt] = useState(() => {
+    // 최초 생성일(당일) 표기용
+    const d = new Date();
+    // YYYY-MM-DD
+    const yyyy = d.getFullYear();
+    const mm = `${d.getMonth() + 1}`.padStart(2, '0');
+    const dd = `${d.getDate()}`.padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  });
 
-  // 신규 초안 메타(회사/카테고리 등) — POST 시 예전 스키마 + memo만 추가해서 전달
-  const meta = initial.meta || {};
+  // 오른쪽 편집 영역(contentEditable)
+  const editorRef = useRef(null);
+  const [termsContent, setTermsContent] = useState(terms || '');
 
-  // 표시용 최초 생성일 기본값(서버 저장 X)
+  // 편의상 로딩/에러
+  const [saving, setSaving] = useState(false);
+
+  // 로그인 체크
   useEffect(() => {
-    if (!createdDate) {
-      const d = new Date();
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      setCreatedDate(`${yyyy}-${mm}-${dd}`);
+    if (!authLoading && !user) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
     }
-  }, [createdDate]);
+  }, [authLoading, user, navigate]);
 
-  // 저장된 문서 열기(새로고침 등) → GET
+  // 초기 컨텐츠 주입 (contentEditable에 HTML로 넣으면 줄바꿈/공백 보존 쉬움)
   useEffect(() => {
-    const fetchExisting = async () => {
-      if (!termId || initial.content) return; // 신규 초안 또는 상태 전달받은 경우 패스
-      if (!user || !user.uid) return;
-      try {
-        setLoading(true);
-        const res = await fetch(`${TERM_SERVICE_BASE_URL}/terms/${termId}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-authenticated-user-uid': user.uid,
-          },
-        });
-        if (!res.ok) throw new Error('약관 조회에 실패했습니다.');
-        const data = await res.json();
-        setContractName(data.title || '');
-        setContent(data.content || '');
-        // createdAt/modifiedAt은 서버 관리. 여기선 표시만.
-        if (data.createdAt) {
-          const dateStr =
-            typeof data.createdAt === 'string' ? data.createdAt.slice(0, 10) : createdDate;
-          setCreatedDate(dateStr || createdDate);
-        }
-        setMemo(data.memo || '');
-      } catch (e) {
-        console.error(e);
-        setError(e.message || '조회 오류가 발생했습니다.');
-      } finally {
-        setLoading(false);
+    if (editorRef.current) {
+      // pre-wrap과 유사하게 보이도록 <div> 안에 텍스트로만 넣고 CSS에서 처리
+      editorRef.current.innerText = termsContent || '';
+    }
+  }, [termsContent]);
+
+  // contentEditable 변경 처리
+  const handleEditorInput = useCallback(() => {
+    if (!editorRef.current) return;
+    // innerText로 가져와서 순수 텍스트 보존
+    const txt = editorRef.current.innerText;
+    setTermsContent(txt);
+  }, []);
+
+  // Ctrl/Cmd+S 저장 단축키
+  useEffect(() => {
+    const onKeyDown = async (e) => {
+      const isMac = navigator.platform.toUpperCase().includes('MAC');
+      if ((isMac && e.metaKey && e.key.toLowerCase() === 's') || (!isMac && e.ctrlKey && e.key.toLowerCase() === 's')) {
+        e.preventDefault();
+        await onClickSave();
       }
     };
-    fetchExisting();
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [termId, user]);
+  }, [title, memo, termsContent, companyName, category, productName, requirements]);
 
-  // 저장 버튼: 신규 → POST(예전 스키마 + memo), 기존 → PUT(예전 스키마 + memo)
-  const handleSave = async () => {
+  // 저장 핸들러
+  const onClickSave = useCallback(async () => {
     if (!user || !user.uid) {
-      alert('사용자 인증 정보가 없습니다. 다시 로그인해주세요.');
+      alert('로그인이 필요합니다.');
       return;
     }
-    if (!contractName) {
-      alert('계약서 이름을 입력해주세요.');
+    if (!title || !termsContent) {
+      alert('제목과 본문은 비어 있을 수 없습니다.');
       return;
     }
-    if (!content) {
-      const ok = window.confirm('약관 내용이 비어 있습니다. 그래도 저장할까요?');
-      if (!ok) return;
+    if (!companyName || !category || !productName) {
+      alert('회사/카테고리/상품명 정보가 없습니다. 처음 화면에서 다시 시도해주세요.');
+      return;
     }
 
     try {
-      setError('');
-      setLoading(true);
+      setSaving(true);
 
-      if (termId) {
-        // ✅ 기존 문서 업데이트 (title, content, memo만 보냄 — 기존 스키마 + memo)
-        const res = await fetch(`${TERM_SERVICE_BASE_URL}/terms/${termId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-authenticated-user-uid': user.uid,
-          },
-          body: JSON.stringify({
-            title: contractName,
-            content: content,
-            memo: memo || '',
-          }),
-        });
-        if (!res.ok) {
-          const d = await res.json().catch(() => ({}));
-          throw new Error(d.error || '계약서 저장 중 오류가 발생했습니다.');
-        }
-        alert('계약서가 저장되었습니다.');
-      } else {
-        // ✅ 신규 생성(최초 저장) : 기존 자동저장 스키마에 memo만 추가해서 POST
-        const payload = {
-          title: contractName,
-          content: content,
-          category: meta.category,
-          productName: meta.productName,
-          requirement: meta.requirements,
-          userCompany: meta.companyName,
-          termType: 'AI_DRAFT',
-          memo: memo || '',
-        };
+      // ✅ Firebase ID 토큰을 Authorization 헤더로
+      const idToken = await user.getIdToken();
 
-        const res = await fetch(`${TERM_SERVICE_BASE_URL}/terms`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-authenticated-user-uid': user.uid,
-          },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) {
-          const d = await res.json().catch(() => ({}));
-          throw new Error(d.error || '계약서 저장(생성) 중 오류가 발생했습니다.');
-        }
-        const saved = await res.json().catch(() => ({}));
-        const newId = saved.id || saved.termId || (saved.data && saved.data.id);
+      // 서버가 기대하는 페이로드(A안: 기존 호환 유지 + memo만 추가)
+      const payload = {
+        title: title,
+        category: category,
+        productName: productName,
+        content: termsContent,     // 편집된 전체 본문
+        requirement: requirements, // 생성에 사용된 요구사항 원문
+        userCompany: companyName,
+        termType: 'AI_DRAFT',
+        // 선택 필드들(있으면 서버가 저장하거나 무시)
+        memo: memo,                // 🔹 추가 필드 (A안)
+        // effectiveDate 자체는 생성 프롬프트에만 쓰였고,
+        // 저장 스키마에 없다면 서버가 무시할 수 있음. 필요 시 payload에 넣고 서버 DTO에 필드 추가.
+      };
 
-        alert('계약서가 저장되었습니다.');
+      const res = await fetch(`${TERM_SERVICE_BASE_URL}/terms`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // 서버 로그에 'Missing request header Authorization'가 있었으므로 필수
+          'Authorization': `Bearer ${idToken}`,
+          // 예전 호환 유지(서버가 헤더에서 userId 읽을 수도 있음)
+          'x-authenticated-user-uid': user.uid,
+        },
+        body: JSON.stringify(payload),
+      });
 
-        // 저장 후 해당 문서의 편집 URL로 이동(이제부터는 PUT 경로)
-        if (newId) {
-          navigate(`/terms/${newId}/edit`, {
-            state: {
-              title: contractName,
-              content,
-              createdAt: createdDate, // 표시용
-              memo,
-            },
-            replace: true,
-          });
-        }
+      const text = await res.text();
+      if (!res.ok) {
+        console.error('Save failed:', res.status, text);
+        alert(text || `저장 실패: ${res.status}`);
+        return;
       }
+
+      // 성공
+      try {
+        const json = JSON.parse(text);
+        // json.id 등이 있으면 여기서 활용 가능
+      } catch (_e) {
+        // 바디가 비어있거나 Non-JSON일 수 있음 → 무시
+      }
+
+      alert('저장 완료되었습니다.');
     } catch (e) {
       console.error(e);
-      alert(e.message || '저장 중 오류가 발생했습니다.');
-      setError(e.message || '저장 오류');
+      alert(`저장 실패: ${e.message}`);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
-  };
+  }, [user, title, termsContent, requirements, companyName, category, productName, memo]);
 
   if (authLoading) return <div>Loading...</div>;
+  if (!user) return null;
 
-  if (!user) {
-    return (
-      <div className="terms-main">
-        <div className="login-prompt" style={{ textAlign: 'center', paddingTop: '50px' }}>
-          <h2>로그인 필요</h2>
-          <p>이 페이지에 접근하려면 로그인이 필요합니다.</p>
-          <Link to="/login" className="login-btn-link">로그인 페이지로 이동</Link>
-        </div>
-      </div>
-    );
-  }
-
+  // UI: Create-Terms와 동일 레이아웃 유지 (좌: 요약/입력, 우: 편집기)
   return (
     <div className="App">
       <main className="terms-main">
         <div className="terms-container">
-          {/* 좌측: 저장/편집 폼 */}
+          {/* 왼쪽: 정보/입력 섹션 */}
           <div className="form-section">
             <div className="form-container">
+              {/* 계약서 이름(제목) */}
               <div className="form-group">
                 <label className="form-label">계약서 이름</label>
                 <input
                   type="text"
-                  value={contractName}
-                  onChange={(e) => setContractName(e.target.value)}
                   className="form-input"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                   placeholder="계약서 이름을 입력하세요"
-                  disabled={loading}
+                  disabled={saving}
                 />
               </div>
 
+              {/* 최초 생성일(읽기 전용) */}
               <div className="form-group">
                 <label className="form-label">최초 생성일</label>
                 <input
                   type="date"
-                  value={createdDate}
-                  onChange={(e) => setCreatedDate(e.target.value)}
                   className="form-input"
-                  disabled={loading}
+                  value={createdAt}
+                  readOnly
+                  disabled
                 />
-                <small className="help-text">
-                  표시용 필드입니다. createdAt/modifiedAt은 서버에서 관리됩니다.
-                </small>
               </div>
 
+              {/* 수정 메모 */}
               <div className="form-group">
                 <label className="form-label">수정 메모</label>
                 <textarea
+                  className="form-textarea"
+                  rows={6}
                   value={memo}
                   onChange={(e) => setMemo(e.target.value)}
-                  className="form-textarea"
-                  placeholder="수정/검토 이력 등을 적어두세요"
-                  rows={8}
-                  disabled={loading}
+                  placeholder="예: 5장 면책조항 문구 완화 필요 / 금액 기준 최신화 등"
+                  disabled={saving}
                 />
               </div>
 
+              {/* 메타(참고용, 읽기 전용) */}
+              <div className="form-group">
+                <label className="form-label">메타 정보</label>
+                <div style={{ fontSize: '0.9rem', color: '#555' }}>
+                  <div>회사명: {companyName || '-'}</div>
+                  <div>카테고리: {category || '-'}</div>
+                  <div>상품명: {productName || '-'}</div>
+                  <div>시행 날짜: {effectiveDate || '-'}</div>
+                </div>
+              </div>
+
+              {/* 저장 버튼 */}
               <button
-                onClick={handleSave}
+                onClick={onClickSave}
                 className="ai-draft-btn"
-                disabled={loading || !contractName}
+                disabled={saving}
               >
-                {loading ? '저장 중...' : '계약서 저장'}
+                {saving ? '저장 중...' : '계약서 저장'}
               </button>
 
-              {error && <p className="error-message" style={{ marginTop: '12px' }}>{error}</p>}
+              <div style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: '#666' }}>
+                ⌘/Ctrl + S 로도 저장할 수 있어요.
+              </div>
             </div>
           </div>
 
-          {/* 우측: 약관 편집 가능 영역 */}
+          {/* 오른쪽: 편집 섹션 (클릭/타이핑 가능) */}
           <div className="preview-section">
-            <div className="preview-placeholder">
-              {loading ? (
-                <p className="blinking-text">약관을 불러오는 중입니다...</p>
-              ) : (
-                <div className="generated-terms-content">
-                  <h3 style={{ textAlign: 'center', marginBottom: '12px' }}>
-                    {contractName || '약관 편집'}
-                  </h3>
-                  {/* ✍️ 편집 가능한 에디터: Textarea */}
-                  <textarea
-                    className="terms-editor"
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    placeholder="여기에 약관 내용을 편집하세요"
-                  />
-                </div>
-              )}
+            <div className="generated-terms-content" style={{ outline: 'none' }}>
+              <h3 style={{ textAlign: 'center', marginBottom: '20px' }}>
+                {title || '계약서 제목'}
+              </h3>
+
+              {/* 편집기: contentEditable */}
+              <div
+                ref={editorRef}
+                onInput={handleEditorInput}
+                contentEditable
+                suppressContentEditableWarning
+                style={{
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  fontFamily: 'inherit',
+                  fontSize: '0.95rem',
+                  minHeight: '60vh',
+                  padding: '0.5rem',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '6px',
+                  background: '#fff',
+                }}
+                spellCheck={false}
+              />
             </div>
           </div>
         </div>
