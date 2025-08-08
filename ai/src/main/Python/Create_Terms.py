@@ -13,6 +13,7 @@ import logging
 import requests
 import json
 from google.cloud import secretmanager
+import urllib.parse # URL 인코딩을 위해 추가
 
 # Flask App 초기화 및 CORS 설정
 app = Flask(__name__)
@@ -144,8 +145,11 @@ def generate_terms():
         # 1) 포인트 차감
         try:
             deduction_amount = 5000
+            reason = "AI 약관 초안 생성"
+            encoded_reason = urllib.parse.quote(reason) # 한글을 URL 인코딩
             base_url = POINT_SERVICE_URL.rstrip('/')
-            point_deduction_url = f"{base_url}/api/points/{user_id}/reduce?amount={deduction_amount}"
+            point_deduction_url = f"{base_url}/api/points/{user_id}/reduce?amount={deduction_amount}&reason={encoded_reason}"
+            
             logging.info(f"포인트 차감 요청: {point_deduction_url}")
             point_response = requests.post(point_deduction_url)
             if not point_response.ok:
