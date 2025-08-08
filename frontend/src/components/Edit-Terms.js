@@ -16,15 +16,18 @@ function EditTerms() {
 
   const isEditMode = !!termId;
 
-  const getInitialData = () => {
-    if (isEditMode) return location.state?.contract;
+  // useState의 초기화 함수를 사용하여 initialData를 딱 한 번만 설정합니다.
+  const [initialData] = useState(() => {
+    if (isEditMode) {
+      return location.state?.contract;
+    }
     try {
       const saved = sessionStorage.getItem('draftPayload');
       return saved ? JSON.parse(saved) : null;
-    } catch { return null; }
-  };
-
-  const initialData = getInitialData();
+    } catch {
+      return null;
+    }
+  });
 
   const [title, setTitle] = useState(() => {
     if (!initialData) return '';
@@ -39,21 +42,21 @@ function EditTerms() {
     return dateToSet.toISOString().split('T')[0];
   });
   const [metaInfo, setMetaInfo] = useState(() => {
-    if (!initialData) return {};
-    if (isEditMode) {
-      return {
-        companyName: initialData.userCompany,
-        category: initialData.category,
-        productName: initialData.productName,
-        requirements: initialData.requirement,
-      };
-    }
-    return initialData.meta || {};
+      if (!initialData) return {};
+      if (isEditMode) {
+          return {
+              companyName: initialData.userCompany,
+              category: initialData.category,
+              productName: initialData.productName,
+              requirements: initialData.requirement,
+          };
+      }
+      return initialData.meta || {};
   });
 
   const editorRef = useRef(null);
   const [saving, setSaving] = useState(false);
-  const [submissionSuccess, setSubmissionSuccess] = useState(false); // 저장 성공 상태 추가
+  const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -62,7 +65,6 @@ function EditTerms() {
     }
   }, [authLoading, user, navigate]);
 
-  // 데이터 없을 시 리디렉션 (저장 성공 시에는 실행되지 않도록 수정)
   useEffect(() => {
     if (!authLoading && !initialData && !submissionSuccess) {
       alert('계약서 데이터가 없습니다. 이전 페이지로 돌아갑니다.');
@@ -70,6 +72,8 @@ function EditTerms() {
     }
   }, [authLoading, initialData, submissionSuccess, navigate, isEditMode, termId]);
 
+  // contentEditable의 초기 내용을 설정하는 useEffect
+  // 이제 initialData가 재생성되지 않으므로, 이 effect는 최초 한 번만 실행됩니다.
   useEffect(() => {
     if (editorRef.current) {
       const initialContent = initialData?.content || initialData?.terms || '';
