@@ -5,6 +5,7 @@ import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.stereotype.Service;
 import self.domain.*;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -41,6 +42,54 @@ public class TermService {
         
         return term;
     }
+
+    public void deleteLatestVersion(String id) throws ExecutionException, InterruptedException {
+        Optional<Term> termOptional = termRepository.findById(id);
+        if (termOptional.isPresent()) {
+            Term termToDelete = termOptional.get();
+            // 이 버전이 다른 버전에 의해 origin으로 참조되고 있는지 확인
+            List<Term> children = termRepository.findByOrigin(termToDelete.getId());
+            if (!children.isEmpty()) {
+                throw new IllegalStateException("Cannot delete a version that is an origin for another version.");
+            }
+            termRepository.delete(termToDelete);
+        }
+    }
+
+    public void deleteTermGroup(String id) throws ExecutionException, InterruptedException {
+        Optional<Term> termOptional = termRepository.findById(id);
+        if (termOptional.isEmpty()) {
+            return; // Or throw an exception
+        }
+        Term currentTerm = termOptional.get();
+
+        // Find the root of the version chain
+        Term rootTerm = currentTerm;
+        while (rootTerm.getOrigin() != null) {
+            Optional<Term> parentOptional = termRepository.findById(rootTerm.getOrigin());
+            if (parentOptional.isEmpty()) {
+                break;
+            }
+            rootTerm = parentOptional.get();
+        }
+
+        // Find all versions in the group starting from the root
+        List<Term> allVersions = new ArrayList<>();
+        findAllVersionsRecursive(rootTerm, allVersions);
+
+        for (Term term : allVersions) {
+            termRepository.delete(term);
+        }
+    }
+
+    private void findAllVersionsRecursive(Term term, List<Term> allVersions) throws ExecutionException, InterruptedException {
+        allVersions.add(term);
+        List<Term> children = termRepository.findByOrigin(term.getId());
+        for (Term child : children) {
+            findAllVersionsRecursive(child, allVersions);
+        }
+    }
+
 
     // PolicyHandler에서 사용하던 메소드들은 Kafka를 사용하지 않으므로,
     // 현재 아키텍처에서는 직접 호출되지 않습니다. 그대로 두거나 삭제할 수 있습니다.

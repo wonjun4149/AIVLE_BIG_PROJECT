@@ -99,6 +99,42 @@ public class TermController {
         }
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteTerm(@PathVariable String id,
+                                        @RequestParam String type,
+                                        @RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            String userId = getUidFromToken(authorizationHeader);
+            Optional<Term> termOptional = termService.findById(id);
+
+            if (termOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Term not found with id: " + id);
+            }
+
+            Term term = termOptional.get();
+            if (!term.getUserId().equals(userId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User does not have permission to delete this term.");
+            }
+
+            if ("latest".equals(type)) {
+                termService.deleteLatestVersion(id);
+                return ResponseEntity.ok().body("Latest version deleted successfully.");
+            } else if ("group".equals(type)) {
+                termService.deleteTermGroup(id);
+                return ResponseEntity.ok().body("Term group deleted successfully.");
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid delete type specified.");
+            }
+
+        } catch (FirebaseAuthException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token verification failed: " + e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting term: " + e.getMessage());
+        }
+    }
+
     @PostMapping("/{id}/foreintermcreaterequest")
     public ResponseEntity<?> foreinTermCreateRequest(@PathVariable String id,
                                                      @RequestBody ForeinTermCreateRequestCommand command,

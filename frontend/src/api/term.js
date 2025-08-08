@@ -72,3 +72,31 @@ export const updateContract = async (id, updateData) => {
     throw error;
   }
 };
+
+/**
+ * 최신 버전의 계약서 하나를 삭제합니다.
+ */
+export const deleteLatestContract = async (id) => {
+  try {
+    // 백엔드에서 type=latest 쿼리를 보고 최신 버전 삭제 로직을 수행합니다.
+    const response = await apiClient.delete(`/terms/${id}?type=latest`);
+    return response.data;
+  } catch (error) {
+    console.error(`ID가 ${id}인 최신 계약서를 삭제하는 중 오류가 발생했습니다.`, error);
+    throw error;
+  }
+};
+
+/**
+ * 특정 계약서의 모든 버전 기록을 삭제합니다.
+ */
+export const deleteAllContractsInGroup = async (id) => {
+  try {
+    // 백엔드에서 type=group 쿼리를 보고 그룹 전체 삭제 로직을 수행합니다.
+    const response = await apiClient.delete(`/terms/${id}?type=group`);
+    return response.data;
+  } catch (error) {
+    console.error(`ID가 ${id}인 계약서 그룹을 삭제하는 중 오류가 발생했습니다.`, error);
+    throw error;
+  }
+};

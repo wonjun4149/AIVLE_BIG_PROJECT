@@ -22,7 +22,7 @@
 .contract-list-header,
 .contract-item {
   display: grid;
-  grid-template-columns: 3fr 4fr 2fr 1fr;
+  grid-template-columns: 3fr 4fr 2fr 1fr 2fr; /* Reverted management column to 2fr */
   align-items: center;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid #e0e0e0;
@@ -48,20 +48,56 @@
   padding: 0 0.5rem;
 }
 
+.item-data.management {
+  display: flex;
+  flex-direction: column; /* Stack buttons vertically */
+  align-items: flex-start; /* Align buttons to the left */
+  justify-content: center;
+  gap: 0.5rem; /* Increased gap for better vertical spacing */
+}
+
+.delete-button {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: background-color 0.2s, color 0.2s;
+  white-space: nowrap; /* Prevent text wrapping */
+}
+
+.delete-button.latest {
+  border-color: #ffc107;
+  background-color: #fff;
+  color: #ffc107;
+}
+.delete-button.latest:hover {
+  background-color: #ffc107;
+  color: #fff;
+}
+
+.delete-button.all {
+  border-color: #dc3545;
+  background-color: #fff;
+  color: #dc3545;
+}
+.delete-button.all:hover {
+  background-color: #dc3545;
+  color: #fff;
+}
+
 .item-data.title {
     font-weight: 600;
 }
 
-/* 링크 스타일 수정 */
 .item-data.title a {
-    color: #333; /* 기본 색상 검은색 계열 */
-    text-decoration: none; /* 밑줄 제거 */
-    transition: color 0.2s ease-in-out; /* 색상 변경 애니메이션 */
+    color: #333;
+    text-decoration: none;
+    transition: color 0.2s ease-in-out;
 }
 
-/* 마우스 올렸을 때 스타일 */
 .item-data.title a:hover {
-    color: #007bff; /* 마우스 올리면 파란색으로 변경 */
+    color: #007bff;
 }
 
 .no-memo {
@@ -77,4 +113,85 @@
   text-align: center;
   padding: 3rem;
   color: #888;
+}
+
+/* Version History Styles */
+.contract-group {
+  border-bottom: 1px solid #e0e0e0;
+}
+.contract-group:last-child {
+  border-bottom: none;
+}
+.contract-group .contract-item {
+  border-bottom: none; /* Remove bottom border from individual items inside a group */
+}
+
+.history-toggle {
+  padding: 0.5rem 1.5rem;
+  background-color: #f9f9f9;
+  text-align: center;
+}
+
+.history-button {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.history-button:hover {
+  text-decoration: underline;
+}
+
+.history-list {
+  padding-left: 2rem; /* Indent history items */
+  background-color: #fdfdfd;
+}
+
+.history-item {
+  background-color: #f9f9f9;
+  opacity: 0.8;
+}
+
+.history-item .item-data.title a {
+  font-weight: normal;
+}
+
+/* Pagination Styles */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 0;
+}
+
+.pagination button {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  color: #007bff; /* Default text color to blue */
+  padding: 0.5rem 1rem;
+  margin: 0 0.25rem;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  border-radius: 4px;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: #007bff; /* Blue background on hover */
+  color: #fff; /* White text on hover */
+}
+
+.pagination button:disabled {
+  background-color: #f8f9fa;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.pagination button.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+  cursor: default;
 }
