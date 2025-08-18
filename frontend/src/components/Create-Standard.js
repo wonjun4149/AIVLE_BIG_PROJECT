@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
 import './Create-Terms.css'; // 동일한 CSS 파일 사용
-import '../App.css';
 
 function CreateStandard() {
   const { user, authLoading } = useOutletContext();
