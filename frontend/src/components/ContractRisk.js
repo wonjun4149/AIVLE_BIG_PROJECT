@@ -1,6 +1,5 @@
 // src/components/ContractRisk.js
 import React, { useState, useRef, useEffect } from 'react';
-import './ContractRisk.js';
 import './ContractRisk.css';
 import { Document, Packer, Paragraph, TextRun } from 'docx';
 import { saveAs } from 'file-saver';
