@@ -3,6 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
 import { reduceUserPoints } from '../api/point'; // 포인트 API import
 import './UploadImage.css';
+import '../App.css';
 
 // Cloud Run 서비스 URL (POST / 로 업로드)
 const API_URL = 'https://image-ai-service-eck6h26cxa-uc.a.run.app';

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useOutletContext, Link, useNavigate } from 'react-router-dom';
 import './Create-Terms.css';
+import '../App.css';
 
 function CreateTerms() {
   const { user, authLoading } = useOutletContext();

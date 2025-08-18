@@ -5,6 +5,7 @@ import { Document, Packer, Paragraph, TextRun } from 'docx';
 import { saveAs } from 'file-saver';
 import { getIdToken } from '../firebase'; 
 import { useOutletContext, Link } from 'react-router-dom';
+import '../App.css';
 
 // 분석 API(Flask)
 const ANALYZE_API_BASE_URL =
