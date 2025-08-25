@@ -97,9 +97,9 @@ PROMPT_TEMPLATE_JSON = r"""
 3) 반복 용어는 '용어의 정의'에 1회 정의 후 본문에서는 용어만 사용.
 4) 각 절차는 주 경로와 예비 경로 2가지 제시.
 5) 최소 6개 관 이상, 총 50개 조 이상. 각 조는 다수의 하위항 포함.
-6) '목차'라는 단어 자체를 출력하지 말 것.
-7) 아래 JSON 스키마 그대로 출력. 키 누락 금지. 값은 문자열 또는 문자열 리스트만.
-8) 자체 점검: 출력 직전에 전체 조(articles) 개수가 50개 이상인지 확인하고, 부족하면 추가 작성하여 50개 이상이 되도록 할 것.
+6) 아래 JSON 스키마 그대로 출력. 키 누락 금지. 값은 문자열 또는 문자열 리스트만.
+7) 자체 점검: 출력 직전에 전체 조(articles) 개수가 50개 이상인지 확인하고, 부족하면 추가 작성하여 50개 이상이 되도록 할 것.
+8) 
 
 JSON 스키마:
 {{
@@ -417,7 +417,6 @@ def generate_terms_v2():
         context = "\n\n".join([d.page_content for d in docs + law_docs])
 
         # 표 스펙 구성(통합 CSV에서)
-        parsed = parse_unified_product_csv_upload(files['productMeta'])
 
         user_tables = {}
         if parsed["refund_spec"]:
