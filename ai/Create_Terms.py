@@ -322,6 +322,25 @@ def json_to_text(policy: dict) -> str:
     # Join all articles with two newlines to create a space between them
     return "\n\n".join(full_text)
 
+def create_table_of_contents(policy: dict) -> str:
+    toc_parts = []
+    if not isinstance(policy, dict):
+        return ""
+    sections = policy.get("sections", [])
+    if not sections:
+        return "(생성된 목차 없음)"
+    for section in sections:
+        section_name = section.get("name")
+        if section_name:
+            toc_parts.append(section_name)
+        articles = section.get("articles", [])
+        for article in articles:
+            article_title = article.get("title")
+            if article_title:
+                toc_parts.append(f"  {article_title}")
+    logging.info(f"생성된 목차: {toc_parts}")
+    return "\n".join(toc_parts)
+
 # 신규: 멀티파트 업로드 
 @app.route('/api/generate', methods=['POST', 'OPTIONS'])
 @cross_origin(origin='*')
@@ -446,8 +465,11 @@ def generate_terms_v2():
 
         # JSON을 텍스트로 변환하여 반환
         policy_text = json_to_text(policy)
+        toc_text = create_table_of_contents(policy)
+
         return jsonify({
             "policy": policy_text,
+            "table_of_contents": toc_text,
             "meta": {
                 "companyName": company_name,
                 "productName": product_name,
