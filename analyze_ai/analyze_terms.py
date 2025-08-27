@@ -11,12 +11,9 @@ from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
 
 # --- Chroma 버전 로깅(디버그용) ---
-try:
-    import chromadb  # noqa
-    logging.basicConfig(level=logging.INFO)
-    logging.info(f"[BOOT] chromadb version: {chromadb.__version__}")
-except Exception:
-    pass
+import chromadb  # noqa
+logging.basicConfig(level=logging.INFO)
+logging.info(f"[BOOT] chromadb version: {chromadb.__version__}")
 
 # Google / Vertex
 import vertexai
@@ -33,10 +30,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 # DOCX
-try:
-    from docx import Document
-except Exception:
-    Document = None
+from docx import Document
 
 
 # =============================================================================
@@ -135,7 +129,7 @@ else:
 # Prompt / Chain
 # =============================================================================
 judgment_prompt = ChatPromptTemplate.from_template("""
-당신은 기업에서 약관 리스크를 전문적으로 점검하는 법률 전문가입니다.
+당신은 약관에 숨어있는 '법적 시한폭탄'을 찾아내는, 기업 소송 전문 변호사입니다. 당신의 유일한 임무는 회사에 막대한 재정적 손실이나 규제 기관의 제재를 초래할 수 있는 가장 치명적인 조항만을 식별하는 것입니다.
 
 입력:
 - 검토 대상 약관 조항({clause})
@@ -143,33 +137,29 @@ judgment_prompt = ChatPromptTemplate.from_template("""
 - 관련 판례 후보 목록({citations_catalog})  # 비어 있을 수 있음
 
 필수 규칙:
-1) 약관 조항 중 리스크(모호함, 명확성 부족, 설명의무 위반, 오탈자, 주체 혼동 등)가 있는 부분만 결과를 내세요.
-2) 문서에 나온 순서(제1조→제2조→…)로 처리하고, 문제가 발견된 조항만 그 순서대로 출력하세요.
-3) 한 조항당 하나의 결과 블록만 작성하세요.
-4) 관련 판례는 반드시 '관련 판례 후보 목록'에 있는 항목에서만 선택하세요. 목록이 비어 있으면 관련 판례 줄을 쓰지 마세요(가공 금지).
-5) 아무런 리스크가 없으면 그 조항은 출력하지 마세요.
-6) 첫 줄은 반드시 ‘조항 본문에서 발췌한 핵심 문장’만(제목 금지).
-7) 결과는 순수 텍스트. 불릿/머리말/요약 금지.
-8) 각 결과 블록 내부에서는 섹션 사이에 빈 줄 1개로 구분하세요:
-   - [문제가 되는 조항]
-   (빈 줄 1개)
-   - 설명:
-   (빈 줄 1개)
-   - 수정 제안:
-   (선택) (빈 줄 1개)
-   - 관련 판례:  # 후보가 있을 때만 한 줄
+1) 오직 아래 기준 중 하나 이상에 명백하게 해당하는 '치명적 리스크' 조항만 결과를 내세요:
+    - 법률 명백 위반: 약관규제법 등 현행법의 강행규정을 직접적으로 위반하는 조항
+    - 소송 패소 가능성 농후: 판례에 비추어 볼 때, 소송 시 패소 가능성이 매우 높은 조항
+    - 정부 기관 제재 가능성: 공정거래위원회 등 규제 기관으로부터 과징금, 시정명령 등을 받을 수 있는 조항
+    - 중대한 재정적 책임 유발: 회사의 고의·중과실에 대한 면책을 규정하여 대규모 배상 책임을 유발할 수 있는 조항
+2) 단순 오탈자, 사소한 문법 오류, 법적 리스크가 없는 수준의 모호함 등 경미한 사안은 '치명적 리스크'가 아니므로 절대 결과에 포함하지 마세요.
+3) 문서에 나온 순서(제1조→제2조→…)로 처리하고, 문제가 발견된 조항만 그 순서대로 출력하세요.
+4) 한 조항당 하나의 결과 블록만 작성하세요.
+5) 관련 판례는 반드시 '관련 판례 후보 목록'에 있는 항목에서만 선택하세요. 목록이 비어 있으면 관련 판례 줄을 쓰지 마세요(가공 금지).
+6) 결과는 순수 텍스트 형식이어야 하며, 불필요한 머리말이나 요약은 금지합니다.
+7) 각 결과 블록 내부에서는 아래 설명된 각 섹션 사이에 빈 줄 1개로 구분하세요.
 
 관련 판례 줄 형식(있을 때만):
 관련 판례: 법원 선고일 (사건번호) 사건명 — 적용 이유: 한 줄 요약
 
-출력 형식(조항 하나당 2~3줄 + (선택) 관련 판례 1줄):
+출력 형식:
 [문제가 되는 조항] 원문 일부/핵심 문장
 
-설명: 무엇이 왜 문제인지(모호·불명확·설명의무 위반 등). 필요한 경우 구체 수치/기한/기준 포함
+설명: 무엇이 왜 '치명적 리스크'인지 ('필수 규칙 1번'에 근거하여) 명확하게 서술
 
-수정 제안: 소비자가 즉시 이해할 수 있도록 구체 문구로 재작성(수치·기한·정의 포함)
+수정 제안: 법적 리스크를 완전히 제거하고 방어 논리를 확보할 수 있는 가장 안전한 문구로 제안
 
-관련 판례: 법원 선고일 (사건번호) 사건명 — 적용 이유: 한 줄 요약   # 후보가 있을 때만
+관련 판례: 법원 선고일 (사건번호) 사건명 — 적용 이유: 한 줄 요약  # 후보가 있을 때만
 
 아래 입력을 검토해 위 형식으로만 출력하세요.
 {clause}
@@ -555,11 +545,6 @@ def health():
     return {"ok": True, "service": "analyze_terms", "time": datetime.now(timezone.utc).isoformat()}
 
 
-# Flask-CORS가 OPTIONS 요청(pre-flight)을 자동으로 처리하므로 수동 핸들러는 제거합니다.
-# @app.route("/api/<path:_any>", methods=["OPTIONS"])
-# def any_options(_any):
-#     return ("", 204)
-
 @app.route("/api/download/<path:filename>", methods=["GET"])
 def download_file(filename):
     safe = os.path.basename(filename)
@@ -604,6 +589,41 @@ def _after(resp):
     resp.headers.add('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
     return resp
     
+def perform_analysis(full_text: str, vector_db_path: str, limit: int = 0) -> dict:
+    """텍스트와 벡터DB 경로를 받아 약관 분석의 핵심 로직을 수행하고 결과를 딕셔너리로 반환합니다."""
+    vectorstore = build_vectorstore(vector_db_path)
+    clauses = split_into_clauses(full_text)
+    if limit > 0:
+        clauses = clauses[:limit]
+
+    results, flagged = [], 0
+    # 문서 등장 순서대로 분석
+    for c in clauses:
+        body = (c.get("body") or "").strip()
+        if not _is_real_body(body):
+            continue
+        
+        analysis = analyze_single_clause(
+            body, vectorstore,
+            top_k=TOP_K_DEFAULT, threshold=THRESHOLD_DEFAULT
+        )
+        
+        if analysis:
+            flagged += 1
+            results.append({"index": c["index"], "title": c["title"], "analysis": analysis})
+    
+    # 블록 사이 한 줄 공백으로 전체 분석 결과 텍스트 생성
+    joined_text = "\n\n".join([r["analysis"] for r in results])
+    pairs = parse_replacement_pairs(joined_text)
+
+    # 분석 결과를 담은 딕셔너리 반환
+    return {
+        "clauses": clauses,
+        "flagged": flagged,
+        "results": results,
+        "joined_text": joined_text,
+        "pairs": pairs,
+    }
 
 # JSON 본문 분석(파일 없이)
 @app.route("/api/analyze-terms", methods=["POST", "OPTIONS"])
@@ -628,41 +648,17 @@ def analyze_terms():
 
         if not vector_db_path:
             return jsonify({"ok": False, "error": f"category가 유효하지 않습니다: {category_raw}. 허용: {list(LAW_VECTOR_DB_MAP)}"}), 400
-
-        clauses = split_into_clauses(full_text)
-        if limit > 0:
-            clauses = clauses[:limit]
-
-        vectorstore = build_vectorstore(vector_db_path)
-
-        results, flagged = [], 0
-        for c in clauses:  # 문서 등장 순서대로
-            body = (c.get("body") or "").strip()
-            if not _is_real_body(body):
-                continue
-            analysis = analyze_single_clause(
-                body, vectorstore,
-                top_k=TOP_K_DEFAULT, threshold=THRESHOLD_DEFAULT
-            )
-            if analysis:
-                flagged += 1
-                results.append({"index": c["index"], "title": c["title"], "analysis": analysis})
-
-        # 블록 사이 한 줄 공백
-        joined = "\n\n".join([r["analysis"] for r in results])
-
-        # 치환 페어만 파싱해서 반환(파일 저장은 업로드 엔드포인트에서)
-        pairs = parse_replacement_pairs(joined)
+        analysis_result = perform_analysis(full_text, vector_db_path, limit)
 
         return jsonify({
             "ok": True,
             "category": category,
             "vector_db_path": vector_db_path,
-            "count_clauses": len(clauses),
-            "count_flagged": flagged,
-            "results": results,
-            "text": joined,
-            "pairs": [{"from": s, "to": d} for s, d in pairs],
+            "count_clauses": len(analysis_result["clauses"]),
+            "count_flagged": analysis_result["flagged"],
+            "results": analysis_result["results"],
+            "text": analysis_result["joined_text"],
+            "pairs": [{"from": s, "to": d} for s, d in analysis_result["pairs"]],
         })
     except Exception as e:
         logging.exception("[API] /api/analyze-terms 오류")
@@ -707,31 +703,11 @@ def analyze_terms_upload():
             return jsonify({"ok": False, "error": f"category가 유효하지 않습니다: {category_raw}. 허용: {list(LAW_VECTOR_DB_MAP)}"}), 400
 
         vector_db_path = LAW_VECTOR_DB_MAP[category]
-
-        clauses = split_into_clauses(full_text)
-        if limit > 0:
-            clauses = clauses[:limit]
-
-        vectorstore = build_vectorstore(vector_db_path)
-
-        results, flagged = [], 0
-        for c in clauses:
-            body = (c.get("body") or "").strip()
-            if not _is_real_body(body):
-                continue
-            analysis = analyze_single_clause(
-                body, vectorstore,
-                top_k=TOP_K_DEFAULT, threshold=THRESHOLD_DEFAULT
-            )
-            if analysis:
-                flagged += 1
-                results.append({"index": c["index"], "title": c["title"], "analysis": analysis})
-
-        joined = "\n\n".join([r["analysis"] for r in results])
-        pairs = parse_replacement_pairs(joined)
+        analysis_result = perform_analysis(full_text, vector_db_path, limit)
 
         output_filename, applied_count = None, 0
         try:
+            pairs = analysis_result["pairs"]
             if ext == ".docx":
                 output_filename, applied_count = apply_pairs_to_docx(src_path, pairs)
             else:
@@ -749,11 +725,11 @@ def analyze_terms_upload():
             "ok": True,
             "category": category,
             "vector_db_path": vector_db_path,
-            "count_clauses": len(clauses),
-            "count_flagged": flagged,
-            "results": results,
-            "text": joined,
-            "pairs": [{"from": s, "to": d} for s, d in pairs],
+            "count_clauses": len(analysis_result["clauses"]),
+            "count_flagged": analysis_result["flagged"],
+            "results": analysis_result["results"],
+            "text": analysis_result["joined_text"],
+            "pairs": [{"from": s, "to": d} for s, d in analysis_result["pairs"]],
             "applied_replacements": applied_count,
             "output_file": output_filename,
             "output_url": download_url,
