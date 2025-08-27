@@ -424,36 +424,23 @@ def generate_terms_v2():
         if not category:
             return jsonify({"error": "category가 필요합니다."}), 400
         
-        persist_dir = VECTOR_DB_MAP.get(category)
-        if not persist_dir or not os.path.isdir(persist_dir):
+        # 1. 카테고리 DB 로드 및 검색
+        category_persist_dir = VECTOR_DB_MAP.get(category)
+        if not category_persist_dir or not os.path.isdir(category_persist_dir):
             return jsonify({"error": f"'{category}' 벡터 저장소를 찾을 수 없습니다."}), 400
-        vectorstore = Chroma(persist_directory=persist_dir, embedding_function=embedding)
-        retriever = vectorstore.as_retriever(search_kwargs={'k': 5})
+        category_vectorstore = Chroma(persist_directory=category_persist_dir, embedding_function=embedding)
+        category_retriever = category_vectorstore.as_retriever(search_kwargs={'k': 5})
+        docs = category_retriever.invoke(product_name)
 
-        # docs = retriever.invoke(wishlist)
-        # context = "\n\n".join([d.page_content for d in docs])[:12000]
-        
-        # logging.info(f"DB 검색어: '{retrieval_query}'")
-        # docs = retriever.invoke(retrieval_query)
-        # retrieval_query = product_name
+        # 2. 법령 DB 로드 및 검색
+        law_persist_dir = VECTOR_DB_MAP.get('laws') # 'laws' 키로 법령 DB 경로를 가져옴
+        if not law_persist_dir or not os.path.isdir(law_persist_dir):
+            return jsonify({"error": "'laws' 법령 벡터 저장소를 찾을 수 없습니다."}), 400
+        law_vectorstore = Chroma(persist_directory=law_persist_dir, embedding_function=embedding)
+        law_retriever = law_vectorstore.as_retriever(search_kwargs={'k': 5})
+        law_docs = law_retriever.invoke(product_name)
 
-        # 두  벡터db 임시 쿼리로 상품명
-        logging.info(f"초안카테고리DB 검색어: '{product_name}'")
-        try:
-            docs = retriever.invoke(product_name)
-        except Exception as e:
-            logging.error(f"초안카테고리DB 검색 실패: {e}")
-            return jsonify({"error": "초안카테고리DB 검색 중 오류가 발생했습니다."}), 500
-        
-        logging.info(f"법령DB 검색어: '{product_name}'")
-        try:
-            law_docs = retriever.invoke(product_name)
-        except Exception as e:
-            logging.error(f"법령DB 검색 실패: {e}")
-            return jsonify({"error": "법령DB 검색 중 오류가 발생했습니다."}), 500
-        
-        
-        # AI에게 전달할 참고문서(context)는 검색 결과로 만듭니다.
+        # 3. 두 검색 결과를 합쳐서 context 생성 (정상)
         context = "\n\n".join([d.page_content for d in docs + law_docs])
 
         # 표 스펙 구성(통합 CSV에서)
